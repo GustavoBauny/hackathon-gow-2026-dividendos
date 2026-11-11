@@ -1,0 +1,13 @@
+# segredo do time: nunca versionar
+.bureau_token
+.env
+
+# dados e caches (regenerados pelo pipeline a partir do banco e da API)
+data/
+*.pkl
+*.dump
+
+__pycache__/
+*.pyc
+.venv/
+.ipynb_checkpoints/
