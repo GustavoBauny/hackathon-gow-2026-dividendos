@@ -414,8 +414,10 @@ footer.wrap {{ padding-block: 24px 40px; color: var(--muted); font-size: 12.5px;
       <li>Saídas acima de {pct(P['saidas_sobre_entradas_max'], 0)} das entradas da conta.</li>
       <li>{P['consultas_90d_max'] + 1} ou mais consultas ao CPF em 90 dias.</li>
       <li>Renda declarada mais que {num(P['renda_decl_sobre_real_max'])} vezes as entradas reais.</li>
-      <li>Pico de entradas: os 3 meses antes do pedido vêm {num((P['tendencia_entradas_max'] - 1) * 100)}% ou mais acima da média dos meses anteriores.</li></ul>
-      <p class="small muted">Nos quatro primeiros grupos, de 82% a 100% dos clientes deixaram de pagar. No pico de entradas, cerca de 30%, quase o dobro do limite em que emprestar deixa de dar lucro.</p></li>
+      <li>Pico de entradas: os 3 meses antes do pedido vêm {num((P['tendencia_entradas_max'] - 1) * 100)}% ou mais acima da média dos meses anteriores.</li>
+      <li>Pedido maior que {num(P['pedido_sobre_entradas_max'])} vezes o que entra por mês na conta. Nega em vez de reduzir: no histórico, reduzir o valor não tirou o risco.</li>
+      <li>Parcelas em outros bancos acima de {pct(P['outras_sobre_entradas_max'], 0)} do que entra na conta.</li></ul>
+      <p class="small muted">Nos quatro primeiros grupos, de 82% a 100% dos clientes deixaram de pagar. No pico de entradas, cerca de 27%, bem acima do limite (cerca de 16%) em que emprestar deixa de dar lucro. No pedido excessivo, cerca de 74%, e 70% entre os que a política atual aprovou com o valor reduzido; na dívida acima de 35% das entradas, cerca de 32%.</p></li>
     <li><h4>Calcula o valor máximo que cabe no bolso</h4> <span class="cnt">{num(cont.get(4, 0))} negados</span>
       <ul><li>A parcela pode ser no máximo {pct(P['teto_parcela_sobre_sobra'], 0)} da sobra mensal (entradas menos saídas, média de 12 meses). Acima de 50%, quase todos deram calote.</li>
       <li>A parcela também fica em no máximo {pct(P['teto_parcela_sobre_entradas'], 0)} das entradas reais da conta. Vale a menor entre a média de 12 meses e a de 3 meses.</li>

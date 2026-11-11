@@ -130,8 +130,11 @@ def arvore_combinacoes(h: pd.DataFrame, profundidade: int = 3, min_folha: int = 
 
 
 def _alerta(df: pd.DataFrame, incluir_pico: bool = True) -> pd.Series:
+    entradas = df["mov_entradas_med"].where(df["mov_entradas_med"] > 0)
     a = ((df["mov_meses_cheque"] >= 2) | (df["mov_saidas_sobre_entradas"] > 0.8) |
-         (df["consultas_90_dias"] >= 8) | (df["renda_decl_sobre_real"] > 2))
+         (df["consultas_90_dias"] >= 8) | (df["renda_decl_sobre_real"] > 2) |
+         (df["valor_solicitado"] / entradas > 6).fillna(False) |                     # v3: pedido excessivo
+         (df["parcelas_outras_instituicoes"] / entradas > 0.35).fillna(False))       # v3: dívida sobre as entradas
     return a | (df["mov_tendencia_entradas"] > 1.35) if incluir_pico else a
 
 
@@ -152,7 +155,8 @@ SPECS = [
      "Zona de risco crescente antes do corte de 50%. A política proposta limita a parcela a 40% da sobra."),
     ("risco", "Reduzidos ao limite de 30% da renda declarada", "cujo pedido a política atual reduziu para a parcela caber em 30% da renda declarada",
      lambda h, a: _reduzido_pela_atual(h),
-     "Cortar até exatamente 30% da renda declarada não basta: a renda declarada costuma ser maior que a que entra na conta."),
+     "Cortar até exatamente 30% da renda declarada não basta. Três em cada quatro desse grupo pediram mais de 6 vezes o que entra "
+     "na conta: é principalmente o pedido excessivo que explica o calote, e reduzir o valor não tirou esse risco."),
     ("risco", "Cheque especial recorrente", "que usaram cheque especial em 2 ou mais meses no último ano",
      lambda h, a: h["mov_meses_cheque"] >= 2,
      "Uso recorrente indica aperto financeiro crônico. Um mês isolado não muda o risco."),
@@ -165,15 +169,25 @@ SPECS = [
     ("risco", "Renda declarada inflada", "com renda declarada maior que o dobro das entradas reais na conta",
      lambda h, a: h["renda_decl_sobre_real"] > 2,
      "A movimentação da conta desmente a renda informada no cadastro."),
+    ("risco", "Pedido acima de 6x as entradas", "que pedem mais de 6 vezes o que entra por mês na conta",
+     lambda h, a: h["valor_solicitado"] / h["mov_entradas_med"] > 6,
+     "Pedido desproporcional à conta. Reduzir o valor não resolve: entre os que a política atual aprovou com valor cortado, "
+     "o calote continuou alto. Por isso é corte, não teto (v3)."),
+    ("risco", "Dívidas fora acima de 35% das entradas", "com parcelas em outros bancos acima de 35% do que entra na conta",
+     lambda h, a: h["parcelas_outras_instituicoes"] / h["mov_entradas_med"] > 0.35,
+     "Medida contra o que de fato entra na conta, a dívida em outros bancos tem um degrau nítido em 35%. "
+     "A mesma conta contra a renda declarada quase não separa bons de maus pagadores (v3)."),
     ("risco", "Pico de entradas antes do pedido", "sem outros sinais de alerta, mas com entradas nos 3 meses antes do pedido 35% ou mais acima da média dos meses anteriores",
      lambda h, a: (h["mov_tendencia_entradas"] > 1.35) & ~_alerta(h, incluir_pico=False),
      "A conta \"engorda\" pouco antes do pedido: a movimentação recente não representa a renda de verdade. Entre 1,2x e 1,35x o risco é normal."),
     ("risco", "Entradas instáveis", "sem sinais de alerta, mas com entradas instáveis (variação mensal acima de 30%)",
      lambda h, a: (h["mov_entradas_cv"] > 0.3) & ~a,
-     "Renda irregular aumenta o risco mesmo sem outros sinais. Entra no modelo, não é corte."),
-    ("risco", "Dívidas fora acima de 30% da renda", "sem sinais de alerta, mas com dívidas em outros bancos acima de 30% da renda",
+     "Renda irregular quase dobra o risco em relação aos clientes sem sinais de alerta (16% contra 8%) e fica perto do ponto "
+     "em que emprestar deixa de dar lucro. Entra no modelo, não é corte."),
+    ("neutro", "Dívidas fora acima de 30% da renda", "sem sinais de alerta (dívida abaixo de 35% das entradas), mas com dívidas em outros bancos acima de 30% da renda declarada",
      lambda h, a: (h["divida_outras_sobre_renda"] > 0.3) & ~a,
-     "Comprometimento já alto fora da Fortuna. Entra no modelo, não é corte."),
+     "Parece risco, mas não é: contra a renda declarada a dívida parece alta, mas, enquanto fica abaixo de 35% do que entra "
+     "na conta, o calote é menor que o dos clientes sem alerta. O que importa é a dívida sobre as entradas reais (v3)."),
     ("oportunidade", "Score 450 a 600 sem alertas", "com score entre 450 e 600 e sem sinais de alerta",
      lambda h, a: (h["score"] >= 450) & (h["score"] <= 600) & ~a & (h["parcela_sobre_sobra"] <= 0.5),
      "A política atual nega todos. Score baixo, sozinho, quase não prevê calote nesta base."),
@@ -182,7 +196,7 @@ SPECS = [
      "A política atual nega todos. Com parcela proporcional à renda, pagam como a média."),
     ("oportunidade", "1 restrição sem alertas", "com 1 restrição ativa e sem sinais de alerta",
      lambda h, a: (h["restricoes_ativas"] == 1) & ~a & (h["parcela_sobre_sobra"] <= 0.5),
-     "A política atual nega todos. Pagam, mas atrasam mais: cerca de metade tem alguma parcela em atraso."),
+     "A política atual nega todos. Pagam, mas atrasam mais: cerca de um terço tem alguma parcela em atraso, contra cerca de 22% dos demais."),
     ("oportunidade", "Aposentados", "aposentados sem sinais de alerta",
      lambda h, a: (h["tipo_vinculo"] == "aposentado") & ~a,
      "Renda estável: o grupo de menor risco da base."),

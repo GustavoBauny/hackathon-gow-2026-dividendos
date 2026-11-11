@@ -6,9 +6,9 @@ São 5 minutos de apresentação e 2 de perguntas. Deixe o painel aberto (`outpu
 
 A política atual nega quem pagaria e aprova quem não consegue pagar. Nos 2.000 pedidos novos, a nossa:
 
-- aprova **1.510** clientes, contra 1.145 da atual;
-- empresta **R$ 10,2 mi**, contra R$ 8,9 mi;
-- dá um ganho esperado de **+R$ 662 mil** sobre a atual.
+- aprova **1.365** clientes, contra 1.145 da atual;
+- empresta **R$ 9,2 mi**, contra R$ 8,9 mi;
+- dá um ganho esperado de **+R$ 608 mil** sobre a atual.
 
 *Mostrar:* os quadros do Resumo.
 
@@ -27,18 +27,20 @@ A política atual nega quem pagaria e aprova quem não consegue pagar. Nos 2.000
 ## 1:30 · Os padrões (75 s)
 
 - **Manchete: o tamanho da parcela.** Com parcela acima de 50% da sobra mensal (entradas menos saídas), **99%** não pagam. O problema não é o cliente, é a parcela, e reduzir o valor resolve.
-- **A política atual erra porque olha a renda declarada.** Quem ela reduziu para caber em 30% da renda declarada deu 58% de calote, porque a renda declarada costuma ser maior que a real.
+- **A política atual erra porque olha a renda declarada.** Quem ela reduziu para caber em 30% da renda declarada deu 58% de calote: 3 em cada 4 tinham pedido mais de 6x o que entra na conta, e reduzir não tirou o risco.
 - **Sinais de alerta na movimentação da conta, que o manual disse que passavam despercebidos:**
   - cheque especial em 2 ou mais meses: 82% de calote;
   - gasto acima de 80% das entradas: 98%;
   - renda declarada maior que 2x a real: 92%;
-  - pico de entradas nos 3 meses antes do pedido: 33%.
+  - pico de entradas nos 3 meses antes do pedido: 27%;
+  - **pedido maior que 6x o que entra por mês: 74%, e 70% mesmo com o valor reduzido.** Por isso a v3 nega em vez de reduzir;
+  - parcelas em outros bancos acima de 35% das entradas reais: 32%. Contra a renda declarada, a mesma conta não separa ninguém.
 - **Bons pagadores que a atual nega:**
-  - score de 450 a 600 sem alertas: 13%;
-  - 1 restrição sem alertas: 3%;
-  - renda até R$ 2.000 sem alertas: 12%.
+  - score de 450 a 600 sem alertas: 11%;
+  - 1 restrição sem alertas: 2%;
+  - renda até R$ 2.000 sem alertas: 4%.
   - Score alto não protege: acima de 800 paga igual à média.
-- **Medição direta com o piloto:** aprovados no piloto que a atual negaria, sem alerta, deram 11% de calote.
+- **Medição direta com o piloto:** aprovados no piloto que a atual negaria, sem alerta, deram 8% de calote.
 
 *Mostrar:* a Parte 1, rolando pelos cards e pela tabela "Onde a política atual erra".
 
@@ -48,18 +50,18 @@ Os 6 passos, cada um com quantos pedidos decidiu:
 
 1. Bureau.
 2. Faixas sem histórico, com 2+ restrições: 174.
-3. Sinais de alerta: 166.
+3. Sinais de alerta: 360 (90 de pedido excessivo e 104 de dívida alta, as duas regras novas da v3).
 4. Teto de parcela: 40% da sobra e 30% das entradas reais.
-5. Valor ótimo pelo resultado esperado: 120 negados.
-6. Aprovação: 1.510, dos quais 226 com valor reduzido.
+5. Valor ótimo pelo resultado esperado: 71 negados.
+6. Aprovação: 1.365, dos quais 114 com valor reduzido.
 
 O ganho vem de três frentes:
 
 | Frente | Pedidos | Ganho esperado |
 |---|---|---|
-| Reduzir valor | 129 | +R$ 340 mil |
-| Negar quem a atual aprova | 112 | +R$ 165 mil |
-| Aprovar quem a atual nega | 477 | +R$ 157 mil |
+| Negar quem a atual aprova | 199 | +R$ 407 mil |
+| Aprovar quem a atual nega | 419 | +R$ 139 mil |
+| Reduzir valor | 63 | +R$ 62 mil |
 
 *Mostrar:* a Parte 2 e a tabela de comparação.
 
@@ -69,7 +71,8 @@ Na seção "Consultar pedido" do painel, ou no terminal com `python explicar.py 
 
 | Pedido | O que mostra |
 |---|---|
-| `P-00808` | Pediu R$ 19.500. A atual daria R$ 12.172; nós aprovamos R$ 6.800, porque a parcela não cabia na sobra. |
+| `P-03111` | Pediu R$ 21.000. A atual daria R$ 13.886. A sobra comporta até R$ 10.276, mas nesse valor o risco seria de 17%; aprovamos R$ 8.100, com risco de 9%. |
+| `P-00808` | Pediu R$ 19.500, mais de 6x o que entra por mês. A atual daria R$ 12.172; a v2 aprovava R$ 6.800; a v3 nega, porque reduzir não tira o risco. |
 | `P-00176` | Score ≤ 600. A atual nega; nós aprovamos o valor cheio. |
 | `P-00150` | 1 restrição. A atual nega; nós aprovamos. |
 | `P-03661` | A atual aprova; nós negamos por pico de entradas antes do pedido. |
@@ -78,15 +81,15 @@ Na seção "Consultar pedido" do painel, ou no terminal com `python explicar.py 
 ## 4:30 · Validação e o que mudou (30 s)
 
 - **Fora do tempo:** treinado até setembro de 2025, o modelo previu os calotes do piloto, que nunca viu, com AUC de 0,88.
-- **Backtest cross-fitted em 10 mil pedidos:** ganho de +R$ 3,49 mi sobre a atual.
+- **Backtest cross-fitted em 10 mil pedidos:** ganho de +R$ 3,2 mi sobre a atual, pelo modelo e fora da amostra. As duas regras da v3 vieram do desfecho real: o modelo sozinho achava esses grupos lucrativos, mas no histórico eles deram 74% e 32% de calote.
 - **Réplica da política atual:** reproduz 100% das 8.737 decisões históricas.
 - **Bureau:** 126 respostas 503 tratadas com repetição, 0 falhas.
-- **Depois do checkpoint:** *(preencher com a v3 do CHANGELOG)*.
+- **O que mudou na v3:** comparamos a política com uma segunda abordagem do time (regras descobertas por agentes de IA + modelo explicável), julgando as duas por três juízes diferentes. Dela vieram dois sinais de alerta, o pedido excessivo e a dívida sobre as entradas reais. Isso tirou 145 aprovações que o histórico mostra que dariam prejuízo.
 
 ## Perguntas prováveis
 
 **Por que negar 2+ restrições, se 1 restrição paga bem?**
-Ninguém com 2+ foi aprovado no histórico, então não há desfecho para medir. Aprovar os 123 sem alerta renderia cerca de +R$ 79 mil se eles se comportarem como os de 1 restrição, e cerca de −R$ 169 mil se forem ruins. A recomendação é um piloto controlado, e a decisão é do analista.
+Ninguém com 2+ foi aprovado no histórico, então não há desfecho para medir. São 84 pedidos novos assim sem nenhum sinal de alerta. Aprová-los seria uma aposta sem nenhum desfecho histórico para medir. A recomendação é um piloto controlado, e a decisão é do analista.
 
 **Reduzir o valor não espanta o cliente?**
 Para quem a parcela não cabe na sobra, a alternativa é calote: 99% acima de 50% da sobra. Com valor menor, ele vira pagador. Quando dois valores rendem quase igual, ficamos com o maior.
@@ -98,7 +101,7 @@ Para quem a parcela não cabe na sobra, a alternativa é calote: 99% acima de 50
 - Ensemble de 5 sementes: só 9 a 14 decisões mudam entre ensembles.
 
 **Por que o score quase não importa?**
-Sem sinais de alerta, score de 450 a 600 dá 13% e acima de 800 dá 10%. O que separa bom e mau pagador é a movimentação da conta.
+Sem sinais de alerta, score de 450 a 600 dá 11% e acima de 800 dá 8%. O que separa bom e mau pagador é a movimentação da conta.
 
 **Usaram gênero ou CEP?**
 Não. Também ficaram de fora idade e estado civil.

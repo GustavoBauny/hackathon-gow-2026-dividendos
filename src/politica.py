@@ -51,6 +51,8 @@ class Parametros:
     consultas_90d_max: int = 7        # 8+ consultas ao CPF em 90 dias
     renda_decl_sobre_real_max: float = 2.0
     tendencia_entradas_max: float = 1.35      # entradas dos últimos 3 meses / meses anteriores (pico antes do pedido)
+    pedido_sobre_entradas_max: float = 6.0    # v3: valor PEDIDO / entradas médias. Acima, ~50% de calote mesmo com valor reduzido
+    outras_sobre_entradas_max: float = 0.35   # v3: parcelas em outros bancos / entradas médias (não a renda declarada)
     # Passo 4: teto de valor pela capacidade de pagamento
     teto_parcela_sobre_sobra: float = 0.40   # calote salta para ~100% acima de 50% da sobra mensal
     teto_comprometimento: float = 0.30       # parcela / renda declarada (mesmo limite da política atual)
@@ -123,6 +125,13 @@ def politica_nova(base: pd.DataFrame, modelo, taxa_atraso: dict, p: Parametros =
     negar(b["consultas_90_dias"] > p.consultas_90d_max, 3, "8+ consultas ao CPF em 90 dias")
     negar(b["renda_decl_sobre_real"] > p.renda_decl_sobre_real_max, 3, "renda declarada mais que o dobro das entradas reais")
     negar(b["mov_tendencia_entradas"] > p.tendencia_entradas_max, 3, "pico de entradas nos 3 meses antes do pedido (35%+ acima da média anterior)")
+    # v3: medidos contra o que de fato entra na conta. O pedido excessivo é negado, não reduzido: no histórico,
+    # reduzir o valor não tirou o risco (76% de calote nos reduzidos a até 3x as entradas)
+    entradas = b["mov_entradas_med"].where(b["mov_entradas_med"] > 0)
+    negar((b["valor_solicitado"] / entradas > p.pedido_sobre_entradas_max).fillna(False), 3,
+          "pede mais de 6x o que entra por mês na conta (reduzir o valor não tira o risco)")
+    negar((b["parcelas_outras_instituicoes"] / entradas > p.outras_sobre_entradas_max).fillna(False), 3,
+          "parcelas em outros bancos acima de 35% do que entra na conta")
 
     # 4. teto de valor pela capacidade de pagamento
     sobra = (b["mov_entradas_med"] - b["mov_saidas_med"]).clip(lower=0)

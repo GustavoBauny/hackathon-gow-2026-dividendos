@@ -1,5 +1,33 @@
 # Changelog
 
+## v3 · pedido excessivo e dívida sobre as entradas como sinais de alerta (11/11, ~10h45)
+
+- **Novo sinal de alerta: pedido excessivo.** Nega o pedido quando o valor pedido passa de 6x o que entra por mês na conta.
+  - No histórico, esse grupo deu cerca de 74% de calote. Entre os que a política atual aprovou com o valor reduzido, foram 70%.
+  - O modelo da v2 não via o valor pedido, só o concedido, e previa 9% para esses clientes.
+  - Na v3 o pedido é negado em vez de reduzido.
+- **Novo sinal de alerta: dívida em outros bancos acima de 35% das entradas reais.**
+  - Dá cerca de 32% de calote, com degrau nítido em 35% (11% entre 30% e 35%).
+  - A mesma medida contra a renda declarada quase não separa bons de maus pagadores.
+- **Origem.** Comparativo neutro entre a v2 e a política da branch `pipeline-painel` (regras descobertas por agentes de IA + modelo explicável).
+  - Cada política foi julgada pelo próprio modelo, pelo modelo da outra, pelas taxas do histórico sem modelo e por backtest.
+  - A v2 com essas duas regras foi a opção mais robusta: pior caso de R$ 586 mil entre os juízes, contra R$ 433 mil da v2.
+- **2.000 pedidos novos:** a proposta aprova 1.365 (R$ 9,15 mi), contra 1.145 da atual.
+  - 618 decisões diferentes da atual.
+  - 145 pedidos que a v2 aprovava passam a ser negados: 86 de pedido excessivo e 59 de dívida alta. Nenhuma outra decisão muda.
+  - 114 aprovados com valor reduzido.
+  - Ganho esperado pelo modelo: +R$ 608 mil, contra +R$ 662 mil na v2. O número cai porque o modelo da v2 subestima o risco desses dois grupos.
+  - Pelas taxas de calote observadas no histórico, o lucro esperado sobe de R$ 459 mil (v2) para R$ 625 mil (v3).
+- **Padrões:**
+  - dois cards novos;
+  - "Dívidas fora acima de 30% da renda" virou "parece risco, mas não é": quando a dívida fica abaixo de 35% das entradas, o calote é menor que o dos clientes sem alerta.
+- **Testes:** `tests/test_politica_v3.py` cobre os limites das duas regras, a negativa no lugar da redução e a medida sobre as entradas (no pedido e na dívida). São 9 casos, sem banco.
+- **Backtest cross-fitted (resultado esperado pelo modelo, fora da amostra):** ganho de +R$ 3,23 mi, contra +R$ 3,49 mi da v2.
+  - A v3 cai nessa métrica porque o juiz é o próprio modelo, que acha lucrativos os dois grupos negados.
+  - Pelo desfecho real, esses grupos deram 74% e 32% de calote.
+  - A AUC fora do tempo continua em 0,88, porque o modelo não mudou.
+
+
 ## v2 · revisão antes do checkpoint (11/11, ~09h25)
 
 - **Novo padrão: pico de entradas antes do pedido.** Quem tem os 3 meses anteriores 35% ou mais acima da média dos meses anteriores dá cerca de 33% de calote (137 contratos). Passou a ser sinal de alerta no passo 3 e feature do modelo.
