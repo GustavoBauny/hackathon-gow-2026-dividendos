@@ -34,7 +34,7 @@ FEATS_TODAS = FEATS_CLIENTE + FEATS_VALOR + FEAT_TEMPO
 # 0,826 / 0,238 com todas as features): menos ruído e mais fácil de explicar ao analista.
 FEATS = ["score", "restricoes_ativas", "consultas_90_dias", "meses_historico_bureau", "divida_outras_sobre_renda",
          "renda_declarada", "prazo_meses", "mov_entradas_cv", "mov_saldo_medio_med", "mov_meses_cheque",
-         "mov_dias_cheque_total", "mov_saidas_sobre_entradas", "renda_decl_sobre_real",
+         "mov_dias_cheque_total", "mov_saidas_sobre_entradas", "renda_decl_sobre_real", "mov_tendencia_entradas",
          "vinc_aposentado", "vinc_assalariado", "vinc_autonomo", "vinc_empresario"] + FEATS_VALOR + FEAT_TEMPO
 
 PARAMS = dict(objective="binary", learning_rate=0.03, num_leaves=4, min_child_samples=500,
@@ -167,3 +167,40 @@ def km_relativo(df: pd.DataFrame, n_bins: int = 10) -> tuple[float, float]:
         if nr > 0:
             sobrev *= 1 - eventos.sum() / nr
     return 1 - sobrev, len(df)
+
+
+class ModeloEnsemble:
+    """Média de vários ModeloCalote (sementes diferentes), cada um com sua calibração fora da amostra.
+
+    Uma decisão de crédito não deve mudar por causa da semente aleatória: com um único modelo, de 10 a 60
+    das 2.000 decisões mudavam entre sementes. A média de 5 modelos reduz essa variação.
+    """
+
+    def __init__(self, seeds=(11, 22, 33, 44, 55), **kw):
+        self.seeds = tuple(seeds)
+        self.kw = kw
+        self.membros: list[ModeloCalote] = []
+
+    def fit(self, hist: pd.DataFrame, parcelas: pd.DataFrame):
+        self.membros = []
+        for s in self.seeds:
+            params = {**self.kw.get("params", {}), "seed": s}
+            m = ModeloCalote(**{**self.kw, "params": params}).fit(hist, parcelas).calibrar(hist, parcelas, seed=s)
+            self.membros.append(m)
+        m0 = self.membros[0]
+        self.feats, self.n_linhas_treino, self.n_eventos = m0.feats, m0.n_linhas_treino, m0.n_eventos
+        # calibração do ensemble, fora da amostra: média das PDs out-of-fold de cada membro, por faixa x KM observado
+        h = hist.reset_index(drop=True)[["id_pedido", "k_evento", "n_observaveis", "prazo_meses"]]
+        oof = np.mean([m.oof.set_index("id_pedido").loc[h["id_pedido"], "pd_calibrada"].values for m in self.membros], axis=0)
+        h = h.assign(pd_ens=oof, faixa=pd.qcut(oof, 20, labels=False, duplicates="drop"))
+        self.tabela_calibracao = h.groupby("faixa").apply(lambda g: pd.Series({
+            "pd_bruta_media": g["pd_ens"].mean(), "pd_km": km_relativo(g)[0], "n": len(g),
+            "pd_calibrada": g["pd_ens"].mean()}), include_groups=False)
+        self.oof = h[["id_pedido"]].assign(pd_calibrada=oof)
+        return self
+
+    def pd_contrato(self, base: pd.DataFrame, valor, ate_parcela=None, calibrada: bool = True) -> np.ndarray:
+        return np.mean([m.pd_contrato(base, valor, ate_parcela, calibrada) for m in self.membros], axis=0)
+
+    def importancia(self) -> pd.Series:
+        return pd.concat([m.importancia() for m in self.membros], axis=1).mean(axis=1).sort_values(ascending=False)

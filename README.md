@@ -6,15 +6,17 @@ Hackathon GOW 2026. Nova política de crédito para a Fortuna, construída com I
 
 | | Política atual (réplica) | Política proposta |
 |---|---|---|
-| Aprovados (2.000 pedidos novos) | 1.145 | 1.533 (254 com valor reduzido) |
-| Valor aprovado | R$ 8,86 mi | R$ 10,31 mi |
-| Ganho esperado sobre a atual (modelo) | | **+R$ 666 mil** |
-| Backtest cross-fitted nos 10 mil pedidos históricos | −R$ 228 mil | +R$ 3,24 mi (**+R$ 3,47 mi**) |
+| Aprovados (2.000 pedidos novos) | 1.145 | 1.510 (226 com valor reduzido) |
+| Valor aprovado | R$ 8,86 mi | R$ 10,16 mi |
+| Ganho esperado sobre a atual (modelo) | | **+R$ 662 mil** |
+| Backtest cross-fitted nos 10 mil pedidos históricos | −R$ 209 mil | +R$ 3,26 mi (**+R$ 3,47 mi**) |
 
 O ganho vem de três frentes:
 - **Reduzir o valor** quando a parcela não cabe na sobra mensal do cliente.
-- **Negar** os aprovados com sinais de alerta, que deram 90% de calote no histórico.
-- **Aprovar** quem a política atual nega sem motivo: score de 450 a 600, renda de até R$ 2.000 ou 1 restrição, desde que sem sinais de alerta. No piloto, esse grupo deu 11,6% de calote.
+- **Negar** aprovados com sinais de alerta, que deram 77% de calote no histórico.
+- **Aprovar** quem a política atual nega sem motivo: score de 450 a 600, renda de até R$ 2.000 ou 1 restrição, desde que sem sinais de alerta. No piloto, esse grupo deu 11% de calote.
+
+A réplica da política atual reproduz 100% das 8.737 decisões que ela tomou no histórico (`tests/test_politica.py`).
 
 ## Como a política decide
 
@@ -29,11 +31,13 @@ Os passos são aplicados nesta ordem. O primeiro que nega encerra a análise.
    - cheque especial em 2 ou mais meses;
    - saídas acima de 80% das entradas;
    - 8 ou mais consultas ao CPF em 90 dias;
-   - renda declarada maior que 2 vezes as entradas reais.
+   - renda declarada maior que 2 vezes as entradas reais;
+   - pico de entradas: os 3 meses antes do pedido 35% ou mais acima dos meses anteriores (cerca de 33% de calote).
 4. **Capacidade de pagamento.** Teto de valor:
    - parcela até 40% da sobra mensal (entradas menos saídas);
+   - parcela até 30% das entradas reais, usando a menor entre a média de 12 meses e a de 3 meses;
    - parcela até 30% da renda declarada.
-5. **Risco e retorno.** Um modelo de sobrevivência por parcela (LightGBM) estima a chance de calote para cada valor possível. O pipeline escolhe o valor que maximiza o resultado esperado (+15% em dia, +5% com atraso, −60% calote). Se nenhum valor dá resultado positivo, nega.
+5. **Risco e retorno.** Um ensemble de 5 modelos de sobrevivência por parcela (LightGBM calibrado) estima a chance de calote para cada valor possível. O pipeline escolhe o valor que maximiza o resultado esperado (+15% em dia, +5% com atraso, −60% calote). Se nenhum valor dá resultado positivo, nega.
 6. **Aprovação.** Aprova o valor escolhido, que pode ser menor que o pedido.
 
 ## Alvo: contratos em andamento
@@ -80,6 +84,7 @@ python avaliar_historico.py           # validação fora do tempo + backtest (ce
 python gerar_painel.py                # só regera o painel
 python explicar.py P-00070 P-01208    # explica a decisão de pedidos específicos (demo)
 python gerar_decisoes.py --so-cache   # roda sem chamar a API (usa só o cache)
+python -m unittest discover tests     # testes: falhas do bureau (API simulada) e réplica da política atual
 ```
 
 Saídas em `output/`:

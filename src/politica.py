@@ -50,11 +50,14 @@ class Parametros:
     saidas_sobre_entradas_max: float = 0.80
     consultas_90d_max: int = 7        # 8+ consultas ao CPF em 90 dias
     renda_decl_sobre_real_max: float = 2.0
+    tendencia_entradas_max: float = 1.35      # entradas dos últimos 3 meses / meses anteriores (pico antes do pedido)
     # Passo 4: teto de valor pela capacidade de pagamento
     teto_parcela_sobre_sobra: float = 0.40   # calote salta para ~100% acima de 50% da sobra mensal
     teto_comprometimento: float = 0.30       # parcela / renda declarada (mesmo limite da política atual)
+    teto_parcela_sobre_entradas: float = 0.30  # parcela / menor entre entradas médias de 12 e de 3 meses
     # Passo 5/6: risco e valor
     margem_min: float = 0.01          # EV mínimo por real emprestado (folga para erro do modelo)
+    tolerancia_ev: float = 0.02       # valores com resultado a até 2% do melhor contam como empate: fica o maior
     pontos_grade: int = 24
 
 
@@ -69,11 +72,26 @@ PASSOS = {
 
 
 def taxa_atraso_por_segmento(hist_aprovados: pd.DataFrame) -> dict:
-    """L = P(atrasar alguma parcela | não deu calote), em contratos com >=50% do prazo vencido."""
+    """A = P(atrasar alguma parcela | não deu calote), em contratos com >=50% do prazo vencido.
+
+    Atraso é quase aleatório (um modelo com todas as variáveis acerta pouco: AUC 0,54); só dois grupos se destacam:
+    quem tem restrição e quem já compromete mais de 30% da renda com dívidas em outros bancos.
+    """
     s = hist_aprovados[(~hist_aprovados["calote_obs"]) & (hist_aprovados["frac_vencida"] >= 0.5)]
-    sem = float(s.loc[s["restricoes_ativas"] == 0, "atraso_obs"].mean())
-    com = float(s.loc[s["restricoes_ativas"] >= 1, "atraso_obs"].mean())
-    return {"sem_restricao": round(sem, 4), "com_restricao": round(com, 4)}
+    com_restr = s["restricoes_ativas"] >= 1
+    divida = s["parcelas_outras_instituicoes"] / s["renda_declarada"] > LIMITE_DIVIDA_FORA
+    return {"com_restricao": round(float(s.loc[com_restr, "atraso_obs"].mean()), 4),
+            "divida_fora_alta": round(float(s.loc[~com_restr & divida, "atraso_obs"].mean()), 4),
+            "sem_restricao": round(float(s.loc[~com_restr & ~divida, "atraso_obs"].mean()), 4)}
+
+
+LIMITE_DIVIDA_FORA = 0.30
+
+
+def taxa_atraso_de(b: pd.DataFrame, taxa_atraso: dict) -> np.ndarray:
+    divida = (b["parcelas_outras_instituicoes"] / b["renda_declarada"] > LIMITE_DIVIDA_FORA).values
+    return np.where(b["restricoes_ativas"].values >= 1, taxa_atraso["com_restricao"],
+                    np.where(divida, taxa_atraso.get("divida_fora_alta", taxa_atraso["sem_restricao"]), taxa_atraso["sem_restricao"]))
 
 
 def politica_nova(base: pd.DataFrame, modelo, taxa_atraso: dict, p: Parametros = Parametros()) -> pd.DataFrame:
@@ -104,6 +122,7 @@ def politica_nova(base: pd.DataFrame, modelo, taxa_atraso: dict, p: Parametros =
     negar(b["mov_saidas_sobre_entradas"] > p.saidas_sobre_entradas_max, 3, "gasta mais de 80% do que entra na conta")
     negar(b["consultas_90_dias"] > p.consultas_90d_max, 3, "8+ consultas ao CPF em 90 dias")
     negar(b["renda_decl_sobre_real"] > p.renda_decl_sobre_real_max, 3, "renda declarada mais que o dobro das entradas reais")
+    negar(b["mov_tendencia_entradas"] > p.tendencia_entradas_max, 3, "pico de entradas nos 3 meses antes do pedido (35%+ acima da média anterior)")
 
     # 4. teto de valor pela capacidade de pagamento
     sobra = (b["mov_entradas_med"] - b["mov_saidas_med"]).clip(lower=0)
@@ -112,6 +131,8 @@ def politica_nova(base: pd.DataFrame, modelo, taxa_atraso: dict, p: Parametros =
         np.full(n, VALOR_MAX),
         valor_max_por_parcela(p.teto_parcela_sobre_sobra * sobra, b["prazo_meses"]),
         valor_max_por_parcela(p.teto_comprometimento * b["renda_declarada"], b["prazo_meses"]),
+        valor_max_por_parcela(p.teto_parcela_sobre_entradas * np.minimum(b["mov_entradas_med"], b["mov_entradas_ult3"]),
+                              b["prazo_meses"]),
     ])
     teto = np.floor(teto * 100) / 100
     out["valor_teto"] = teto
@@ -120,7 +141,7 @@ def politica_nova(base: pd.DataFrame, modelo, taxa_atraso: dict, p: Parametros =
     # 5. risco x retorno: busca o valor (<= teto) que maximiza o resultado esperado
     idx = np.where(aberto)[0]
     if len(idx):
-        L = np.where(b.loc[idx, "restricoes_ativas"] >= 1, taxa_atraso["com_restricao"], taxa_atraso["sem_restricao"])
+        L = taxa_atraso_de(b.loc[idx], taxa_atraso)
         fracs = np.linspace(1.0, 0.0, p.pontos_grade, endpoint=False)
         cand = np.outer(teto[idx], fracs)                         # (m, g)
         cand[:, 1:] = np.floor(cand[:, 1:] / 100) * 100           # valores reduzidos em centenas
@@ -133,7 +154,11 @@ def politica_nova(base: pd.DataFrame, modelo, taxa_atraso: dict, p: Parametros =
         pdm = pdv.reshape(cand.shape)
         evm = cand * margem_por_real(pdm, L[:, None])
         evm = np.where(np.isnan(evm), -np.inf, evm)
-        j = evm.argmax(axis=1)
+        # empate técnico: entre os valores com resultado a até `tolerancia_ev` do máximo, fica o maior
+        # (a grade vai do maior para o menor valor, então argmax do 1º elegível = maior valor)
+        ev_max = evm.max(axis=1, keepdims=True)
+        elegivel = evm >= ev_max - p.tolerancia_ev * np.abs(ev_max)
+        j = elegivel.argmax(axis=1)
         r = np.arange(len(idx))
         best_v, best_pd, best_ev = cand[r, j], pdm[r, j], evm[r, j]
         out.loc[idx, "pd"] = best_pd
@@ -163,7 +188,7 @@ def resultado_esperado(decisoes: pd.DataFrame, base: pd.DataFrame, modelo, taxa_
     m = v > 0
     if m.any():
         pdv = modelo.pd_contrato(b[m], v[m])
-        L = np.where(b.loc[m, "restricoes_ativas"].values >= 1, taxa_atraso["com_restricao"], taxa_atraso["sem_restricao"])
+        L = taxa_atraso_de(b.loc[m], taxa_atraso)
         ev[m] = v[m] * margem_por_real(pdv, L)
     return pd.Series(ev, index=decisoes.index)
 

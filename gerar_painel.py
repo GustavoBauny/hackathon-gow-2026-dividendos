@@ -15,7 +15,7 @@ RAIZ = Path(__file__).resolve().parent
 SAIDA = RAIZ / "output"
 
 ROTULOS_FEATURE = {
-    "parcela_sobre_sobra": "Parcela ÷ sobra mensal", "t_rel": "Momento do contrato (parcela ÷ prazo)",
+    "parcela_sobre_sobra": "Parcela ÷ sobra mensal", "t_rel": "Quanto do prazo já passou (o calote se concentra no início)",
     "mov_saidas_sobre_entradas": "Saídas ÷ entradas da conta", "comprometimento": "Parcela ÷ renda declarada",
     "comprometimento_real": "Parcela ÷ entradas reais", "comprometimento_total": "(Parcela + dívidas fora) ÷ renda",
     "mov_entradas_cv": "Instabilidade das entradas", "renda_decl_sobre_real": "Renda declarada ÷ entradas reais",
@@ -68,7 +68,7 @@ def bloco_padroes(pads, media):
         tip = f"{p['titulo']}: {pct(p['pd'])} de calote (média {pct(media)}) · {num(p['n'])} contratos"
         linhas.append(f"""
       <li class="pad">
-        <div class="pad-top"><span class="chip {p['tipo']}">{'Risco' if p['tipo'] == 'risco' else 'Oportunidade'}</span>
+        <div class="pad-top"><span class="chip {p['tipo']}">{ {'risco': 'Risco', 'oportunidade': 'Oportunidade', 'neutro': 'Não é sinal'}[p['tipo']] }</span>
           <h4>{e(p['titulo'])}</h4></div>
         <p class="frase">{frase}</p>
         <div class="bar" data-tip="{e(tip)}" role="img" aria-label="{e(tip)}">
@@ -135,6 +135,7 @@ def gerar(resumo_path: Path = SAIDA / "resumo.json", destino: Path = SAIDA / "pa
     media = r["padroes_ref"]["pd_media"]
     riscos = [p for p in r["padroes"] if p["tipo"] == "risco"]
     oport = [p for p in r["padroes"] if p["tipo"] == "oportunidade"]
+    neutros = [p for p in r["padroes"] if p["tipo"] == "neutro"]
     passos = pd.DataFrame(r["por_passo"])
     cont = passos.groupby("passo")["pedidos"].sum().to_dict()
     por_motivo = {row["motivo"]: row["pedidos"] for row in r["por_passo"]}
@@ -203,9 +204,12 @@ def gerar(resumo_path: Path = SAIDA / "resumo.json", destino: Path = SAIDA / "pa
         validacao = "<p>Rode <code>python avaliar_historico.py</code> para incluir a validação fora do tempo e o backtest.</p>"
 
     cal = r["modelo"]["calibracao"]
-    cal_tab = tabela(["Faixa", "Contratos", "PD bruta do modelo", "Inadimplência observada (KM)", "PD calibrada (usada na decisão)"],
-                     [[str(int(c["faixa"]) + 1), num(c["n"]), pct(c["pd_bruta_media"]), pct(c["pd_km"]), pct(c["pd_calibrada"])] for c in cal],
-                     {1: "n", 2: "n", 3: "n", 4: "n"})
+    cal_tab = tabela(["Faixa de risco", "Contratos", "PD prevista (fora da amostra)", "Inadimplência observada (KM)"],
+                     [[str(int(c["faixa"]) + 1), num(c["n"]), pct(c["pd_calibrada"]), pct(c["pd_km"])] for c in cal],
+                     {1: "n", 2: "n", 3: "n"})
+    piso = min(c["pd_calibrada"] for c in cal)
+    metade = sorted(cal, key=lambda c: c["pd_calibrada"])[: len(cal) // 2]
+    pd_metade, km_metade = np.mean([c["pd_calibrada"] for c in metade]), np.mean([c["pd_km"] for c in metade])
 
     # ---- dados para a consulta de pedido
     cols = ["id_pedido", "valor_solicitado", "prazo_meses", "renda_declarada", "tipo_vinculo", "score", "restricoes_ativas",
@@ -277,6 +281,7 @@ ul.pads {{ list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 1
 .chip {{ font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; border-radius: 4px; padding: 2px 6px; }}
 .chip.risco {{ color: var(--risk); background: var(--risk-bg); }}
 .chip.oportunidade {{ color: var(--good); background: var(--good-bg); }}
+.chip.neutro {{ color: var(--muted); background: var(--band); }}
 .frase {{ margin: 8px 0; }}
 .bar {{ position: relative; height: 10px; background: var(--band); border-radius: 4px; max-width: 560px; }}
 .bar .fill {{ position: absolute; inset: 0 auto 0 0; background: var(--s1); border-radius: 0 4px 4px 0; }}
@@ -375,6 +380,8 @@ footer.wrap {{ padding-block: 24px 40px; color: var(--muted); font-size: 12.5px;
   <ul class="pads">{bloco_padroes(riscos, media)}</ul>
   <h3>Bons pagadores que a política atual nega</h3>
   <ul class="pads">{bloco_padroes(oport, media)}</ul>
+  <h3>Parece risco, mas não é</h3>
+  <ul class="pads">{bloco_padroes(neutros, media)}</ul>
 
   <h3>Onde a política atual erra, medido com desfecho real</h3>
   <p>Durante seis meses o piloto aprovou clientes que a política atual negaria. Isso permite medir os erros diretamente, sem depender do modelo.</p>
@@ -382,7 +389,9 @@ footer.wrap {{ padding-block: 24px 40px; color: var(--muted); font-size: 12.5px;
 
   <h3>Como a IA chegou a esses padrões</h3>
   <p><b>Varredura automática.</b> Para cada variável, uma árvore de decisão testou todos os cortes e escolheu o que mais separa quem pagou de quem não pagou.
-  Os cortes da política vêm daqui, arredondados.</p>
+  A árvore aponta a região. O corte final da política fica no ponto em que a taxa salta quando se olha faixa por faixa.
+  Exemplo: com 7 consultas ao CPF, a inadimplência é de 26%; com 8, chega a 100%. Por isso o corte é 8, e não o 7 da árvore.
+  Outro caso: renda declarada entre 1,5x e 2x as entradas, sem outros alertas, dá só 7%. Por isso o corte é 2x.</p>
   {varr}
   <p><b>Combinações.</b> Uma árvore de 3 níveis sobre todas as variáveis encontrou estes grupos:</p>
   <ol class="arv">{arv}</ol>
@@ -404,16 +413,20 @@ footer.wrap {{ padding-block: 24px 40px; color: var(--muted); font-size: 12.5px;
       <ul><li>Cheque especial em {P['meses_cheque_max'] + 1} ou mais meses no último ano.</li>
       <li>Saídas acima de {pct(P['saidas_sobre_entradas_max'], 0)} das entradas da conta.</li>
       <li>{P['consultas_90d_max'] + 1} ou mais consultas ao CPF em 90 dias.</li>
-      <li>Renda declarada mais que {num(P['renda_decl_sobre_real_max'])} vezes as entradas reais.</li></ul>
-      <p class="small muted">Nesses grupos, de 82% a 100% dos clientes deixaram de pagar.</p></li>
+      <li>Renda declarada mais que {num(P['renda_decl_sobre_real_max'])} vezes as entradas reais.</li>
+      <li>Pico de entradas: os 3 meses antes do pedido vêm {num((P['tendencia_entradas_max'] - 1) * 100)}% ou mais acima da média dos meses anteriores.</li></ul>
+      <p class="small muted">Nos quatro primeiros grupos, de 82% a 100% dos clientes deixaram de pagar. No pico de entradas, cerca de 30%, quase o dobro do limite em que emprestar deixa de dar lucro.</p></li>
     <li><h4>Calcula o valor máximo que cabe no bolso</h4> <span class="cnt">{num(cont.get(4, 0))} negados</span>
       <ul><li>A parcela pode ser no máximo {pct(P['teto_parcela_sobre_sobra'], 0)} da sobra mensal (entradas menos saídas, média de 12 meses). Acima de 50%, quase todos deram calote.</li>
-      <li>A parcela também fica em no máximo {pct(P['teto_comprometimento'], 0)} da renda declarada, o mesmo limite da política atual.</li>
+      <li>A parcela também fica em no máximo {pct(P['teto_parcela_sobre_entradas'], 0)} das entradas reais da conta. Vale a menor entre a média de 12 meses e a de 3 meses.</li>
+      <li>E em no máximo {pct(P['teto_comprometimento'], 0)} da renda declarada, o mesmo limite da política atual.</li>
       <li>Se nem R$ 500 cabe, nega.</li></ul></li>
     <li><h4>Escolhe o valor pelo risco e pelo retorno</h4> <span class="cnt">{num(cont.get(5, 0))} negados</span>
       <p>O modelo estima a chance de calote para vários valores até o teto. A política escolhe o valor com o maior resultado esperado:</p>
       <div class="formula">resultado esperado = valor × [ (1 − PD) × (15% × (1 − A) + 5% × A) − 60% × PD ]</div>
-      <p class="small">PD é a chance de calote para aquele valor. A é a chance de atrasar entre quem paga: {pct(L['sem_restricao'], 0)} sem restrição e {pct(L['com_restricao'], 0)} com 1 restrição, medidas no histórico.
+      <p class="small">PD é a chance de calote para aquele valor. A é a chance de atrasar entre quem paga, medida no histórico: {pct(L['com_restricao'], 0)} com 1 restrição,
+      {pct(L.get('divida_fora_alta', L['sem_restricao']), 0)} com dívidas em outros bancos acima de 30% da renda e {pct(L['sem_restricao'], 0)} nos demais.
+      Fora desses grupos, o atraso é quase aleatório: um modelo com todas as variáveis acertou pouco (AUC 0,54).
       Se nem o menor valor rende pelo menos {pct(P['margem_min'], 0)} do valor emprestado, nega. Na prática, aprova com PD até cerca de 16%.</p></li>
     <li><h4>Aprova</h4> <span class="cnt">{num(cont.get(6, 0))} aprovados, {num(r['proposta']['reduzidos'])} com valor reduzido</span>
       <p>Aprova o valor escolhido. Quando é menor que o pedido, a parcela ficou grande demais para a renda real do cliente.</p></li>
@@ -428,7 +441,9 @@ footer.wrap {{ padding-block: 24px 40px; color: var(--muted); font-size: 12.5px;
 <section class="wrap" id="comparacao">
   <h2>Comparação com a política atual nos {num(r['csv']['linhas'])} pedidos novos</h2>
   <p>A política atual foi reproduzida exatamente: score acima de 600, renda acima de R$ 2.000 e nenhuma restrição.
-  Quando a parcela passa de 30% da renda declarada, ela reduz o valor em vez de negar, como mostra o histórico.
+  Quando a parcela passa de 30% da renda declarada, ela reduz o valor em vez de negar.
+  A réplica acerta 100% das 8.737 decisões que a política atual tomou no histórico, e o valor aprovado bate até os centavos
+  (teste automático em <span class="mono">tests/test_politica.py</span>).
   O resultado esperado usa o modelo calibrado e as regras do desafio: +15% em dia, +5% com atraso, −60% sem pagamento.</p>
   {decomp}
 </section>
@@ -437,8 +452,10 @@ footer.wrap {{ padding-block: 24px 40px; color: var(--muted); font-size: 12.5px;
   <h2>Validação</h2>
   {validacao}
   <h3>Calibração: a chance prevista bate com a observada?</h3>
-  <p>A PD bruta do modelo foi ajustada à inadimplência observada (Kaplan-Meier) em 20 faixas, sempre fora da amostra.
-  Abaixo de cerca de 11%, o modelo não consegue separar os clientes e assume 7,7% para todos. Isso evita reduzir valores por ruído.</p>
+  <p>A decisão usa a média de 5 modelos treinados com sementes diferentes, para que nenhuma decisão dependa do acaso.
+  Cada modelo é calibrado fora da amostra: a chance prevista é ajustada para bater com a inadimplência observada (Kaplan-Meier) em 20 faixas.
+  Na metade mais segura da carteira, o modelo não consegue separar os clientes: prevê {pct(pd_metade)} e a observada é {pct(km_metade)}.
+  Por isso todos ali recebem praticamente a mesma chance, a partir de {pct(piso)}, e o valor deles não é reduzido por ruído.</p>
   <details><summary>Ver tabela de calibração</summary>{cal_tab}</details>
 </section>
 
@@ -472,6 +489,8 @@ footer.wrap {{ padding-block: 24px 40px; color: var(--muted); font-size: 12.5px;
   <p>Modelo de sobrevivência em tempo discreto: uma linha por parcela já observável, até o calote. Foram {num(r['modelo']['linhas_treino'])} linhas e {num(r['modelo']['eventos'])} calotes.
   O modelo estima a chance de o calote começar em cada parcela. A chance no contrato inteiro é 1 − ∏(1 − h).
   É um LightGBM raso com restrição de monotonicidade: o risco só pode subir quando a parcela sobe em relação à renda.
+  A decisão usa a média de 5 modelos com sementes diferentes; com um modelo só, de 10 a 60 decisões mudavam entre sementes.
+  Quando dois valores dão resultado esperado a até {pct(P['tolerancia_ev'], 0)} um do outro, a política fica com o maior.
   Gênero, CEP, estado civil e idade ficam fora da decisão.</p>
 </section>
 

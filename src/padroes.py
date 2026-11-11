@@ -47,7 +47,7 @@ def fmt(v, kind):
     if kind == "brl":
         return f"R$ {v:,.0f}".replace(",", ".")
     if kind == "x":
-        return f"{v:.2f}x"
+        return f"{v:.2f}x".replace(".", ",")
     return f"{v:.0f}"
 
 
@@ -129,9 +129,10 @@ def arvore_combinacoes(h: pd.DataFrame, profundidade: int = 3, min_folha: int = 
     return pd.DataFrame(linhas).sort_values("pd", ascending=False).reset_index(drop=True)
 
 
-def _alerta(df: pd.DataFrame) -> pd.Series:
-    return ((df["mov_meses_cheque"] >= 2) | (df["mov_saidas_sobre_entradas"] > 0.8) |
-            (df["consultas_90_dias"] >= 8) | (df["renda_decl_sobre_real"] > 2))
+def _alerta(df: pd.DataFrame, incluir_pico: bool = True) -> pd.Series:
+    a = ((df["mov_meses_cheque"] >= 2) | (df["mov_saidas_sobre_entradas"] > 0.8) |
+         (df["consultas_90_dias"] >= 8) | (df["renda_decl_sobre_real"] > 2))
+    return a | (df["mov_tendencia_entradas"] > 1.35) if incluir_pico else a
 
 
 def _reduzido_pela_atual(h: pd.DataFrame) -> pd.Series:
@@ -164,6 +165,9 @@ SPECS = [
     ("risco", "Renda declarada inflada", "com renda declarada maior que o dobro das entradas reais na conta",
      lambda h, a: h["renda_decl_sobre_real"] > 2,
      "A movimentação da conta desmente a renda informada no cadastro."),
+    ("risco", "Pico de entradas antes do pedido", "sem outros sinais de alerta, mas com entradas nos 3 meses antes do pedido 35% ou mais acima da média dos meses anteriores",
+     lambda h, a: (h["mov_tendencia_entradas"] > 1.35) & ~_alerta(h, incluir_pico=False),
+     "A conta \"engorda\" pouco antes do pedido: a movimentação recente não representa a renda de verdade. Entre 1,2x e 1,35x o risco é normal."),
     ("risco", "Entradas instáveis", "sem sinais de alerta, mas com entradas instáveis (variação mensal acima de 30%)",
      lambda h, a: (h["mov_entradas_cv"] > 0.3) & ~a,
      "Renda irregular aumenta o risco mesmo sem outros sinais. Entra no modelo, não é corte."),
@@ -182,6 +186,12 @@ SPECS = [
     ("oportunidade", "Aposentados", "aposentados sem sinais de alerta",
      lambda h, a: (h["tipo_vinculo"] == "aposentado") & ~a,
      "Renda estável: o grupo de menor risco da base."),
+    ("neutro", "Conta aberta há 3 meses ou menos", "sem sinais de alerta e com conta na Fortuna aberta há 3 meses ou menos",
+     lambda h, a: (h["meses_conta"] <= 3) & ~a & (h["parcela_sobre_sobra"] <= 0.5),
+     "Parece risco, mas não é. Na base inteira o grupo tem calote alto, mas por causa dos sinais de alerta que muitos deles têm. Sem os sinais, paga como a média. Por isso não é corte."),
+    ("neutro", "Score acima de 800", "sem sinais de alerta e com score acima de 800",
+     lambda h, a: (h["score"] > 800) & ~a & (h["parcela_sobre_sobra"] <= 0.5),
+     "Score alto não protege. Esse grupo paga igual ao de score 600 a 800, então o score pesa pouco na decisão."),
 ]
 
 
@@ -215,11 +225,10 @@ def padroes_negocio(h: pd.DataFrame, novos: pd.DataFrame | None = None) -> tuple
 def onde_a_politica_atual_erra(h: pd.DataFrame) -> list[dict]:
     """Medição direta com desfechos reais: piloto aprovou gente que a política atual negaria."""
     elegivel_atual = (h["score"] > 600) & (h["renda_declarada"] > 2000) & (h["restricoes_ativas"] == 0)
-    alerta = ((h["mov_meses_cheque"] >= 2) | (h["mov_saidas_sobre_entradas"] > 0.8) |
-              (h["consultas_90_dias"] >= 8) | (h["renda_decl_sobre_real"] > 2) | (h["parcela_sobre_sobra"] > 0.5))
+    alerta = _alerta(h) | (h["parcela_sobre_sobra"] > 0.5)
     piloto_fora = (h["politica_aplicada"] == "piloto") & ~elegivel_atual
     grupos = [
-        ("Aprovados pela política atual (dentro das regras)", elegivel_atual),
+        ("Clientes que a política atual aprovaria (aprovados pela atual ou pelo piloto, dentro das regras atuais)", elegivel_atual),
         ("…desses, com sinal de alerta ou parcela > 50% da sobra (a atual aprova, a proposta nega)", elegivel_atual & alerta),
         ("…desses, sem sinal de alerta", elegivel_atual & ~alerta),
         ("Aprovados no piloto que a política atual negaria", piloto_fora),

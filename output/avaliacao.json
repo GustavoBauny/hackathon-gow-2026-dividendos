@@ -1,55 +1,55 @@
 {
   "fora_do_tempo": {
     "treino_ate": "2025-10-01",
-    "auc": 0.879,
+    "auc": 0.88,
     "por_trimestre": [
       {
         "trimestre": "2024Q4",
         "contratos": 717,
         "calotes_observados": 110,
-        "calotes_previstos": 110.00452956804568,
+        "calotes_previstos": 110.10019499700196,
         "no_treino": true
       },
       {
         "trimestre": "2025Q1",
         "contratos": 708,
         "calotes_observados": 111,
-        "calotes_previstos": 98.59582916364069,
+        "calotes_previstos": 98.79434977580127,
         "no_treino": true
       },
       {
         "trimestre": "2025Q2",
         "contratos": 704,
         "calotes_observados": 98,
-        "calotes_previstos": 102.04346471795375,
+        "calotes_previstos": 101.9304071202728,
         "no_treino": true
       },
       {
         "trimestre": "2025Q3",
         "contratos": 715,
         "calotes_observados": 78,
-        "calotes_previstos": 87.6098042031822,
+        "calotes_previstos": 87.4423383038297,
         "no_treino": true
       },
       {
         "trimestre": "2025Q4",
         "contratos": 914,
         "calotes_observados": 130,
-        "calotes_previstos": 118.47595548253547,
+        "calotes_previstos": 119.28337012845267,
         "no_treino": false
       },
       {
         "trimestre": "2026Q1",
         "contratos": 906,
         "calotes_observados": 81,
-        "calotes_previstos": 77.4968383561116,
+        "calotes_previstos": 78.66841825222305,
         "no_treino": false
       },
       {
         "trimestre": "2026Q2",
         "contratos": 676,
         "calotes_observados": 18,
-        "calotes_previstos": 18.286811693005305,
+        "calotes_previstos": 18.295264199583556,
         "no_treino": false
       },
       {
@@ -66,45 +66,45 @@
       "cfg": "atual",
       "aprovados": 5606,
       "valor": 45332129.25,
-      "resultado": -227868.80633439688,
+      "resultado": -209082.87306384408,
       "ganho_vs_atual": 0.0
     },
     {
       "cfg": "margem 0%",
-      "aprovados": 7962,
-      "valor": 55229626.35,
-      "resultado": 3244838.858241788,
-      "ganho_vs_atual": 3472707.664576185
+      "aprovados": 7860,
+      "valor": 55473068.88,
+      "resultado": 3266598.60211951,
+      "ganho_vs_atual": 3475681.475183354
     },
     {
       "cfg": "margem 3%",
-      "aprovados": 7300,
-      "valor": 51150626.35,
-      "resultado": 3188820.7298844964,
-      "ganho_vs_atual": 3416689.5362188932
+      "aprovados": 7189,
+      "valor": 51136268.88,
+      "resultado": 3186299.4271449153,
+      "ganho_vs_atual": 3395382.3002087595
     },
     {
       "cfg": "proposta",
-      "aprovados": 7674,
-      "valor": 53552826.35,
-      "resultado": 3237635.7894496955,
-      "ganho_vs_atual": 3465504.5957840923
+      "aprovados": 7726,
+      "valor": 54810468.88,
+      "resultado": 3262830.0418884717,
+      "ganho_vs_atual": 3471912.914952316
     },
     {
       "cfg": "teto 30% da sobra",
-      "aprovados": 7673,
-      "valor": 53268191.14,
-      "resultado": 3221853.6579818926,
-      "ganho_vs_atual": 3449722.4643162894
+      "aprovados": 7727,
+      "valor": 54326158.71,
+      "resultado": 3244157.516468232,
+      "ganho_vs_atual": 3453240.389532076
     },
     {
       "cfg": "teto 50% da sobra",
-      "aprovados": 7674,
-      "valor": 53568500.0,
-      "resultado": 3237701.1243905425,
-      "ganho_vs_atual": 3465569.9307249393
+      "aprovados": 7726,
+      "valor": 54843628.81,
+      "resultado": 3264535.243911013,
+      "ganho_vs_atual": 3473618.116974857
     }
   ],
   "n_pedidos": 10000,
-  "duracao_s": 144.1
+  "duracao_s": 312.9
 }

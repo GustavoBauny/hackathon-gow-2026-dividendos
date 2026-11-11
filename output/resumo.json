@@ -1,66 +1,66 @@
 {
-  "gerado_em": "2026-11-11 09:00:44",
-  "duracao_s": 18.1,
+  "gerado_em": "2026-11-11 09:23:11",
+  "duracao_s": 73.5,
   "csv": {
     "arquivo": "dividendos_final.csv",
     "linhas": 2000,
-    "aprovados": 1533,
-    "negados": 467,
-    "valor_total_aprovado": 10308820.07
+    "aprovados": 1510,
+    "negados": 490,
+    "valor_total_aprovado": 10159135.23
   },
-  "diferencas_vs_atual": 574,
+  "diferencas_vs_atual": 589,
   "atual": {
     "aprovados": 1145,
     "valor": 8856446.13,
-    "ev_modelo": -14018.829991252518
+    "ev_modelo": -12706.515984793776
   },
   "proposta": {
-    "aprovados": 1533,
-    "valor": 10308820.07,
-    "ev_modelo": 652268.110862952,
-    "reduzidos": 254
+    "aprovados": 1510,
+    "valor": 10159135.23,
+    "ev_modelo": 649396.9316697275,
+    "reduzidos": 226
   },
-  "ganho_estimado": 666286.9408542045,
+  "ganho_estimado": 662103.4476545213,
   "decomposicao": [
     {
       "grupo": "A atual aprova, a proposta nega",
-      "pedidos": 93,
-      "valor_atual": 806671.82,
+      "pedidos": 112,
+      "valor_atual": 976752.71,
       "valor_proposta": 0.0,
-      "ev_atual": -148100.5089104841,
+      "ev_atual": -164803.03014952777,
       "ev_proposta": 0.0,
-      "ganho": 148100.5089104841
+      "ganho": 164803.03014952777
     },
     {
       "grupo": "A atual nega, a proposta aprova",
-      "pedidos": 481,
+      "pedidos": 477,
       "valor_atual": 0.0,
-      "valor_proposta": 2779167.27,
+      "valor_proposta": 2747603.7,
       "ev_atual": 0.0,
-      "ev_proposta": 154144.27800897512,
-      "ganho": 154144.27800897512
+      "ev_proposta": 157161.09500846948,
+      "ganho": 157161.09500846948
     },
     {
       "grupo": "As duas aprovam o mesmo valor (ou maior)",
-      "pedidos": 906,
-      "valor_atual": 6340200.0,
-      "valor_proposta": 6340200.0,
-      "ev_atual": 423267.01602390665,
-      "ev_proposta": 423267.01602390665,
+      "pedidos": 904,
+      "valor_atual": 6384600.0,
+      "valor_proposta": 6384600.0,
+      "ev_atual": 430018.0713734045,
+      "ev_proposta": 430018.0713734045,
       "ganho": 0.0
     },
     {
       "grupo": "As duas aprovam, a proposta reduz o valor",
-      "pedidos": 146,
-      "valor_atual": 1709574.31,
-      "valor_proposta": 1189452.8,
-      "ev_atual": -289185.33710467507,
-      "ev_proposta": 74856.81683007025,
-      "ganho": 364042.15393474535
+      "pedidos": 129,
+      "valor_atual": 1495093.42,
+      "valor_proposta": 1026931.53,
+      "ev_atual": -277921.55720867054,
+      "ev_proposta": 62217.76528785358,
+      "ganho": 340139.32249652414
     },
     {
       "grupo": "As duas negam",
-      "pedidos": 374,
+      "pedidos": 378,
       "valor_atual": 0.0,
       "valor_proposta": 0.0,
       "ev_atual": 0.0,
@@ -96,6 +96,12 @@
     {
       "passo": 3,
       "passo_nome": "Sinal de alerta",
+      "motivo": "pico de entradas nos 3 meses antes do pedido (35%+ acima da média anterior)",
+      "pedidos": 41
+    },
+    {
+      "passo": 3,
+      "passo_nome": "Sinal de alerta",
       "motivo": "renda declarada mais que o dobro das entradas reais",
       "pedidos": 40
     },
@@ -109,19 +115,19 @@
       "passo": 5,
       "passo_nome": "Risco x retorno (modelo)",
       "motivo": "risco de calote alto mesmo com valor reduzido",
-      "pedidos": 138
+      "pedidos": 120
     },
     {
       "passo": 6,
       "passo_nome": "Aprovado",
       "motivo": "aprovado com valor reduzido",
-      "pedidos": 254
+      "pedidos": 226
     },
     {
       "passo": 6,
       "passo_nome": "Aprovado",
       "motivo": "aprovado no valor pedido",
-      "pedidos": 1279
+      "pedidos": 1284
     }
   ],
   "bureau": {
@@ -173,14 +179,18 @@
     "saidas_sobre_entradas_max": 0.8,
     "consultas_90d_max": 7,
     "renda_decl_sobre_real_max": 2.0,
+    "tendencia_entradas_max": 1.35,
     "teto_parcela_sobre_sobra": 0.4,
     "teto_comprometimento": 0.3,
+    "teto_parcela_sobre_entradas": 0.3,
     "margem_min": 0.01,
+    "tolerancia_ev": 0.02,
     "pontos_grade": 24
   },
   "taxa_atraso": {
-    "sem_restricao": 0.2304,
-    "com_restricao": 0.5333
+    "com_restricao": 0.5333,
+    "divida_fora_alta": 0.3886,
+    "sem_restricao": 0.2177
   },
   "modelo": {
     "linhas_treino": 49186,
@@ -199,6 +209,7 @@
       "mov_dias_cheque_total",
       "mov_saidas_sobre_entradas",
       "renda_decl_sobre_real",
+      "mov_tendencia_entradas",
       "vinc_aposentado",
       "vinc_assalariado",
       "vinc_autonomo",
@@ -210,169 +221,100 @@
       "t_rel"
     ],
     "importancia": {
-      "parcela_sobre_sobra": 10725.8,
-      "t_rel": 2143.3,
-      "prazo_meses": 1818.4,
-      "mov_saidas_sobre_entradas": 1272.9,
-      "comprometimento_real": 1113.6,
-      "mov_entradas_cv": 859.0,
-      "comprometimento": 698.1,
-      "renda_decl_sobre_real": 546.4,
-      "mov_saldo_medio_med": 539.7,
-      "divida_outras_sobre_renda": 423.2,
-      "meses_historico_bureau": 307.9,
-      "comprometimento_total": 246.6,
-      "renda_declarada": 236.4,
-      "score": 176.9,
-      "consultas_90_dias": 69.5,
-      "mov_dias_cheque_total": 26.8,
-      "vinc_empresario": 19.7,
-      "mov_meses_cheque": 12.6,
-      "vinc_aposentado": 4.2,
-      "vinc_assalariado": 3.7,
-      "restricoes_ativas": 0.0,
-      "vinc_autonomo": 0.0
+      "parcela_sobre_sobra": 10463.1,
+      "t_rel": 2293.3,
+      "prazo_meses": 1779.9,
+      "mov_saidas_sobre_entradas": 1361.9,
+      "comprometimento_real": 1156.0,
+      "comprometimento": 810.3,
+      "mov_entradas_cv": 758.0,
+      "renda_decl_sobre_real": 486.3,
+      "mov_saldo_medio_med": 437.6,
+      "divida_outras_sobre_renda": 435.3,
+      "mov_tendencia_entradas": 382.7,
+      "comprometimento_total": 277.1,
+      "meses_historico_bureau": 271.4,
+      "score": 186.2,
+      "renda_declarada": 165.0,
+      "mov_dias_cheque_total": 66.5,
+      "consultas_90_dias": 65.9,
+      "mov_meses_cheque": 40.1,
+      "vinc_empresario": 19.2,
+      "vinc_aposentado": 8.8,
+      "vinc_assalariado": 2.3,
+      "restricoes_ativas": 2.1,
+      "vinc_autonomo": 1.3
     },
     "calibracao": [
       {
         "faixa": 0,
-        "pd_bruta_media": 0.0617,
-        "pd_km": 0.1063,
-        "n": 302.0,
-        "pd_calibrada": 0.0773
+        "pd_bruta_media": 0.0793,
+        "pd_km": 0.079,
+        "n": 3318.0,
+        "pd_calibrada": 0.0793
       },
       {
         "faixa": 1,
-        "pd_bruta_media": 0.0703,
-        "pd_km": 0.1083,
+        "pd_bruta_media": 0.0825,
+        "pd_km": 0.0913,
         "n": 302.0,
-        "pd_calibrada": 0.0773
+        "pd_calibrada": 0.0825
       },
       {
         "faixa": 2,
-        "pd_bruta_media": 0.0747,
-        "pd_km": 0.0654,
+        "pd_bruta_media": 0.0849,
+        "pd_km": 0.0865,
         "n": 301.0,
-        "pd_calibrada": 0.0773
+        "pd_calibrada": 0.0849
       },
       {
         "faixa": 3,
-        "pd_bruta_media": 0.0781,
-        "pd_km": 0.0826,
+        "pd_bruta_media": 0.0906,
+        "pd_km": 0.0678,
         "n": 302.0,
-        "pd_calibrada": 0.0773
+        "pd_calibrada": 0.0906
       },
       {
         "faixa": 4,
-        "pd_bruta_media": 0.0812,
-        "pd_km": 0.0609,
+        "pd_bruta_media": 0.1059,
+        "pd_km": 0.1049,
         "n": 302.0,
-        "pd_calibrada": 0.0773
+        "pd_calibrada": 0.1059
       },
       {
         "faixa": 5,
-        "pd_bruta_media": 0.084,
-        "pd_km": 0.0723,
+        "pd_bruta_media": 0.137,
+        "pd_km": 0.1219,
         "n": 301.0,
-        "pd_calibrada": 0.0773
+        "pd_calibrada": 0.137
       },
       {
         "faixa": 6,
-        "pd_bruta_media": 0.0868,
-        "pd_km": 0.0762,
+        "pd_bruta_media": 0.1727,
+        "pd_km": 0.2172,
         "n": 302.0,
-        "pd_calibrada": 0.0773
+        "pd_calibrada": 0.1727
       },
       {
         "faixa": 7,
-        "pd_bruta_media": 0.0899,
-        "pd_km": 0.0461,
+        "pd_bruta_media": 0.22,
+        "pd_km": 0.2048,
         "n": 301.0,
-        "pd_calibrada": 0.0773
+        "pd_calibrada": 0.22
       },
       {
         "faixa": 8,
-        "pd_bruta_media": 0.0933,
-        "pd_km": 0.1058,
+        "pd_bruta_media": 0.4667,
+        "pd_km": 0.4863,
         "n": 302.0,
-        "pd_calibrada": 0.0774
+        "pd_calibrada": 0.4667
       },
       {
         "faixa": 9,
-        "pd_bruta_media": 0.0969,
-        "pd_km": 0.0626,
+        "pd_bruta_media": 0.9674,
+        "pd_km": 0.9791,
         "n": 302.0,
-        "pd_calibrada": 0.0774
-      },
-      {
-        "faixa": 10,
-        "pd_bruta_media": 0.1014,
-        "pd_km": 0.0639,
-        "n": 301.0,
-        "pd_calibrada": 0.0774
-      },
-      {
-        "faixa": 11,
-        "pd_bruta_media": 0.1074,
-        "pd_km": 0.093,
-        "n": 302.0,
-        "pd_calibrada": 0.0774
-      },
-      {
-        "faixa": 12,
-        "pd_bruta_media": 0.1143,
-        "pd_km": 0.0615,
-        "n": 301.0,
-        "pd_calibrada": 0.0774
-      },
-      {
-        "faixa": 13,
-        "pd_bruta_media": 0.1237,
-        "pd_km": 0.1374,
-        "n": 302.0,
-        "pd_calibrada": 0.1138
-      },
-      {
-        "faixa": 14,
-        "pd_bruta_media": 0.1371,
-        "pd_km": 0.1143,
-        "n": 302.0,
-        "pd_calibrada": 0.1138
-      },
-      {
-        "faixa": 15,
-        "pd_bruta_media": 0.1576,
-        "pd_km": 0.0896,
-        "n": 301.0,
-        "pd_calibrada": 0.1138
-      },
-      {
-        "faixa": 16,
-        "pd_bruta_media": 0.1844,
-        "pd_km": 0.2021,
-        "n": 302.0,
-        "pd_calibrada": 0.2021
-      },
-      {
-        "faixa": 17,
-        "pd_bruta_media": 0.2382,
-        "pd_km": 0.2118,
-        "n": 301.0,
-        "pd_calibrada": 0.2118
-      },
-      {
-        "faixa": 18,
-        "pd_bruta_media": 0.4549,
-        "pd_km": 0.4798,
-        "n": 302.0,
-        "pd_calibrada": 0.4798
-      },
-      {
-        "faixa": 19,
-        "pd_bruta_media": 0.9441,
-        "pd_km": 0.9774,
-        "n": 302.0,
-        "pd_calibrada": 0.9774
+        "pd_calibrada": 0.9674
       }
     ]
   },
@@ -470,39 +412,51 @@
     },
     {
       "tipo": "risco",
+      "titulo": "Pico de entradas antes do pedido",
+      "sujeito": "sem outros sinais de alerta, mas com entradas nos 3 meses antes do pedido 35% ou mais acima da média dos meses anteriores",
+      "pd": 0.3339074888969483,
+      "n": 137,
+      "pd_media": 0.16653163037656937,
+      "lift": 2.0050694762424444,
+      "leitura": "A conta \"engorda\" pouco antes do pedido: a movimentação recente não representa a renda de verdade. Entre 1,2x e 1,35x o risco é normal.",
+      "taxa_atraso": 0.14634146341463414,
+      "n_novos": 49
+    },
+    {
+      "tipo": "risco",
       "titulo": "Entradas instáveis",
       "sujeito": "sem sinais de alerta, mas com entradas instáveis (variação mensal acima de 30%)",
-      "pd": 0.22186025848714197,
-      "n": 720,
+      "pd": 0.19788941889322165,
+      "n": 588,
       "pd_media": 0.16653163037656937,
-      "lift": 1.3322409561802813,
+      "lift": 1.1882992945288804,
       "leitura": "Renda irregular aumenta o risco mesmo sem outros sinais. Entra no modelo, não é corte.",
-      "taxa_atraso": 0.21678321678321677,
-      "n_novos": 285
+      "taxa_atraso": 0.22857142857142856,
+      "n_novos": 239
     },
     {
       "tipo": "risco",
       "titulo": "Dívidas fora acima de 30% da renda",
       "sujeito": "sem sinais de alerta, mas com dívidas em outros bancos acima de 30% da renda",
-      "pd": 0.2091199775578022,
-      "n": 486,
+      "pd": 0.2067317129617825,
+      "n": 477,
       "pd_media": 0.16653163037656937,
-      "lift": 1.2557372859734215,
+      "lift": 1.2413960788969083,
       "leitura": "Comprometimento já alto fora da Fortuna. Entra no modelo, não é corte.",
       "taxa_atraso": 0.3979591836734694,
-      "n_novos": 182
+      "n_novos": 174
     },
     {
       "tipo": "oportunidade",
       "titulo": "Score 450 a 600 sem alertas",
       "sujeito": "com score entre 450 e 600 e sem sinais de alerta",
-      "pd": 0.1344547105741135,
-      "n": 243,
+      "pd": 0.1284605558398616,
+      "n": 240,
       "pd_media": 0.16653163037656937,
-      "lift": 0.8073824190039935,
+      "lift": 0.7713883275470275,
       "leitura": "A política atual nega todos. Score baixo, sozinho, quase não prevê calote nesta base.",
       "taxa_atraso": 0.26153846153846155,
-      "n_novos": 372
+      "n_novos": 358
     },
     {
       "tipo": "oportunidade",
@@ -514,19 +468,19 @@
       "lift": 0.7097587325860631,
       "leitura": "A política atual nega todos. Com parcela proporcional à renda, pagam como a média.",
       "taxa_atraso": 0.23529411764705882,
-      "n_novos": 108
+      "n_novos": 105
     },
     {
       "tipo": "oportunidade",
       "titulo": "1 restrição sem alertas",
       "sujeito": "com 1 restrição ativa e sem sinais de alerta",
-      "pd": 0.05287351891024539,
-      "n": 79,
+      "pd": 0.028059701492537337,
+      "n": 75,
       "pd_media": 0.16653163037656937,
-      "lift": 0.31749835626232226,
+      "lift": 0.1684947263717252,
       "leitura": "A política atual nega todos. Pagam, mas atrasam mais: cerca de metade tem alguma parcela em atraso.",
-      "taxa_atraso": 0.46153846153846156,
-      "n_novos": 121
+      "taxa_atraso": 0.4583333333333333,
+      "n_novos": 114
     },
     {
       "tipo": "oportunidade",
@@ -539,13 +493,37 @@
       "leitura": "Renda estável: o grupo de menor risco da base.",
       "taxa_atraso": 0.2467948717948718,
       "n_novos": 178
+    },
+    {
+      "tipo": "neutro",
+      "titulo": "Conta aberta há 3 meses ou menos",
+      "sujeito": "sem sinais de alerta e com conta na Fortuna aberta há 3 meses ou menos",
+      "pd": 0.09486220072134843,
+      "n": 158,
+      "pd_media": 0.16653163037656937,
+      "lift": 0.56963473249401,
+      "leitura": "Parece risco, mas não é. Na base inteira o grupo tem calote alto, mas por causa dos sinais de alerta que muitos deles têm. Sem os sinais, paga como a média. Por isso não é corte.",
+      "taxa_atraso": 0.2777777777777778,
+      "n_novos": 44
+    },
+    {
+      "tipo": "neutro",
+      "titulo": "Score acima de 800",
+      "sujeito": "sem sinais de alerta e com score acima de 800",
+      "pd": 0.10212072125437976,
+      "n": 2101,
+      "pd_media": 0.16653163037656937,
+      "lift": 0.613221170197274,
+      "leitura": "Score alto não protege. Esse grupo paga igual ao de score 600 a 800, então o score pesa pouco na decisão.",
+      "taxa_atraso": 0.2209889001009082,
+      "n_novos": 499
     }
   ],
   "padroes_ref": {
     "pd_media": 0.16653163037656937,
     "n": 6033,
-    "pd_sem_alerta": 0.10551442809161793,
-    "n_sem_alerta": 5619
+    "pd_sem_alerta": 0.10171726082334731,
+    "n_sem_alerta": 5491
   },
   "varredura": [
     {
@@ -617,8 +595,8 @@
       "variavel": "renda_decl_sobre_real",
       "rotulo": "renda declarada ÷ entradas reais",
       "corte": 1.4985151886940002,
-      "corte_fmt": "1.50x",
-      "condicao": "> 1.50x",
+      "corte_fmt": "1,50x",
+      "condicao": "> 1,50x",
       "lado_risco": ">",
       "pd_grupo_risco": 0.6467798639073893,
       "n_grupo_risco": 75,
@@ -669,8 +647,8 @@
       "variavel": "mov_tendencia_entradas",
       "rotulo": "entradas dos últimos 3 meses ÷ meses anteriores",
       "corte": 1.353278934955597,
-      "corte_fmt": "1.35x",
-      "condicao": "> 1.35x",
+      "corte_fmt": "1,35x",
+      "condicao": "> 1,35x",
       "lado_risco": ">",
       "pd_grupo_risco": 0.36284084704649777,
       "n_grupo_risco": 144,
@@ -844,7 +822,7 @@
       "n": 98
     },
     {
-      "regra": "parcela ÷ sobra mensal (entradas − saídas) ≤ 50% E parcela ÷ renda declarada ≤ 29% E renda declarada ÷ entradas reais > 1.34x",
+      "regra": "parcela ÷ sobra mensal (entradas − saídas) ≤ 50% E parcela ÷ renda declarada ≤ 29% E renda declarada ÷ entradas reais > 1,34x",
       "pd": 0.3450493360239464,
       "n": 122
     },
@@ -854,29 +832,29 @@
       "n": 111
     },
     {
-      "regra": "parcela ÷ sobra mensal (entradas − saídas) ≤ 50% E parcela ÷ renda declarada ≤ 29% E renda declarada ÷ entradas reais ≤ 1.34x",
+      "regra": "parcela ÷ sobra mensal (entradas − saídas) ≤ 50% E parcela ÷ renda declarada ≤ 29% E renda declarada ÷ entradas reais ≤ 1,34x",
       "pd": 0.09316168187556095,
       "n": 5354
     }
   ],
   "onde_atual_erra": [
     {
-      "grupo": "Aprovados pela política atual (dentro das regras)",
+      "grupo": "Clientes que a política atual aprovaria (aprovados pela atual ou pelo piloto, dentro das regras atuais)",
       "pd": 0.15837116711589128,
       "n": 5606,
       "valor_total": 45426001.94
     },
     {
       "grupo": "…desses, com sinal de alerta ou parcela > 50% da sobra (a atual aprova, a proposta nega)",
-      "pd": 0.9035681596629659,
-      "n": 337,
-      "valor_total": 3728489.5
+      "pd": 0.7690556462909806,
+      "n": 459,
+      "valor_total": 4751608.65
     },
     {
       "grupo": "…desses, sem sinal de alerta",
-      "pd": 0.10511050487384099,
-      "n": 5269,
-      "valor_total": 41697512.440000005
+      "pd": 0.10130205001078219,
+      "n": 5147,
+      "valor_total": 40674393.29000001
     },
     {
       "grupo": "Aprovados no piloto que a política atual negaria",
@@ -886,15 +864,15 @@
     },
     {
       "grupo": "…desses, sem sinal de alerta (a atual nega, a proposta aprova)",
-      "pd": 0.11624635584945242,
-      "n": 350,
-      "valor_total": 2212253.4400000004
+      "pd": 0.11363716816927727,
+      "n": 344,
+      "valor_total": 2162453.44
     },
     {
       "grupo": "…desses, com sinal de alerta",
-      "pd": 0.9593945436418019,
-      "n": 77,
-      "valor_total": 706067.2599999999
+      "pd": 0.9484524509681136,
+      "n": 83,
+      "valor_total": 755867.2599999999
     }
   ]
 }

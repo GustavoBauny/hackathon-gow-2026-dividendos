@@ -25,7 +25,7 @@ sys.path.insert(0, str(RAIZ / "src"))
 from db import carregar  # noqa: E402
 from features import montar_base  # noqa: E402
 from target import construir_alvo  # noqa: E402
-from modelo import ModeloCalote, km_relativo  # noqa: E402
+from modelo import ModeloEnsemble, km_relativo  # noqa: E402
 from politica import (Parametros, politica_atual, politica_nova, resultado_esperado,  # noqa: E402
                       taxa_atraso_por_segmento, parametros_dict, PASSOS)
 from bureau_client import BureauClient, TokenInvalido  # noqa: E402
@@ -115,8 +115,8 @@ def main():
     log.info("histórico aprovado: %d contratos, %d calotes observados", len(hist), int(hist["calote_obs"].sum()))
 
     # 2. modelo
-    log.info("treinando modelo de calote (hazard por parcela) + calibração fora da amostra")
-    modelo = ModeloCalote().fit(hist, d["parcelas"]).calibrar(hist, d["parcelas"])
+    log.info("treinando ensemble de 5 modelos de calote (hazard por parcela), cada um calibrado fora da amostra")
+    modelo = ModeloEnsemble().fit(hist, d["parcelas"])
     taxa_atraso = taxa_atraso_por_segmento(hist)
     with open(DADOS / "modelo.pkl", "wb") as f:
         pickle.dump({"modelo": modelo, "taxa_atraso": taxa_atraso}, f)

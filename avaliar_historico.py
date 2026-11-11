@@ -24,7 +24,7 @@ sys.path.insert(0, str(RAIZ / "src"))
 from db import carregar  # noqa: E402
 from features import montar_base  # noqa: E402
 from target import construir_alvo  # noqa: E402
-from modelo import ModeloCalote  # noqa: E402
+from modelo import ModeloCalote, ModeloEnsemble  # noqa: E402
 from politica import Parametros, politica_atual, politica_nova, resultado_esperado, taxa_atraso_por_segmento  # noqa: E402
 
 log = logging.getLogger("avaliacao")
@@ -61,7 +61,7 @@ def main(n_folds: int = 5):
     res = []
     for f in range(n_folds):
         tr = hist[~hist["id_pedido"].isin(hb["id_pedido"][fold == f])]
-        mf = ModeloCalote().fit(tr, d["parcelas"]).calibrar(tr, d["parcelas"])
+        mf = ModeloEnsemble(seeds=(11, 22, 33)).fit(tr, d["parcelas"])
         te = hb[fold == f].reset_index(drop=True)
         for nome, p in configs.items():
             dn = politica_nova(te, mf, L, p)
