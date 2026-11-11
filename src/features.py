@@ -5,6 +5,18 @@ import pandas as pd
 TAXA = 0.03
 VALOR_MIN, VALOR_MAX = 500.0, 30000.0
 
+# Limiares dos padrões descobertos no histórico (ver painel, aba 1). Usados pelo modelo de risco e
+# como valor inicial das regras da política (o analista pode ajustar as regras no painel).
+LIMIARES = {
+    "parcela_sobre_sobra": 0.50,    # acima: calote certo (depende do valor APROVADO)
+    "saidas_sobre_entradas": 0.90,  # perfil "gasta tudo o que entra": calote certo
+    "renda_inflada": 2.0,           # renda declarada / entradas reais
+    "pedido_sobre_entradas": 6.0,   # valor pedido / entradas mensais
+    "outras_sobre_entradas": 0.35,  # parcelas em outras instituições / entradas mensais
+    "cv_entradas": 0.35,            # variação das entradas mês a mês
+    "bureau_curto_meses": 36,       # meses de histórico no bureau
+}
+
 
 def parcela_price(valor, prazo):
     """Parcela pela tabela Price (3% a.m.)."""
@@ -74,6 +86,12 @@ def montar_base(d: dict[str, pd.DataFrame], bureau_novos: pd.DataFrame | None = 
     base["renda_decl_sobre_real"] = base["renda_declarada"] / base["mov_entradas_med"].replace(0, np.nan)
     base["divida_outras_sobre_renda"] = base["parcelas_outras_instituicoes"] / base["renda_declarada"]
     base["uf_regiao_cep"] = base["cep"].str[0]
+    # razões sobre o que de fato entra na conta (padrões descobertos usam as entradas reais, não a renda declarada)
+    entradas = base["mov_entradas_med"].replace(0, np.nan)
+    base["sobra"] = base["mov_entradas_med"] - base["mov_saidas_med"]
+    base["pedido_sobre_entradas"] = base["valor_solicitado"] / entradas
+    base["outras_sobre_entradas"] = base["parcelas_outras_instituicoes"] / entradas
+    base["aposentado"] = (base["tipo_vinculo"] == "aposentado").astype(int)
     return base
 
 

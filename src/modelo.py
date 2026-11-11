@@ -102,6 +102,15 @@ class ModeloCalote:
             log_sobrev[ativos] += np.log1p(-np.clip(hk, 0, 0.999999))
         return 1 - np.exp(log_sobrev)
 
+    def salvar(self, caminho) -> None:
+        self.booster.save_model(str(caminho))
+
+    @classmethod
+    def carregar(cls, caminho) -> "ModeloCalote":
+        m = cls()
+        m.booster = lgb.Booster(model_file=str(caminho))
+        return m
+
     def importancia(self) -> pd.Series:
         return pd.Series(self.booster.feature_importance("gain"), index=FEATS).sort_values(ascending=False)
 

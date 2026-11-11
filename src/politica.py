@@ -2,20 +2,27 @@
 
 Resultado financeiro por pedido aprovado (regra do desafio):
   pagou em dia +15% | pagou com atraso +5% | não pagou -60% | negado 0
-EV(valor) = valor x [ (1-PD) x (0,15 x (1-L) + 0,05 x L) - 0,60 x PD ]
-  PD = chance de calote (modelo, depende do valor via comprometimento)
-  L  = chance de atrasar alguma parcela entre quem paga (taxa histórica por segmento)
+Resultado esperado por real emprestado:
+  margem = (1-PD) x (0,15 x (1-L) + 0,05 x L) - 0,60 x PD
+  PD = chance de calote no valor aprovado; L = chance de atrasar entre quem paga (modelo de risco)
+
+As regras de negação são dados (`Regra`): a IA sugere, o analista liga/desliga e ajusta o limiar
+no painel, e a versão aprovada fica gravada em `politica_aprovada.json` (lida pelo pipeline).
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
+import json
+import operator
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-from features import parcela_price, valor_max_por_parcela, VALOR_MIN, VALOR_MAX
+from features import LIMIARES, VALOR_MAX, VALOR_MIN, valor_max_por_parcela
 
 GANHO_EM_DIA, GANHO_ATRASO, PERDA_CALOTE = 0.15, 0.05, 0.60
+_OPS = {">": operator.gt, ">=": operator.ge, "<": operator.lt, "<=": operator.le, "==": operator.eq}
 
 
 def margem_por_real(pd_, l_):
@@ -25,6 +32,7 @@ def margem_por_real(pd_, l_):
 # ----------------------------------------------------------------------------------------------
 # Política atual: score > 600, renda > 2.000, sem restrição; parcela até 30% da renda declarada.
 # No histórico, quando a parcela passa de 30%, o valor é reduzido ao teto (não nega).
+# Reproduz 100% das 8.737 decisões históricas da política atual.
 # ----------------------------------------------------------------------------------------------
 def politica_atual(base: pd.DataFrame) -> pd.DataFrame:
     elegivel = (base["score"] > 600) & (base["renda_declarada"] > 2000) & (base["restricoes_ativas"] == 0)
@@ -40,133 +48,161 @@ def politica_atual(base: pd.DataFrame) -> pd.DataFrame:
 # Política proposta
 # ----------------------------------------------------------------------------------------------
 @dataclass
+class Regra:
+    """Regra de negação: nega quando `coluna <op> limiar`. Valor ausente nunca nega."""
+    id: str
+    passo: int                 # 2 = fora da faixa com evidência, 3 = sinal de alerta
+    coluna: str
+    op: str
+    limiar: float
+    motivo: str                # texto de negócio; pode usar {limiar}
+    ativa: bool = True
+    padrao: str = ""           # id do padrão (painel, aba 1) que justifica a regra
+
+    def mascara(self, b: pd.DataFrame) -> np.ndarray:
+        x = pd.to_numeric(b[self.coluna], errors="coerce")
+        return _OPS[self.op](x, self.limiar).fillna(False).to_numpy(bool)
+
+    def texto(self) -> str:
+        lim = float(self.limiar)
+        return self.motivo.format(limiar=int(lim) if lim.is_integer() else lim)
+
+
+def regras_padrao() -> list[Regra]:
+    L = LIMIARES
+    return [
+        # Passo 2: fora da faixa que o piloto testou -> nega (sem evidência de pagamento, sem aposta)
+        Regra("restricoes", 2, "restricoes_ativas", ">=", 2,
+              "{limiar} ou mais restrições ativas no bureau (nunca aprovado no histórico)", padrao="P08"),
+        Regra("score_min", 2, "score", "<=", 450, "score do bureau até {limiar} (nunca aprovado no histórico)", padrao="P06"),
+        Regra("renda_min", 2, "renda_declarada", "<=", 1500, "renda declarada até R$ {limiar} (nunca aprovada no histórico)",
+              padrao="P09"),
+        # Passo 3: sinais de alerta descobertos pela IA no histórico
+        Regra("gasta_tudo", 3, "mov_saidas_sobre_entradas", ">=", L["saidas_sobre_entradas"],
+              "saídas da conta chegam a {limiar:.0%} ou mais das entradas", padrao="P02"),
+        Regra("renda_inflada", 3, "renda_decl_sobre_real", ">", L["renda_inflada"],
+              "renda declarada mais de {limiar}x o que entra na conta", padrao="P03"),
+        Regra("pedido_excessivo", 3, "pedido_sobre_entradas", ">", L["pedido_sobre_entradas"],
+              "pede mais de {limiar}x o que entra por mês na conta", padrao="P04"),
+        Regra("divida_alta", 3, "outras_sobre_entradas", ">", L["outras_sobre_entradas"],
+              "parcelas em outras instituições acima de {limiar:.0%} das entradas", padrao="P05"),
+        Regra("entradas_instaveis", 3, "mov_entradas_cv", ">", L["cv_entradas"],
+              "entradas mensais instáveis (variação acima de {limiar:.0%})", padrao="P07"),
+    ]
+
+
+@dataclass
 class Parametros:
-    # Passo 2: fora da faixa onde o histórico tem desfecho -> nega (sem evidência, sem aposta)
-    score_min: float = 450            # menor score aprovado no histórico: 452
-    renda_min: float = 1500           # menor renda aprovada no histórico: 1.550
-    restricoes_max: int = 1           # piloto aprovou até 1 restrição; 2+ nunca foi aprovado
-    # Passo 3: sinais de alerta descobertos no histórico (calote de 70% a 100%)
-    meses_cheque_max: int = 1         # 2+ meses no cheque especial nos últimos 12
-    saidas_sobre_entradas_max: float = 0.80
-    consultas_90d_max: int = 7        # 8+ consultas ao CPF em 90 dias
-    renda_decl_sobre_real_max: float = 2.0
-    # Passo 4: teto de valor pela capacidade de pagamento
-    teto_parcela_sobre_sobra: float = 0.40   # calote salta para ~100% acima de 50% da sobra mensal
-    teto_comprometimento: float = 0.30       # parcela / renda declarada (mesmo limite da política atual)
-    # Passo 5/6: risco e valor
-    margem_min: float = 0.01          # EV mínimo por real emprestado (folga para erro do modelo)
-    pontos_grade: int = 24
+    regras: list[Regra] = field(default_factory=regras_padrao)
+    # Passo 4: teto de valor pela capacidade de pagamento (None desliga o teto)
+    teto_parcela_sobre_sobra: float | None = 0.45   # calote é certo acima de 50% da sobra: folga de 5 p.p.
+    teto_comprometimento: float | None = 0.30       # trava de segurança: o histórico nunca passou de 35%
+    # Passo 5: risco x retorno
+    usar_modelo: bool = True
+    margem_min: float = 0.01          # resultado esperado mínimo por real emprestado (folga para erro do modelo)
 
-
-PASSOS = {
-    1: "Dados do bureau",
-    2: "Fora da faixa com histórico",
-    3: "Sinal de alerta",
-    4: "Capacidade de pagamento",
-    5: "Risco x retorno (modelo)",
-    6: "Aprovado",
-}
-
-
-def taxa_atraso_por_segmento(hist_aprovados: pd.DataFrame) -> dict:
-    """L = P(atrasar alguma parcela | não deu calote), em contratos com >=50% do prazo vencido."""
-    s = hist_aprovados[(~hist_aprovados["calote_obs"]) & (hist_aprovados["frac_vencida"] >= 0.5)]
-    sem = float(s.loc[s["restricoes_ativas"] == 0, "atraso_obs"].mean())
-    com = float(s.loc[s["restricoes_ativas"] >= 1, "atraso_obs"].mean())
-    return {"sem_restricao": round(sem, 4), "com_restricao": round(com, 4)}
-
-
-def politica_nova(base: pd.DataFrame, modelo, taxa_atraso: dict, p: Parametros = Parametros()) -> pd.DataFrame:
-    b = base.reset_index(drop=True)
-    n = len(b)
-    out = pd.DataFrame({"id_pedido": b["id_pedido"], "decisao": "NEGADO", "valor_aprovado": 0.0,
-                        "passo": 0, "motivo": "", "pd": np.nan, "p_atraso": np.nan, "ev": 0.0,
-                        "valor_teto": np.nan})
-    aberto = np.ones(n, bool)
-
-    def negar(mask, passo, motivo):
-        nonlocal aberto
-        m = aberto & mask.values if hasattr(mask, "values") else aberto & mask
-        out.loc[m, ["passo", "motivo"]] = [passo, motivo]
-        aberto = aberto & ~m
-
-    # 1. bureau indisponível depois de todas as tentativas -> nega (conservador) e registra
-    sem_bureau = b["score"].isna()
-    negar(sem_bureau, 1, "bureau indisponível após todas as tentativas")
-
-    # 2. fora da faixa com evidência
-    negar(b["restricoes_ativas"] > p.restricoes_max, 2, f"{p.restricoes_max + 1}+ restrições ativas (nunca aprovado no histórico)")
-    negar(b["score"] < p.score_min, 2, f"score abaixo de {p.score_min:.0f} (sem histórico de pagamento)")
-    negar(b["renda_declarada"] < p.renda_min, 2, f"renda abaixo de R$ {p.renda_min:,.0f} (sem histórico de pagamento)")
-
-    # 3. sinais de alerta
-    negar(b["mov_meses_cheque"] > p.meses_cheque_max, 3, "usou cheque especial em 2+ meses no último ano")
-    negar(b["mov_saidas_sobre_entradas"] > p.saidas_sobre_entradas_max, 3, "gasta mais de 80% do que entra na conta")
-    negar(b["consultas_90_dias"] > p.consultas_90d_max, 3, "8+ consultas ao CPF em 90 dias")
-    negar(b["renda_decl_sobre_real"] > p.renda_decl_sobre_real_max, 3, "renda declarada mais que o dobro das entradas reais")
-
-    # 4. teto de valor pela capacidade de pagamento
-    sobra = (b["mov_entradas_med"] - b["mov_saidas_med"]).clip(lower=0)
-    teto = np.minimum.reduce([
-        b["valor_solicitado"].values,
-        np.full(n, VALOR_MAX),
-        valor_max_por_parcela(p.teto_parcela_sobre_sobra * sobra, b["prazo_meses"]),
-        valor_max_por_parcela(p.teto_comprometimento * b["renda_declarada"], b["prazo_meses"]),
-    ])
-    teto = np.floor(teto * 100) / 100
-    out["valor_teto"] = teto
-    negar(teto < VALOR_MIN, 4, "parcela mínima (R$ 500) não cabe na sobra mensal")
-
-    # 5. risco x retorno: busca o valor (<= teto) que maximiza o resultado esperado
-    idx = np.where(aberto)[0]
-    if len(idx):
-        L = np.where(b.loc[idx, "restricoes_ativas"] >= 1, taxa_atraso["com_restricao"], taxa_atraso["sem_restricao"])
-        fracs = np.linspace(1.0, 0.0, p.pontos_grade, endpoint=False)
-        cand = np.outer(teto[idx], fracs)                         # (m, g)
-        cand[:, 1:] = np.floor(cand[:, 1:] / 100) * 100           # valores reduzidos em centenas
-        cand = np.where(cand < VALOR_MIN, np.nan, cand)
-        rep = b.loc[np.repeat(idx, len(fracs))].reset_index(drop=True)
-        vals = cand.ravel()
-        ok = ~np.isnan(vals)
-        pdv = np.full(vals.shape, np.nan)
-        pdv[ok] = modelo.pd_contrato(rep[ok], vals[ok])
-        pdm = pdv.reshape(cand.shape)
-        evm = cand * margem_por_real(pdm, L[:, None])
-        evm = np.where(np.isnan(evm), -np.inf, evm)
-        j = evm.argmax(axis=1)
-        r = np.arange(len(idx))
-        best_v, best_pd, best_ev = cand[r, j], pdm[r, j], evm[r, j]
-        out.loc[idx, "pd"] = best_pd
-        out.loc[idx, "p_atraso"] = L
-        out.loc[idx, "ev"] = np.where(np.isfinite(best_ev), best_ev, 0.0)
-        aprova = np.isfinite(best_ev) & (best_ev > p.margem_min * np.nan_to_num(best_v))
-        # PD do valor teto, para explicar quando o valor foi reduzido por risco
-        out.loc[idx, "pd_no_teto"] = pdm[:, 0]
-        neg_idx = idx[~aprova]
-        out.loc[neg_idx, ["passo", "motivo"]] = [5, "risco de calote alto mesmo com valor reduzido"]
-        ap_idx = idx[aprova]
-        out.loc[ap_idx, "decisao"] = "APROVADO"
-        out.loc[ap_idx, "valor_aprovado"] = np.round(best_v[aprova], 2)
-        out.loc[ap_idx, "passo"] = 6
-        sol = b.loc[ap_idx, "valor_solicitado"].values
-        reduziu = best_v[aprova] < sol - 0.005
-        out.loc[ap_idx, "motivo"] = np.where(reduziu, "aprovado com valor reduzido", "aprovado no valor pedido")
-    out["valor_aprovado"] = out["valor_aprovado"].round(2)
-    return out
-
-
-def resultado_esperado(decisoes: pd.DataFrame, base: pd.DataFrame, modelo, taxa_atraso: dict) -> pd.Series:
-    """EV de cada decisão segundo o modelo (para comparar políticas nos mesmos pedidos)."""
-    b = base.reset_index(drop=True)
-    v = decisoes["valor_aprovado"].values.astype(float)
-    ev = np.zeros(len(b))
-    m = v > 0
-    if m.any():
-        pdv = modelo.pd_contrato(b[m], v[m])
-        L = np.where(b.loc[m, "restricoes_ativas"].values >= 1, taxa_atraso["com_restricao"], taxa_atraso["sem_restricao"])
-        ev[m] = v[m] * margem_por_real(pdv, L)
-    return pd.Series(ev, index=decisoes.index)
+    def regra(self, id_: str) -> Regra:
+        return next(r for r in self.regras if r.id == id_)
 
 
 def parametros_dict(p: Parametros) -> dict:
     return asdict(p)
+
+
+def parametros_de_dict(d: dict) -> Parametros:
+    d = dict(d)
+    regras = [Regra(**r) for r in d.pop("regras", [])] or regras_padrao()
+    return Parametros(regras=regras, **{k: v for k, v in d.items() if k in Parametros.__dataclass_fields__})
+
+
+def carregar_parametros(caminho: str | Path) -> Parametros:
+    caminho = Path(caminho)
+    if not caminho.exists():
+        return Parametros()
+    return parametros_de_dict(json.loads(caminho.read_text(encoding="utf-8"))["parametros"])
+
+
+PASSOS = {
+    1: "1. Dados do bureau",
+    2: "2. Fora da faixa com evidência",
+    3: "3. Sinal de alerta",
+    4: "4. Capacidade de pagamento",
+    5: "5. Risco x retorno",
+    6: "6. Aprovado",
+}
+
+
+def teto_capacidade(b: pd.DataFrame, p: Parametros) -> np.ndarray:
+    n = len(b)
+    sobra = b["sobra"].clip(lower=0).fillna(0).to_numpy(float)
+    # trava fixa: acima de 50% da sobra o calote é certo (P01); nenhum ajuste do analista passa disso.
+    # A parcela máxima é arredondada para baixo no centavo, para a parcela Price (arredondada) não estourar.
+    parcela_trava = np.floor(np.round(LIMIARES["parcela_sobre_sobra"] * sobra * 100, 6)) / 100
+    limites = [b["valor_solicitado"].to_numpy(float), np.full(n, VALOR_MAX),
+               valor_max_por_parcela(parcela_trava, b["prazo_meses"])]
+    if p.teto_parcela_sobre_sobra is not None:
+        limites.append(valor_max_por_parcela(p.teto_parcela_sobre_sobra * sobra, b["prazo_meses"]))
+    if p.teto_comprometimento is not None:
+        limites.append(valor_max_por_parcela(p.teto_comprometimento * b["renda_declarada"], b["prazo_meses"]))
+    return np.floor(np.minimum.reduce(limites) * 100) / 100
+
+
+def politica_nova(base: pd.DataFrame, modelo, p: Parametros | None = None) -> pd.DataFrame:
+    """Aplica a política proposta. `modelo`: risco.ModeloRisco ajustado no histórico."""
+    p = p or Parametros()
+    b = base.reset_index(drop=True)
+    n = len(b)
+    out = pd.DataFrame({"id_pedido": b["id_pedido"], "decisao": "NEGADO", "valor_aprovado": 0.0,
+                        "passo": 0, "regra": "", "motivo": "", "valor_teto": np.nan,
+                        "pd": np.nan, "p_atraso": np.nan, "margem": np.nan})
+    aberto = np.ones(n, bool)
+
+    def negar(mask, passo, regra, motivo):
+        nonlocal aberto
+        m = aberto & np.asarray(mask, bool)
+        out.loc[m, ["passo", "regra", "motivo"]] = [passo, regra, motivo]
+        aberto = aberto & ~m
+
+    # 1. bureau indisponível depois de todas as tentativas -> nega (conservador) e registra
+    negar(b["score"].isna().to_numpy(), 1, "bureau", "bureau indisponível após todas as tentativas")
+
+    # 2 e 3. regras de negação (fora da faixa e sinais de alerta), na ordem dos passos
+    for r in sorted(p.regras, key=lambda r: r.passo):
+        if r.ativa:
+            negar(r.mascara(b), r.passo, r.id, r.texto())
+
+    # 4. teto de valor pela capacidade de pagamento
+    teto = teto_capacidade(b, p)
+    out["valor_teto"] = teto
+    negar(teto < VALOR_MIN, 4, "capacidade", "sobra mensal não comporta nem a parcela do valor mínimo (R$ 500)")
+
+    # 5. risco x retorno no valor máximo permitido (o risco só depende do valor pela regra da sobra,
+    #    já respeitada no teto, então o maior valor seguro é também o de maior resultado esperado)
+    pd_ = modelo.pd_total(b, teto)
+    la = modelo.p_atraso(b)
+    mg = margem_por_real(pd_, la)
+    out["pd"], out["p_atraso"], out["margem"] = pd_, la, mg
+    if p.usar_modelo:
+        negar(mg < p.margem_min, 5, "risco", "resultado esperado negativo: chance de calote alta demais")
+
+    # 6. aprova no teto
+    ap = np.where(aberto)[0]
+    out.loc[ap, "decisao"] = "APROVADO"
+    out.loc[ap, "valor_aprovado"] = teto[ap]
+    out.loc[ap, ["passo", "regra"]] = [6, "aprovado"]
+    sol = b.loc[ap, "valor_solicitado"].to_numpy(float)
+    out.loc[ap, "motivo"] = np.where(teto[ap] < sol - 0.005, "aprovado com valor reduzido", "aprovado no valor pedido")
+    out["valor_aprovado"] = out["valor_aprovado"].round(2)
+    return out
+
+
+def resultado_esperado(decisoes: pd.DataFrame, base: pd.DataFrame, modelo) -> pd.Series:
+    """Resultado esperado de cada decisão segundo o modelo de risco (compara políticas nos mesmos pedidos)."""
+    b = base.reset_index(drop=True)
+    v = decisoes["valor_aprovado"].to_numpy(float)
+    ev = np.zeros(len(b))
+    m = v > 0
+    if m.any():
+        bm = b[m]
+        ev[m] = v[m] * margem_por_real(modelo.pd_total(bm, v[m]), modelo.p_atraso(bm))
+    return pd.Series(ev, index=decisoes.index)

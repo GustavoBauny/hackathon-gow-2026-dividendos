@@ -35,13 +35,20 @@ class TokenInvalido(RuntimeError):
 
 
 def ler_token() -> str:
+    """Ordem: variável FORTUNA_BUREAU_TOKEN, arquivo .bureau_token, linha BUREAU:<token> ou
+    FORTUNA_BUREAU_TOKEN=<token> no .env. Todos ficam fora do git."""
     tok = os.environ.get("FORTUNA_BUREAU_TOKEN")
+    raiz = Path(__file__).resolve().parent.parent
+    if not tok and (raiz / ".bureau_token").exists():
+        tok = (raiz / ".bureau_token").read_text(encoding="utf-8").strip()
+    if not tok and (raiz / ".env").exists():
+        for linha in (raiz / ".env").read_text(encoding="utf-8").splitlines():
+            linha = linha.strip()
+            for prefixo in ("BUREAU:", "FORTUNA_BUREAU_TOKEN="):
+                if linha.startswith(prefixo):
+                    tok = linha[len(prefixo):].strip().strip('"').strip("'")
     if not tok:
-        p = Path(__file__).resolve().parent.parent / ".bureau_token"
-        if p.exists():
-            tok = p.read_text(encoding="utf-8").strip()
-    if not tok:
-        raise TokenInvalido("Defina FORTUNA_BUREAU_TOKEN ou crie solucao/.bureau_token com o token do time.")
+        raise TokenInvalido("Defina FORTUNA_BUREAU_TOKEN, crie .bureau_token ou ponha BUREAU:<token> no .env.")
     return tok
 
 
@@ -79,7 +86,7 @@ class BureauClient:
     def __init__(self, token: str | None = None, cache_path: str | Path = "data/bureau_cache.jsonl",
                  max_tentativas: int = 10, timeout=(5, 20), workers: int = 24, backoff_base: float = 0.5,
                  backoff_max: float = 15.0):
-        self.token = token or ler_token()
+        self.token = token  # lido só na primeira chamada à API: com cache completo, roda sem token
         self.cache_path = Path(cache_path)
         self.max_tentativas = max_tentativas
         self.timeout = timeout
@@ -96,8 +103,12 @@ class BureauClient:
         cache = {}
         if self.cache_path.exists():
             for linha in self.cache_path.read_text(encoding="utf-8").splitlines():
-                if linha.strip():
-                    r = json.loads(linha)
+                try:
+                    r = json.loads(linha) if linha.strip() else None
+                except json.JSONDecodeError:
+                    log.warning("linha incompleta no cache ignorada: %.60s", linha)
+                    continue
+                if isinstance(r, dict) and "id_cliente" in r:
                     cache[r["id_cliente"]] = r
         return cache
 
@@ -111,6 +122,7 @@ class BureauClient:
     # ---------- http ----------
     def _sessao(self) -> requests.Session:
         if not hasattr(self._local, "s"):
+            self.token = self.token or ler_token()
             s = requests.Session()
             s.headers.update({"Authorization": f"Bearer {self.token}", "Accept": "application/json"})
             self._local.s = s
@@ -121,14 +133,21 @@ class BureauClient:
         time.sleep(random.uniform(0.5 * t, t))  # jitter: evita todos os threads voltarem juntos
 
     @staticmethod
-    def _validar(payload: dict, id_cliente: str) -> dict:
+    def _validar(payload, id_cliente: str) -> dict:
+        if not isinstance(payload, dict):
+            raise ValueError(f"resposta não é um objeto: {type(payload).__name__}")
         if payload.get("id_cliente") != id_cliente:
             raise ValueError(f"resposta de outro cliente: {payload.get('id_cliente')} != {id_cliente}")
         reg = {"id_cliente": id_cliente, "status": "ok"}
         for campo, tipo in CAMPOS.items():
             if payload.get(campo) is None:
                 raise ValueError(f"campo ausente: {campo}")
-            reg[campo] = tipo(payload[campo])
+            try:
+                reg[campo] = tipo(payload[campo])
+            except (TypeError, ValueError) as e:
+                raise ValueError(f"campo {campo} inválido: {payload[campo]!r}") from e
+        if not 0 <= reg["score"] <= 1000 or min(reg[c] for c in CAMPOS if c != "score") < 0:
+            raise ValueError(f"valores fora da faixa: {reg}")
         return reg
 
     def consultar(self, id_cliente: str) -> dict:
@@ -165,13 +184,17 @@ class BureauClient:
                 self.stats.add(sucesso=1)
                 self._gravar_cache(reg)
                 return reg
-            if r.status_code == 401:
-                raise TokenInvalido("Bureau respondeu 401: token ausente ou inválido.")
+            if r.status_code in (401, 403):
+                raise TokenInvalido(f"Bureau respondeu {r.status_code}: token ausente, inválido ou sem permissão.")
             if r.status_code == 404:
                 self.stats.add(nao_encontrado=1)
                 reg = {"id_cliente": id_cliente, "status": "nao_encontrado", "tentativas": tentativa}
                 self._gravar_cache(reg)
                 return reg
+            if 400 <= r.status_code < 500 and r.status_code not in (408, 429):
+                self.stats.add(falha_definitiva=1)
+                log.warning("bureau respondeu %s para %s: não adianta repetir", r.status_code, id_cliente)
+                return {"id_cliente": id_cliente, "status": "indisponivel", "erro": f"HTTP {r.status_code}"}
             if r.status_code == 503 or r.status_code >= 500:
                 self.stats.add(status_503=1)
                 ultimo_erro = f"HTTP {r.status_code}"
@@ -192,13 +215,18 @@ class BureauClient:
             if not pendentes:
                 break
             log.info("rodada %d: %d clientes", rodada, len(pendentes))
-            with ThreadPoolExecutor(max_workers=self.workers) as ex:
+            ex = ThreadPoolExecutor(max_workers=self.workers)
+            try:
                 futs = {ex.submit(self.consultar, i): i for i in pendentes}
                 for n, fut in enumerate(as_completed(futs), 1):
                     reg = fut.result()
                     resultados[reg["id_cliente"]] = reg
                     if n % 250 == 0:
                         log.info("  %d/%d", n, len(pendentes))
+            except TokenInvalido:
+                ex.shutdown(wait=True, cancel_futures=True)
+                raise
+            ex.shutdown(wait=True)
             pendentes = [i for i, r in resultados.items() if r["status"] == "indisponivel"]
             if pendentes:
                 time.sleep(5)
