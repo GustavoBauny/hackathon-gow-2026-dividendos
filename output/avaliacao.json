@@ -1,0 +1,110 @@
+{
+  "fora_do_tempo": {
+    "treino_ate": "2025-10-01",
+    "auc": 0.879,
+    "por_trimestre": [
+      {
+        "trimestre": "2024Q4",
+        "contratos": 717,
+        "calotes_observados": 110,
+        "calotes_previstos": 110.00452956804568,
+        "no_treino": true
+      },
+      {
+        "trimestre": "2025Q1",
+        "contratos": 708,
+        "calotes_observados": 111,
+        "calotes_previstos": 98.59582916364069,
+        "no_treino": true
+      },
+      {
+        "trimestre": "2025Q2",
+        "contratos": 704,
+        "calotes_observados": 98,
+        "calotes_previstos": 102.04346471795375,
+        "no_treino": true
+      },
+      {
+        "trimestre": "2025Q3",
+        "contratos": 715,
+        "calotes_observados": 78,
+        "calotes_previstos": 87.6098042031822,
+        "no_treino": true
+      },
+      {
+        "trimestre": "2025Q4",
+        "contratos": 914,
+        "calotes_observados": 130,
+        "calotes_previstos": 118.47595548253547,
+        "no_treino": false
+      },
+      {
+        "trimestre": "2026Q1",
+        "contratos": 906,
+        "calotes_observados": 81,
+        "calotes_previstos": 77.4968383561116,
+        "no_treino": false
+      },
+      {
+        "trimestre": "2026Q2",
+        "contratos": 676,
+        "calotes_observados": 18,
+        "calotes_previstos": 18.286811693005305,
+        "no_treino": false
+      },
+      {
+        "trimestre": "2026Q3",
+        "contratos": 693,
+        "calotes_observados": 0,
+        "calotes_previstos": 0.0,
+        "no_treino": false
+      }
+    ]
+  },
+  "backtest": [
+    {
+      "cfg": "atual",
+      "aprovados": 5606,
+      "valor": 45332129.25,
+      "resultado": -227868.80633439688,
+      "ganho_vs_atual": 0.0
+    },
+    {
+      "cfg": "margem 0%",
+      "aprovados": 7962,
+      "valor": 55229626.35,
+      "resultado": 3244838.858241788,
+      "ganho_vs_atual": 3472707.664576185
+    },
+    {
+      "cfg": "margem 3%",
+      "aprovados": 7300,
+      "valor": 51150626.35,
+      "resultado": 3188820.7298844964,
+      "ganho_vs_atual": 3416689.5362188932
+    },
+    {
+      "cfg": "proposta",
+      "aprovados": 7674,
+      "valor": 53552826.35,
+      "resultado": 3237635.7894496955,
+      "ganho_vs_atual": 3465504.5957840923
+    },
+    {
+      "cfg": "teto 30% da sobra",
+      "aprovados": 7673,
+      "valor": 53268191.14,
+      "resultado": 3221853.6579818926,
+      "ganho_vs_atual": 3449722.4643162894
+    },
+    {
+      "cfg": "teto 50% da sobra",
+      "aprovados": 7674,
+      "valor": 53568500.0,
+      "resultado": 3237701.1243905425,
+      "ganho_vs_atual": 3465569.9307249393
+    }
+  ],
+  "n_pedidos": 10000,
+  "duracao_s": 144.1
+}

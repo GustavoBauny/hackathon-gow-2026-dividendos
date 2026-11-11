@@ -1,0 +1,21 @@
+{
+  "modo": "api",
+  "duracao_s": 69.7,
+  "chamadas_http": 2126,
+  "sucesso": 2000,
+  "respostas_503": 126,
+  "timeouts": 0,
+  "erros_conexao": 0,
+  "404": 0,
+  "falha_definitiva": 0,
+  "lidos_do_cache": 0,
+  "latencia_p50_s": 0.42,
+  "latencia_p95_s": 3.47,
+  "latencia_max_s": 12.394461999996565,
+  "clientes": 2000,
+  "com_dados": 2000,
+  "sem_dados": 0,
+  "tentativas_media": 1.06,
+  "tentativas_max": 3,
+  "registrado_em": "2026-11-11 08:55:34"
+}

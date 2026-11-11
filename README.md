@@ -2,7 +2,19 @@
 
 Hackathon GOW 2026. Nova política de crédito para a Fortuna, construída com IA a partir de cerca de 10 mil pedidos históricos e aplicada aos 2 mil pedidos novos.
 
-> **Status:** em construção. O pipeline completo que gera `dividendos_final.csv` (`gerar_decisoes.py`) ainda está sendo escrito. Os módulos em `src/` já funcionam.
+## Resultado
+
+| | Política atual (réplica) | Política proposta |
+|---|---|---|
+| Aprovados (2.000 pedidos novos) | 1.145 | 1.533 (254 com valor reduzido) |
+| Valor aprovado | R$ 8,86 mi | R$ 10,31 mi |
+| Ganho esperado sobre a atual (modelo) | | **+R$ 666 mil** |
+| Backtest cross-fitted nos 10 mil pedidos históricos | −R$ 228 mil | +R$ 3,24 mi (**+R$ 3,47 mi**) |
+
+O ganho vem de três frentes:
+- **Reduzir o valor** quando a parcela não cabe na sobra mensal do cliente.
+- **Negar** os aprovados com sinais de alerta, que deram 90% de calote no histórico.
+- **Aprovar** quem a política atual nega sem motivo: score de 450 a 600, renda de até R$ 2.000 ou 1 restrição, desde que sem sinais de alerta. No piloto, esse grupo deu 11,6% de calote.
 
 ## Como a política decide
 
@@ -55,14 +67,30 @@ pg_restore --no-owner --no-privileges -d fortuna fortuna_hackathon.dump
 pip install -r requirements.txt
 
 # 3. token do bureau (não versionado)
-export FORTUNA_BUREAU_TOKEN=<token do time>   # ou grave em solucao/.bureau_token
+export FORTUNA_BUREAU_TOKEN=<token do time>   # ou FORTUNA_BUREAU_TOKEN=... em solucao/.env
 
 # 4. conexão com o banco (opcional; padrão: host=localhost dbname=fortuna user=postgres)
 export FORTUNA_DSN="host=localhost port=5432 dbname=fortuna user=postgres"
 
-# 5. gerar o arquivo de decisões (em construção)
-python gerar_decisoes.py
+# 5. gerar o arquivo de decisões do zero (cerca de 2 min; a API é consultada uma vez e fica em cache)
+python gerar_decisoes.py              # -> output/dividendos_final.csv (validado) + output/painel.html
+
+# opcionais
+python avaliar_historico.py           # validação fora do tempo + backtest (cerca de 3 min) -> output/avaliacao.json
+python gerar_painel.py                # só regera o painel
+python explicar.py P-00070 P-01208    # explica a decisão de pedidos específicos (demo)
+python gerar_decisoes.py --so-cache   # roda sem chamar a API (usa só o cache)
 ```
+
+Saídas em `output/`:
+
+| Arquivo | Conteúdo |
+|---|---|
+| `dividendos_final.csv` | Arquivo de entrega: `id_pedido,decisao,valor_aprovado`. É validado contra as regras do manual a cada execução. |
+| `painel.html` | Painel para o analista de risco: padrões, política em passos, comparação, validação e consulta de pedido. |
+| `decisoes_detalhadas.csv` | Para cada pedido: passo que decidiu, motivo, PD, resultado esperado e decisão da política atual. |
+| `resumo.json`, `avaliacao.json` | Números que alimentam o painel. |
+| `bureau_execucao_api.json` | Estatísticas da última execução que chamou a API: 503, tentativas e latência. |
 
 ## Estrutura
 
@@ -74,5 +102,10 @@ python gerar_decisoes.py
 | `src/modelo.py` | Modelo de hazard por parcela (LightGBM monotônico) e Kaplan-Meier |
 | `src/politica.py` | Réplica da política atual e política proposta em passos |
 | `src/bureau_client.py` | Cliente resiliente da API do bureau |
+| `src/padroes.py` | Descoberta de padrões: varredura por árvore, combinações e onde a política atual erra |
+| `gerar_decisoes.py` | Pipeline completo: banco, modelo, bureau, política, CSV e painel |
+| `avaliar_historico.py` | Validação fora do tempo e backtest |
+| `gerar_painel.py` | Gera `output/painel.html` |
+| `explicar.py` | Explica decisões no terminal |
 
 Não usamos gênero, CEP, estado civil nem idade na decisão.

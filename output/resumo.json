@@ -1,0 +1,900 @@
+{
+  "gerado_em": "2026-11-11 09:00:44",
+  "duracao_s": 18.1,
+  "csv": {
+    "arquivo": "dividendos_final.csv",
+    "linhas": 2000,
+    "aprovados": 1533,
+    "negados": 467,
+    "valor_total_aprovado": 10308820.07
+  },
+  "diferencas_vs_atual": 574,
+  "atual": {
+    "aprovados": 1145,
+    "valor": 8856446.13,
+    "ev_modelo": -14018.829991252518
+  },
+  "proposta": {
+    "aprovados": 1533,
+    "valor": 10308820.07,
+    "ev_modelo": 652268.110862952,
+    "reduzidos": 254
+  },
+  "ganho_estimado": 666286.9408542045,
+  "decomposicao": [
+    {
+      "grupo": "A atual aprova, a proposta nega",
+      "pedidos": 93,
+      "valor_atual": 806671.82,
+      "valor_proposta": 0.0,
+      "ev_atual": -148100.5089104841,
+      "ev_proposta": 0.0,
+      "ganho": 148100.5089104841
+    },
+    {
+      "grupo": "A atual nega, a proposta aprova",
+      "pedidos": 481,
+      "valor_atual": 0.0,
+      "valor_proposta": 2779167.27,
+      "ev_atual": 0.0,
+      "ev_proposta": 154144.27800897512,
+      "ganho": 154144.27800897512
+    },
+    {
+      "grupo": "As duas aprovam o mesmo valor (ou maior)",
+      "pedidos": 906,
+      "valor_atual": 6340200.0,
+      "valor_proposta": 6340200.0,
+      "ev_atual": 423267.01602390665,
+      "ev_proposta": 423267.01602390665,
+      "ganho": 0.0
+    },
+    {
+      "grupo": "As duas aprovam, a proposta reduz o valor",
+      "pedidos": 146,
+      "valor_atual": 1709574.31,
+      "valor_proposta": 1189452.8,
+      "ev_atual": -289185.33710467507,
+      "ev_proposta": 74856.81683007025,
+      "ganho": 364042.15393474535
+    },
+    {
+      "grupo": "As duas negam",
+      "pedidos": 374,
+      "valor_atual": 0.0,
+      "valor_proposta": 0.0,
+      "ev_atual": 0.0,
+      "ev_proposta": 0.0,
+      "ganho": 0.0
+    }
+  ],
+  "por_passo": [
+    {
+      "passo": 2,
+      "passo_nome": "Fora da faixa com histórico",
+      "motivo": "2+ restrições ativas (nunca aprovado no histórico)",
+      "pedidos": 174
+    },
+    {
+      "passo": 2,
+      "passo_nome": "Fora da faixa com histórico",
+      "motivo": "renda abaixo de R$ 1,500 (sem histórico de pagamento)",
+      "pedidos": 29
+    },
+    {
+      "passo": 2,
+      "passo_nome": "Fora da faixa com histórico",
+      "motivo": "score abaixo de 450 (sem histórico de pagamento)",
+      "pedidos": 1
+    },
+    {
+      "passo": 3,
+      "passo_nome": "Sinal de alerta",
+      "motivo": "gasta mais de 80% do que entra na conta",
+      "pedidos": 5
+    },
+    {
+      "passo": 3,
+      "passo_nome": "Sinal de alerta",
+      "motivo": "renda declarada mais que o dobro das entradas reais",
+      "pedidos": 40
+    },
+    {
+      "passo": 3,
+      "passo_nome": "Sinal de alerta",
+      "motivo": "usou cheque especial em 2+ meses no último ano",
+      "pedidos": 80
+    },
+    {
+      "passo": 5,
+      "passo_nome": "Risco x retorno (modelo)",
+      "motivo": "risco de calote alto mesmo com valor reduzido",
+      "pedidos": 138
+    },
+    {
+      "passo": 6,
+      "passo_nome": "Aprovado",
+      "motivo": "aprovado com valor reduzido",
+      "pedidos": 254
+    },
+    {
+      "passo": 6,
+      "passo_nome": "Aprovado",
+      "motivo": "aprovado no valor pedido",
+      "pedidos": 1279
+    }
+  ],
+  "bureau": {
+    "modo": "api",
+    "duracao_s": 0.1,
+    "chamadas_http": 0,
+    "sucesso": 0,
+    "respostas_503": 0,
+    "timeouts": 0,
+    "erros_conexao": 0,
+    "404": 0,
+    "falha_definitiva": 0,
+    "lidos_do_cache": 2000,
+    "latencia_p50_s": null,
+    "latencia_p95_s": null,
+    "latencia_max_s": null,
+    "clientes": 2000,
+    "com_dados": 2000,
+    "sem_dados": 0,
+    "tentativas_media": 1.06,
+    "tentativas_max": 3
+  },
+  "bureau_api": {
+    "modo": "api",
+    "duracao_s": 69.7,
+    "chamadas_http": 2126,
+    "sucesso": 2000,
+    "respostas_503": 126,
+    "timeouts": 0,
+    "erros_conexao": 0,
+    "404": 0,
+    "falha_definitiva": 0,
+    "lidos_do_cache": 0,
+    "latencia_p50_s": 0.42,
+    "latencia_p95_s": 3.47,
+    "latencia_max_s": 12.394461999996565,
+    "clientes": 2000,
+    "com_dados": 2000,
+    "sem_dados": 0,
+    "tentativas_media": 1.06,
+    "tentativas_max": 3,
+    "registrado_em": "2026-11-11 08:55:34"
+  },
+  "parametros": {
+    "score_min": 450,
+    "renda_min": 1500,
+    "restricoes_max": 1,
+    "meses_cheque_max": 1,
+    "saidas_sobre_entradas_max": 0.8,
+    "consultas_90d_max": 7,
+    "renda_decl_sobre_real_max": 2.0,
+    "teto_parcela_sobre_sobra": 0.4,
+    "teto_comprometimento": 0.3,
+    "margem_min": 0.01,
+    "pontos_grade": 24
+  },
+  "taxa_atraso": {
+    "sem_restricao": 0.2304,
+    "com_restricao": 0.5333
+  },
+  "modelo": {
+    "linhas_treino": 49186,
+    "eventos": 626,
+    "features": [
+      "score",
+      "restricoes_ativas",
+      "consultas_90_dias",
+      "meses_historico_bureau",
+      "divida_outras_sobre_renda",
+      "renda_declarada",
+      "prazo_meses",
+      "mov_entradas_cv",
+      "mov_saldo_medio_med",
+      "mov_meses_cheque",
+      "mov_dias_cheque_total",
+      "mov_saidas_sobre_entradas",
+      "renda_decl_sobre_real",
+      "vinc_aposentado",
+      "vinc_assalariado",
+      "vinc_autonomo",
+      "vinc_empresario",
+      "comprometimento",
+      "comprometimento_total",
+      "comprometimento_real",
+      "parcela_sobre_sobra",
+      "t_rel"
+    ],
+    "importancia": {
+      "parcela_sobre_sobra": 10725.8,
+      "t_rel": 2143.3,
+      "prazo_meses": 1818.4,
+      "mov_saidas_sobre_entradas": 1272.9,
+      "comprometimento_real": 1113.6,
+      "mov_entradas_cv": 859.0,
+      "comprometimento": 698.1,
+      "renda_decl_sobre_real": 546.4,
+      "mov_saldo_medio_med": 539.7,
+      "divida_outras_sobre_renda": 423.2,
+      "meses_historico_bureau": 307.9,
+      "comprometimento_total": 246.6,
+      "renda_declarada": 236.4,
+      "score": 176.9,
+      "consultas_90_dias": 69.5,
+      "mov_dias_cheque_total": 26.8,
+      "vinc_empresario": 19.7,
+      "mov_meses_cheque": 12.6,
+      "vinc_aposentado": 4.2,
+      "vinc_assalariado": 3.7,
+      "restricoes_ativas": 0.0,
+      "vinc_autonomo": 0.0
+    },
+    "calibracao": [
+      {
+        "faixa": 0,
+        "pd_bruta_media": 0.0617,
+        "pd_km": 0.1063,
+        "n": 302.0,
+        "pd_calibrada": 0.0773
+      },
+      {
+        "faixa": 1,
+        "pd_bruta_media": 0.0703,
+        "pd_km": 0.1083,
+        "n": 302.0,
+        "pd_calibrada": 0.0773
+      },
+      {
+        "faixa": 2,
+        "pd_bruta_media": 0.0747,
+        "pd_km": 0.0654,
+        "n": 301.0,
+        "pd_calibrada": 0.0773
+      },
+      {
+        "faixa": 3,
+        "pd_bruta_media": 0.0781,
+        "pd_km": 0.0826,
+        "n": 302.0,
+        "pd_calibrada": 0.0773
+      },
+      {
+        "faixa": 4,
+        "pd_bruta_media": 0.0812,
+        "pd_km": 0.0609,
+        "n": 302.0,
+        "pd_calibrada": 0.0773
+      },
+      {
+        "faixa": 5,
+        "pd_bruta_media": 0.084,
+        "pd_km": 0.0723,
+        "n": 301.0,
+        "pd_calibrada": 0.0773
+      },
+      {
+        "faixa": 6,
+        "pd_bruta_media": 0.0868,
+        "pd_km": 0.0762,
+        "n": 302.0,
+        "pd_calibrada": 0.0773
+      },
+      {
+        "faixa": 7,
+        "pd_bruta_media": 0.0899,
+        "pd_km": 0.0461,
+        "n": 301.0,
+        "pd_calibrada": 0.0773
+      },
+      {
+        "faixa": 8,
+        "pd_bruta_media": 0.0933,
+        "pd_km": 0.1058,
+        "n": 302.0,
+        "pd_calibrada": 0.0774
+      },
+      {
+        "faixa": 9,
+        "pd_bruta_media": 0.0969,
+        "pd_km": 0.0626,
+        "n": 302.0,
+        "pd_calibrada": 0.0774
+      },
+      {
+        "faixa": 10,
+        "pd_bruta_media": 0.1014,
+        "pd_km": 0.0639,
+        "n": 301.0,
+        "pd_calibrada": 0.0774
+      },
+      {
+        "faixa": 11,
+        "pd_bruta_media": 0.1074,
+        "pd_km": 0.093,
+        "n": 302.0,
+        "pd_calibrada": 0.0774
+      },
+      {
+        "faixa": 12,
+        "pd_bruta_media": 0.1143,
+        "pd_km": 0.0615,
+        "n": 301.0,
+        "pd_calibrada": 0.0774
+      },
+      {
+        "faixa": 13,
+        "pd_bruta_media": 0.1237,
+        "pd_km": 0.1374,
+        "n": 302.0,
+        "pd_calibrada": 0.1138
+      },
+      {
+        "faixa": 14,
+        "pd_bruta_media": 0.1371,
+        "pd_km": 0.1143,
+        "n": 302.0,
+        "pd_calibrada": 0.1138
+      },
+      {
+        "faixa": 15,
+        "pd_bruta_media": 0.1576,
+        "pd_km": 0.0896,
+        "n": 301.0,
+        "pd_calibrada": 0.1138
+      },
+      {
+        "faixa": 16,
+        "pd_bruta_media": 0.1844,
+        "pd_km": 0.2021,
+        "n": 302.0,
+        "pd_calibrada": 0.2021
+      },
+      {
+        "faixa": 17,
+        "pd_bruta_media": 0.2382,
+        "pd_km": 0.2118,
+        "n": 301.0,
+        "pd_calibrada": 0.2118
+      },
+      {
+        "faixa": 18,
+        "pd_bruta_media": 0.4549,
+        "pd_km": 0.4798,
+        "n": 302.0,
+        "pd_calibrada": 0.4798
+      },
+      {
+        "faixa": 19,
+        "pd_bruta_media": 0.9441,
+        "pd_km": 0.9774,
+        "n": 302.0,
+        "pd_calibrada": 0.9774
+      }
+    ]
+  },
+  "alvo": {
+    "contratos_aprovados": 6033,
+    "calotes_observados": 626,
+    "taxa_ingenua": 0.1037626388198243,
+    "taxa_km": 0.16653163037656937,
+    "maduros": 1957
+  },
+  "padroes": [
+    {
+      "tipo": "risco",
+      "titulo": "Parcela acima de 50% da sobra mensal",
+      "sujeito": "com parcela acima de 50% da sobra mensal (entradas menos saídas da conta)",
+      "pd": 0.9865161490324719,
+      "n": 348,
+      "pd_media": 0.16653163037656937,
+      "lift": 5.923896540265137,
+      "leitura": "O corte mais forte da base: quase todos deixam de pagar. O problema é o tamanho da parcela, então reduzir o valor resolve.",
+      "taxa_atraso": 0.9444444444444444,
+      "n_novos": 231
+    },
+    {
+      "tipo": "risco",
+      "titulo": "Parcela entre 40% e 50% da sobra",
+      "sujeito": "com parcela entre 40% e 50% da sobra mensal",
+      "pd": 0.26504774306953927,
+      "n": 278,
+      "pd_media": 0.16653163037656937,
+      "lift": 1.5915759815129444,
+      "leitura": "Zona de risco crescente antes do corte de 50%. A política proposta limita a parcela a 40% da sobra.",
+      "taxa_atraso": 0.23076923076923078,
+      "n_novos": 27
+    },
+    {
+      "tipo": "risco",
+      "titulo": "Reduzidos ao limite de 30% da renda declarada",
+      "sujeito": "cujo pedido a política atual reduziu para a parcela caber em 30% da renda declarada",
+      "pd": 0.5813926012979578,
+      "n": 290,
+      "pd_media": 0.16653163037656937,
+      "lift": 3.4911842271842577,
+      "leitura": "Cortar até exatamente 30% da renda declarada não basta: a renda declarada costuma ser maior que a que entra na conta.",
+      "taxa_atraso": 0.2926829268292683,
+      "n_novos": 61
+    },
+    {
+      "tipo": "risco",
+      "titulo": "Cheque especial recorrente",
+      "sujeito": "que usaram cheque especial em 2 ou mais meses no último ano",
+      "pd": 0.8174982259400244,
+      "n": 171,
+      "pd_media": 0.16653163037656937,
+      "lift": 4.908966687538324,
+      "leitura": "Uso recorrente indica aperto financeiro crônico. Um mês isolado não muda o risco.",
+      "taxa_atraso": 0.5,
+      "n_novos": 105
+    },
+    {
+      "tipo": "risco",
+      "titulo": "Gasto acima de 80% das entradas",
+      "sujeito": "que gastam mais de 80% do que entra na conta",
+      "pd": 0.9841262553479403,
+      "n": 156,
+      "pd_media": 0.16653163037656937,
+      "lift": 5.909545550731632,
+      "leitura": "Sem folga no orçamento, qualquer parcela nova vira atraso.",
+      "taxa_atraso": 1.0,
+      "n_novos": 97
+    },
+    {
+      "tipo": "risco",
+      "titulo": "8+ consultas ao CPF em 90 dias",
+      "sujeito": "com 8 ou mais consultas ao CPF nos últimos 90 dias",
+      "pd": 1.0,
+      "n": 49,
+      "pd_media": 0.16653163037656937,
+      "lift": 6.004865248354031,
+      "leitura": "Busca intensa por crédito na praça. Até 7 consultas o risco é normal.",
+      "taxa_atraso": NaN,
+      "n_novos": 38
+    },
+    {
+      "tipo": "risco",
+      "titulo": "Renda declarada inflada",
+      "sujeito": "com renda declarada maior que o dobro das entradas reais na conta",
+      "pd": 0.9197380916679162,
+      "n": 42,
+      "pd_media": 0.16653163037656937,
+      "lift": 5.5229033042441245,
+      "leitura": "A movimentação da conta desmente a renda informada no cadastro.",
+      "taxa_atraso": 0.6666666666666666,
+      "n_novos": 66
+    },
+    {
+      "tipo": "risco",
+      "titulo": "Entradas instáveis",
+      "sujeito": "sem sinais de alerta, mas com entradas instáveis (variação mensal acima de 30%)",
+      "pd": 0.22186025848714197,
+      "n": 720,
+      "pd_media": 0.16653163037656937,
+      "lift": 1.3322409561802813,
+      "leitura": "Renda irregular aumenta o risco mesmo sem outros sinais. Entra no modelo, não é corte.",
+      "taxa_atraso": 0.21678321678321677,
+      "n_novos": 285
+    },
+    {
+      "tipo": "risco",
+      "titulo": "Dívidas fora acima de 30% da renda",
+      "sujeito": "sem sinais de alerta, mas com dívidas em outros bancos acima de 30% da renda",
+      "pd": 0.2091199775578022,
+      "n": 486,
+      "pd_media": 0.16653163037656937,
+      "lift": 1.2557372859734215,
+      "leitura": "Comprometimento já alto fora da Fortuna. Entra no modelo, não é corte.",
+      "taxa_atraso": 0.3979591836734694,
+      "n_novos": 182
+    },
+    {
+      "tipo": "oportunidade",
+      "titulo": "Score 450 a 600 sem alertas",
+      "sujeito": "com score entre 450 e 600 e sem sinais de alerta",
+      "pd": 0.1344547105741135,
+      "n": 243,
+      "pd_media": 0.16653163037656937,
+      "lift": 0.8073824190039935,
+      "leitura": "A política atual nega todos. Score baixo, sozinho, quase não prevê calote nesta base.",
+      "taxa_atraso": 0.26153846153846155,
+      "n_novos": 372
+    },
+    {
+      "tipo": "oportunidade",
+      "titulo": "Renda até R$ 2.000 sem alertas",
+      "sujeito": "com renda declarada entre R$ 1.500 e R$ 2.000 e sem sinais de alerta",
+      "pd": 0.11819727891156462,
+      "n": 63,
+      "pd_media": 0.16653163037656937,
+      "lift": 0.7097587325860631,
+      "leitura": "A política atual nega todos. Com parcela proporcional à renda, pagam como a média.",
+      "taxa_atraso": 0.23529411764705882,
+      "n_novos": 108
+    },
+    {
+      "tipo": "oportunidade",
+      "titulo": "1 restrição sem alertas",
+      "sujeito": "com 1 restrição ativa e sem sinais de alerta",
+      "pd": 0.05287351891024539,
+      "n": 79,
+      "pd_media": 0.16653163037656937,
+      "lift": 0.31749835626232226,
+      "leitura": "A política atual nega todos. Pagam, mas atrasam mais: cerca de metade tem alguma parcela em atraso.",
+      "taxa_atraso": 0.46153846153846156,
+      "n_novos": 121
+    },
+    {
+      "tipo": "oportunidade",
+      "titulo": "Aposentados",
+      "sujeito": "aposentados sem sinais de alerta",
+      "pd": 0.0937859844830059,
+      "n": 596,
+      "pd_media": 0.16653163037656937,
+      "lift": 0.5631721990046725,
+      "leitura": "Renda estável: o grupo de menor risco da base.",
+      "taxa_atraso": 0.2467948717948718,
+      "n_novos": 178
+    }
+  ],
+  "padroes_ref": {
+    "pd_media": 0.16653163037656937,
+    "n": 6033,
+    "pd_sem_alerta": 0.10551442809161793,
+    "n_sem_alerta": 5619
+  },
+  "varredura": [
+    {
+      "variavel": "parcela_sobre_sobra",
+      "rotulo": "parcela ÷ sobra mensal (entradas − saídas)",
+      "corte": 0.5001849830150604,
+      "corte_fmt": "50%",
+      "condicao": "> 50%",
+      "lado_risco": ">",
+      "pd_grupo_risco": 0.9865161490324719,
+      "n_grupo_risco": 348,
+      "pd_outro_lado": 0.10943624647560424,
+      "lift": 5.923896540265137,
+      "separacao": 0.8770799025568676
+    },
+    {
+      "variavel": "mov_saidas_sobre_entradas",
+      "rotulo": "saídas ÷ entradas da conta",
+      "corte": 0.7257284224033356,
+      "corte_fmt": "73%",
+      "condicao": "> 73%",
+      "lado_risco": ">",
+      "pd_grupo_risco": 0.9841262553479403,
+      "n_grupo_risco": 156,
+      "pd_outro_lado": 0.1436865582634933,
+      "lift": 5.909545550731632,
+      "separacao": 0.840439697084447
+    },
+    {
+      "variavel": "mov_dias_cheque_total",
+      "rotulo": "dias no cheque especial (últimos 12 meses)",
+      "corte": 35.5,
+      "corte_fmt": "36",
+      "condicao": "≥ 36",
+      "lado_risco": ">",
+      "pd_grupo_risco": 0.8907510567305683,
+      "n_grupo_risco": 116,
+      "pd_outro_lado": 0.15140550340836834,
+      "lift": 5.34884006549602,
+      "separacao": 0.7393455533222
+    },
+    {
+      "variavel": "mov_meses_cheque",
+      "rotulo": "meses com uso de cheque especial (últimos 12)",
+      "corte": 1.5,
+      "corte_fmt": "2",
+      "condicao": "≥ 2",
+      "lado_risco": ">",
+      "pd_grupo_risco": 0.8174982259400244,
+      "n_grupo_risco": 171,
+      "pd_outro_lado": 0.14628129057715167,
+      "lift": 4.908966687538324,
+      "separacao": 0.6712169353628727
+    },
+    {
+      "variavel": "comprometimento_real",
+      "rotulo": "parcela ÷ entradas reais na conta",
+      "corte": 0.3012142479419708,
+      "corte_fmt": "30%",
+      "condicao": "> 30%",
+      "lado_risco": ">",
+      "pd_grupo_risco": 0.6736742669729008,
+      "n_grupo_risco": 369,
+      "pd_outro_lado": 0.12596870222765877,
+      "lift": 4.045323194455948,
+      "separacao": 0.547705564745242
+    },
+    {
+      "variavel": "renda_decl_sobre_real",
+      "rotulo": "renda declarada ÷ entradas reais",
+      "corte": 1.4985151886940002,
+      "corte_fmt": "1.50x",
+      "condicao": "> 1.50x",
+      "lado_risco": ">",
+      "pd_grupo_risco": 0.6467798639073893,
+      "n_grupo_risco": 75,
+      "pd_outro_lado": 0.16051620806699618,
+      "lift": 3.883825928112632,
+      "separacao": 0.4862636558403931
+    },
+    {
+      "variavel": "comprometimento",
+      "rotulo": "parcela ÷ renda declarada",
+      "corte": 0.27514825761318207,
+      "corte_fmt": "28%",
+      "condicao": "> 28%",
+      "lado_risco": ">",
+      "pd_grupo_risco": 0.6100283690939039,
+      "n_grupo_risco": 409,
+      "pd_outro_lado": 0.12723211522510247,
+      "lift": 3.6631381540820698,
+      "separacao": 0.48279625386880143
+    },
+    {
+      "variavel": "consultas_90_dias",
+      "rotulo": "consultas ao CPF em 90 dias",
+      "corte": 6.5,
+      "corte_fmt": "6",
+      "condicao": "≥ 7",
+      "lado_risco": ">",
+      "pd_grupo_risco": 0.5034753663477685,
+      "n_grupo_risco": 176,
+      "pd_outro_lado": 0.15676376490344046,
+      "lift": 3.0233017307840298,
+      "separacao": 0.346711601444328
+    },
+    {
+      "variavel": "restricoes_ativas",
+      "rotulo": "restrições ativas no bureau",
+      "corte": 0.5,
+      "corte_fmt": "0",
+      "condicao": "≥ 1",
+      "lado_risco": ">",
+      "pd_grupo_risco": 0.48073638867794355,
+      "n_grupo_risco": 127,
+      "pd_outro_lado": 0.1621324547876576,
+      "lift": 2.8867572339914,
+      "separacao": 0.31860393389028596
+    },
+    {
+      "variavel": "mov_tendencia_entradas",
+      "rotulo": "entradas dos últimos 3 meses ÷ meses anteriores",
+      "corte": 1.353278934955597,
+      "corte_fmt": "1.35x",
+      "condicao": "> 1.35x",
+      "lado_risco": ">",
+      "pd_grupo_risco": 0.36284084704649777,
+      "n_grupo_risco": 144,
+      "pd_outro_lado": 0.1587030916291341,
+      "lift": 2.178810393112855,
+      "separacao": 0.20413775541736368
+    },
+    {
+      "variavel": "divida_outras_sobre_renda",
+      "rotulo": "dívidas em outros bancos ÷ renda declarada",
+      "corte": 0.380526527762413,
+      "corte_fmt": "38%",
+      "condicao": "> 38%",
+      "lado_risco": ">",
+      "pd_grupo_risco": 0.33401156075798677,
+      "n_grupo_risco": 162,
+      "pd_outro_lado": 0.16182888114791882,
+      "lift": 2.0056944137441257,
+      "separacao": 0.17218267961006795
+    },
+    {
+      "variavel": "comprometimento_total",
+      "rotulo": "(parcela + dívidas em outros bancos) ÷ renda declarada",
+      "corte": 0.29978667199611664,
+      "corte_fmt": "30%",
+      "condicao": "> 30%",
+      "lado_risco": ">",
+      "pd_grupo_risco": 0.28190653188587445,
+      "n_grupo_risco": 1625,
+      "pd_outro_lado": 0.12045570774875392,
+      "lift": 1.6928107366054952,
+      "separacao": 0.16145082413712053
+    },
+    {
+      "variavel": "meses_conta",
+      "rotulo": "meses de conta na Fortuna",
+      "corte": 2.513140559196472,
+      "corte_fmt": "3",
+      "condicao": "≤ 2",
+      "lado_risco": "<=",
+      "pd_grupo_risco": 0.3048190172293336,
+      "n_grupo_risco": 168,
+      "pd_outro_lado": 0.16254822438142358,
+      "lift": 1.830397123597854,
+      "separacao": 0.14227079284791
+    },
+    {
+      "variavel": "mov_entradas_cv",
+      "rotulo": "instabilidade das entradas (coef. de variação)",
+      "corte": 0.35891203582286835,
+      "corte_fmt": "36%",
+      "condicao": "> 36%",
+      "lado_risco": ">",
+      "pd_grupo_risco": 0.2647482769069961,
+      "n_grupo_risco": 627,
+      "pd_outro_lado": 0.15195969299679546,
+      "lift": 1.589777727560431,
+      "separacao": 0.11278858391020063
+    },
+    {
+      "variavel": "valor_aprovado",
+      "rotulo": "valor do empréstimo",
+      "corte": 9650.0,
+      "corte_fmt": "R$ 9.650",
+      "condicao": "> R$ 9.650",
+      "lado_risco": ">",
+      "pd_grupo_risco": 0.2414657280018334,
+      "n_grupo_risco": 1596,
+      "pd_outro_lado": 0.1398973578120476,
+      "lift": 1.4499691587467163,
+      "separacao": 0.10156837018978582
+    },
+    {
+      "variavel": "mov_saldo_medio_med",
+      "rotulo": "saldo médio na conta",
+      "corte": 16592.0439453125,
+      "corte_fmt": "R$ 16.592",
+      "condicao": "≤ R$ 16.592",
+      "lado_risco": "<=",
+      "pd_grupo_risco": 0.23063432583156107,
+      "n_grupo_risco": 2179,
+      "pd_outro_lado": 0.12927134721132572,
+      "lift": 1.3849280482635016,
+      "separacao": 0.10136297862023536
+    },
+    {
+      "variavel": "score",
+      "rotulo": "score do bureau",
+      "corte": 617.5,
+      "corte_fmt": "618",
+      "condicao": "≤ 617",
+      "lado_risco": "<=",
+      "pd_grupo_risco": 0.2610532313515592,
+      "n_grupo_risco": 400,
+      "pd_outro_lado": 0.16117330421106668,
+      "lift": 1.567589476913503,
+      "separacao": 0.09987992714049254
+    },
+    {
+      "variavel": "idade",
+      "rotulo": "idade",
+      "corte": 70.00547790527344,
+      "corte_fmt": "70",
+      "condicao": "≤ 70",
+      "lado_risco": "<=",
+      "pd_grupo_risco": 0.17063872305485062,
+      "n_grupo_risco": 5793,
+      "pd_outro_lado": 0.07931903405874696,
+      "lift": 1.0246625380955803,
+      "separacao": 0.09131968899610365
+    },
+    {
+      "variavel": "prazo_meses",
+      "rotulo": "prazo em meses",
+      "corte": 15.0,
+      "corte_fmt": "15",
+      "condicao": "≤ 15",
+      "lado_risco": "<=",
+      "pd_grupo_risco": 0.20603221999703725,
+      "n_grupo_risco": 1546,
+      "pd_outro_lado": 0.14270839732079688,
+      "lift": 1.2371957179014414,
+      "separacao": 0.06332382267624037
+    },
+    {
+      "variavel": "meses_historico_bureau",
+      "rotulo": "meses de histórico no bureau",
+      "corte": 38.5,
+      "corte_fmt": "38",
+      "condicao": "≤ 38",
+      "lado_risco": "<=",
+      "pd_grupo_risco": 0.20881468661096314,
+      "n_grupo_risco": 1184,
+      "pd_outro_lado": 0.1568836952065622,
+      "lift": 1.2539040549761105,
+      "separacao": 0.05193099140440094
+    },
+    {
+      "variavel": "renda_declarada",
+      "rotulo": "renda declarada",
+      "corte": 4425.0,
+      "corte_fmt": "R$ 4.425",
+      "condicao": "≤ R$ 4.425",
+      "lado_risco": "<=",
+      "pd_grupo_risco": 0.18893488469827502,
+      "n_grupo_risco": 2686,
+      "pd_outro_lado": 0.14800660152466805,
+      "lift": 1.1345285233264475,
+      "separacao": 0.04092828317360697
+    }
+  ],
+  "arvore": [
+    {
+      "regra": "parcela ÷ sobra mensal (entradas − saídas) > 50% E instabilidade das entradas (coef. de variação) ≤ 8%",
+      "pd": 1.0,
+      "n": 161
+    },
+    {
+      "regra": "parcela ÷ sobra mensal (entradas − saídas) > 50% E instabilidade das entradas (coef. de variação) > 8% E renda declarada > R$ 4.100",
+      "pd": 0.9769805333725546,
+      "n": 92
+    },
+    {
+      "regra": "parcela ÷ sobra mensal (entradas − saídas) > 50% E instabilidade das entradas (coef. de variação) > 8% E renda declarada ≤ R$ 4.100",
+      "pd": 0.9592169332976314,
+      "n": 95
+    },
+    {
+      "regra": "parcela ÷ sobra mensal (entradas − saídas) ≤ 50% E parcela ÷ renda declarada > 29% E score do bureau ≤ 774",
+      "pd": 0.4703306648534078,
+      "n": 98
+    },
+    {
+      "regra": "parcela ÷ sobra mensal (entradas − saídas) ≤ 50% E parcela ÷ renda declarada ≤ 29% E renda declarada ÷ entradas reais > 1.34x",
+      "pd": 0.3450493360239464,
+      "n": 122
+    },
+    {
+      "regra": "parcela ÷ sobra mensal (entradas − saídas) ≤ 50% E parcela ÷ renda declarada > 29% E score do bureau ≥ 775",
+      "pd": 0.23840782821978945,
+      "n": 111
+    },
+    {
+      "regra": "parcela ÷ sobra mensal (entradas − saídas) ≤ 50% E parcela ÷ renda declarada ≤ 29% E renda declarada ÷ entradas reais ≤ 1.34x",
+      "pd": 0.09316168187556095,
+      "n": 5354
+    }
+  ],
+  "onde_atual_erra": [
+    {
+      "grupo": "Aprovados pela política atual (dentro das regras)",
+      "pd": 0.15837116711589128,
+      "n": 5606,
+      "valor_total": 45426001.94
+    },
+    {
+      "grupo": "…desses, com sinal de alerta ou parcela > 50% da sobra (a atual aprova, a proposta nega)",
+      "pd": 0.9035681596629659,
+      "n": 337,
+      "valor_total": 3728489.5
+    },
+    {
+      "grupo": "…desses, sem sinal de alerta",
+      "pd": 0.10511050487384099,
+      "n": 5269,
+      "valor_total": 41697512.440000005
+    },
+    {
+      "grupo": "Aprovados no piloto que a política atual negaria",
+      "pd": 0.3392569348856338,
+      "n": 427,
+      "valor_total": 2918320.6999999997
+    },
+    {
+      "grupo": "…desses, sem sinal de alerta (a atual nega, a proposta aprova)",
+      "pd": 0.11624635584945242,
+      "n": 350,
+      "valor_total": 2212253.4400000004
+    },
+    {
+      "grupo": "…desses, com sinal de alerta",
+      "pd": 0.9593945436418019,
+      "n": 77,
+      "valor_total": 706067.2599999999
+    }
+  ]
+}

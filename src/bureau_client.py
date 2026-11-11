@@ -35,13 +35,18 @@ class TokenInvalido(RuntimeError):
 
 
 def ler_token() -> str:
+    """Ordem: variável de ambiente, solucao/.env (FORTUNA_BUREAU_TOKEN=...), solucao/.bureau_token."""
     tok = os.environ.get("FORTUNA_BUREAU_TOKEN")
+    raiz = Path(__file__).resolve().parent.parent
+    if not tok and (raiz / ".env").exists():
+        for linha in (raiz / ".env").read_text(encoding="utf-8").splitlines():
+            chave, _, valor = linha.strip().partition("=")
+            if chave.strip() == "FORTUNA_BUREAU_TOKEN":
+                tok = valor.strip().strip('"').strip("'")
+    if not tok and (raiz / ".bureau_token").exists():
+        tok = (raiz / ".bureau_token").read_text(encoding="utf-8").strip()
     if not tok:
-        p = Path(__file__).resolve().parent.parent / ".bureau_token"
-        if p.exists():
-            tok = p.read_text(encoding="utf-8").strip()
-    if not tok:
-        raise TokenInvalido("Defina FORTUNA_BUREAU_TOKEN ou crie solucao/.bureau_token com o token do time.")
+        raise TokenInvalido("Defina FORTUNA_BUREAU_TOKEN (ambiente ou solucao/.env) com o token do time.")
     return tok
 
 

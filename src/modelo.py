@@ -29,10 +29,17 @@ FEATS_CLIENTE = [
 # features que dependem do valor concedido: risco só pode subir com o valor (monotonicidade)
 FEATS_VALOR = ["comprometimento", "comprometimento_total", "comprometimento_real", "parcela_sobre_sobra"]
 FEAT_TEMPO = ["t_rel"]
-FEATS = FEATS_CLIENTE + FEATS_VALOR + FEAT_TEMPO
+FEATS_TODAS = FEATS_CLIENTE + FEATS_VALOR + FEAT_TEMPO
+# conjunto enxuto escolhido por validação cruzada (AUC 0,836 / log-loss 0,231 fora da amostra, contra
+# 0,826 / 0,238 com todas as features): menos ruído e mais fácil de explicar ao analista.
+FEATS = ["score", "restricoes_ativas", "consultas_90_dias", "meses_historico_bureau", "divida_outras_sobre_renda",
+         "renda_declarada", "prazo_meses", "mov_entradas_cv", "mov_saldo_medio_med", "mov_meses_cheque",
+         "mov_dias_cheque_total", "mov_saidas_sobre_entradas", "renda_decl_sobre_real",
+         "vinc_aposentado", "vinc_assalariado", "vinc_autonomo", "vinc_empresario"] + FEATS_VALOR + FEAT_TEMPO
 
-PARAMS = dict(objective="binary", learning_rate=0.03, num_leaves=15, min_child_samples=80,
+PARAMS = dict(objective="binary", learning_rate=0.03, num_leaves=4, min_child_samples=500,
               feature_fraction=0.8, bagging_fraction=0.8, bagging_freq=1, lambda_l2=5.0, verbose=-1, seed=42)
+N_ROUNDS = 300
 
 
 def preparar_cliente(base: pd.DataFrame) -> pd.DataFrame:
@@ -64,26 +71,59 @@ def tabela_pessoa_parcela(hist: pd.DataFrame, parcelas: pd.DataFrame) -> pd.Data
 
 
 class ModeloCalote:
-    def __init__(self, n_rounds: int = 400):
+    def __init__(self, n_rounds: int = N_ROUNDS, params: dict | None = None, feats: list[str] | None = None):
         self.n_rounds = n_rounds
+        self.params = {**PARAMS, **(params or {})}
+        self.feats = list(feats or FEATS)
         self.booster: lgb.Booster | None = None
+        self.calibrador = None  # (x_bordas, y_pd) da calibração isotônica
 
     def _matriz(self, X: pd.DataFrame) -> pd.DataFrame:
-        return X[FEATS].astype(float)
+        return X[self.feats].astype(float)
 
     def fit(self, hist: pd.DataFrame, parcelas: pd.DataFrame):
         """hist: base dos aprovados históricos (com valor_aprovado)."""
         h = preparar_cliente(hist).drop(columns=FEATS_VALOR + ["valor", "parcela"], errors="ignore")
         h = pd.concat([h, feats_valor(h, h["valor_aprovado"]).drop(columns=["valor", "parcela"])], axis=1)
         pp = tabela_pessoa_parcela(h, parcelas)
-        mono = [1 if f in FEATS_VALOR else 0 for f in FEATS]
+        mono = [1 if f in FEATS_VALOR else 0 for f in self.feats]
         ds = lgb.Dataset(self._matriz(pp), label=pp["evento"], free_raw_data=False)
-        self.booster = lgb.train({**PARAMS, "monotone_constraints": mono, "monotone_constraints_method": "advanced"},
+        self.booster = lgb.train({**self.params, "monotone_constraints": mono, "monotone_constraints_method": "advanced"},
                                  ds, num_boost_round=self.n_rounds)
         self.n_linhas_treino, self.n_eventos = len(pp), int(pp["evento"].sum())
         return self
 
-    def pd_contrato(self, base: pd.DataFrame, valor, ate_parcela=None) -> np.ndarray:
+    def pd_contrato(self, base: pd.DataFrame, valor, ate_parcela=None, calibrada: bool = True) -> np.ndarray:
+        """PD do contrato inteiro para o valor dado (calibrada, se houver calibrador)."""
+        bruta = self._pd_bruta(base, valor, ate_parcela)
+        if calibrada and self.calibrador is not None and ate_parcela is None:
+            x, y = self.calibrador
+            return np.interp(bruta, x, y)
+        return bruta
+
+    def calibrar(self, hist: pd.DataFrame, parcelas: pd.DataFrame, n_folds: int = 5, n_faixas: int = 20, seed: int = 7):
+        """Calibração isotônica fora da amostra: PD bruta (cross-fitted) -> Kaplan-Meier observado por faixa."""
+        from sklearn.isotonic import IsotonicRegression
+        h = hist.reset_index(drop=True)
+        fold = np.random.RandomState(seed).randint(0, n_folds, len(h))
+        oof = np.zeros(len(h))
+        for f in range(n_folds):
+            m = ModeloCalote(self.n_rounds, self.params, self.feats).fit(h[fold != f], parcelas)
+            oof[fold == f] = m._pd_bruta(h[fold == f], h.loc[fold == f, "valor_aprovado"])
+        h = h.assign(pd_bruta=oof, faixa=pd.qcut(oof, n_faixas, labels=False, duplicates="drop"))
+        tab = h.groupby("faixa").apply(lambda g: pd.Series({
+            "pd_bruta_media": g["pd_bruta"].mean(), "pd_km": km_relativo(g)[0], "n": len(g)}), include_groups=False)
+        iso = IsotonicRegression(y_min=0, y_max=1, out_of_bounds="clip")
+        iso.fit(tab["pd_bruta_media"], tab["pd_km"], sample_weight=tab["n"])
+        x = np.r_[0.0, tab["pd_bruta_media"].values, 1.0]
+        y = np.r_[iso.predict([0.0])[0] if len(tab) else 0, iso.predict(tab["pd_bruta_media"]), 1.0]
+        self.calibrador = (x, np.maximum.accumulate(y))
+        tab["pd_calibrada"] = np.interp(tab["pd_bruta_media"], *self.calibrador)
+        self.tabela_calibracao = tab
+        self.oof = h[["id_pedido", "pd_bruta"]].assign(pd_calibrada=np.interp(oof, *self.calibrador))
+        return self
+
+    def _pd_bruta(self, base: pd.DataFrame, valor, ate_parcela=None) -> np.ndarray:
         """PD do contrato inteiro (ou até `ate_parcela`) para o valor dado. Vetorizado por prazo."""
         X = preparar_cliente(base).drop(columns=FEATS_VALOR + ["valor", "parcela"], errors="ignore").reset_index(drop=True)
         fv = feats_valor(X, np.asarray(valor, float)).drop(columns=["valor", "parcela"])
@@ -103,7 +143,7 @@ class ModeloCalote:
         return 1 - np.exp(log_sobrev)
 
     def importancia(self) -> pd.Series:
-        return pd.Series(self.booster.feature_importance("gain"), index=FEATS).sort_values(ascending=False)
+        return pd.Series(self.booster.feature_importance("gain"), index=self.feats).sort_values(ascending=False)
 
 
 def km_relativo(df: pd.DataFrame, n_bins: int = 10) -> tuple[float, float]:
