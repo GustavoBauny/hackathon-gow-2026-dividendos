@@ -28,10 +28,16 @@
   }
 
   // ---------------------------------------------------------------- controles
+  // Regra desligada na proposta (padrão null): o controle começa desmarcado, parado no corte "ligar_em".
+  function corteInicial(item) {
+    if (pad[item.id] != null) return pad[item.id];
+    return item.ligar_em != null ? item.ligar_em : item.valores[0];
+  }
+
   function htmlControle(item, tipo) {
-    const valores = item.valores, k = valores.indexOf(pad[item.id]);
+    const valores = item.valores, k = valores.indexOf(corteInicial(item));
     const liga = tipo === "regra"
-      ? `<label class="sim-liga"><input type="checkbox" data-liga checked> <b>${esc(item.nome)}</b></label>`
+      ? `<label class="sim-liga"><input type="checkbox" data-liga${pad[item.id] != null ? " checked" : ""}> <b>${esc(item.nome)}</b></label>`
       : `<b>${esc(item.nome)}</b>`;
     return `<div class="sim-regra" data-id="${item.id}" data-tipo="${tipo}">
       <div class="sim-topo">${liga}<span class="sim-cnt" data-cnt></span></div>
@@ -66,6 +72,12 @@
         : "Passa a cortar parcelas que a proposta permite. Nessa faixa: ") + textoEvidencia(e);
     }
     const r = REGRA[id];
+    if (pad[id] == null) {
+      if (P[id] == null) return "<b>Desligada na proposta.</b> " + esc(r.nota_desligada || "Marque para testar.");
+      const f = ev.faixas[r.valores.indexOf(P[id])];
+      if (!f || f.n === 0) return "Ligada, mas não pega ninguém a mais no histórico: quem ela negaria já é negado por outra regra.";
+      return "Ligada: passa a negar, entre clientes que nenhuma outra regra nega: " + textoEvidencia(f);
+    }
     if (P[id] == null) return "<b>Desligada.</b> Libera quem só ela negava: " + textoEvidencia(ev.grupo_padrao);
     if (P[id] === pad[id]) return "Quem só ela nega: " + textoEvidencia(ev.grupo_padrao);
     const afrouxa = r.nega === "maior" ? P[id] > pad[id] : P[id] < pad[id];
@@ -193,9 +205,10 @@
     document.querySelectorAll("#simulador .sim-regra").forEach(div => {
       const id = div.dataset.id, tipo = div.dataset.tipo;
       const valores = tipo === "margem" ? D.margens : (REGRA[id] || TETO[id]).valores;
-      div.querySelector("[data-corte]").value = valores.indexOf(pad[id]);
+      div.querySelector("[data-corte]").value = tipo === "margem" ? valores.indexOf(pad[id])
+        : valores.indexOf(corteInicial(REGRA[id] || TETO[id]));
       const liga = div.querySelector("[data-liga]");
-      if (liga) liga.checked = true;
+      if (liga) liga.checked = pad[id] != null;
     });
     atualizar();
   });

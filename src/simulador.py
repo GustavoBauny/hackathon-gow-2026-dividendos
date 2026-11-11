@@ -65,12 +65,16 @@ REGRAS = [
          valores=[300, 400, 450, 500, 550, 600], rotulo=lambda v: f"nega score abaixo de {v:.0f}"),
     dict(id="renda_min", passo=2, nome="Renda declarada mínima", nega="menor",
          valores=[1000, 1250, 1500, 1750, 2000], rotulo=lambda v: f"nega renda abaixo de R$ {v:,.0f}".replace(",", ".")),
-    # passo 3
-    dict(id="meses_cheque_max", passo=3, nome="Cheque especial recorrente", nega="maior",
+    # passo 3. ligar_em: corte que o controle assume quando o analista liga uma regra desligada na proposta
+    dict(id="meses_cheque_max", passo=3, nome="Cheque especial recorrente", nega="maior", ligar_em=1,
+         nota_desligada="Depois das respostas da Fortuna, deixou de negar sozinho: quase sempre vem com gasto acima de 80% "
+                        "das entradas, que já é negado. Continua no modelo do passo 5.",
          valores=[0, 1, 2, 3, 5], rotulo=lambda v: f"nega com {v + 1:.0f} ou mais meses no cheque especial"),
     dict(id="saidas_sobre_entradas_max", passo=3, nome="Gasto alto sobre as entradas", nega="maior",
          valores=[0.6, 0.7, 0.75, 0.8, 0.85, 0.9, 1.0], rotulo=lambda v: f"nega saídas acima de {_pct(v)} das entradas"),
-    dict(id="consultas_90d_max", passo=3, nome="Consultas ao CPF em 90 dias", nega="maior",
+    dict(id="consultas_90d_max", passo=3, nome="Consultas ao CPF em 90 dias", nega="maior", ligar_em=7,
+         nota_desligada="Depois das respostas da Fortuna, deixou de negar sozinho: todo cliente com 8 ou mais consultas também "
+                        "gasta mais de 80% das entradas, que já é negado. Continua no modelo do passo 5.",
          valores=[3, 5, 6, 7, 9, 11], rotulo=lambda v: f"nega com {v + 1:.0f} ou mais consultas"),
     dict(id="renda_decl_sobre_real_max", passo=3, nome="Renda declarada inflada", nega="maior",
          valores=[1.25, 1.5, 1.75, 2.0, 2.5, 3.0], rotulo=lambda v: f"nega renda declarada acima de {_x(v)} as entradas"),
@@ -119,8 +123,10 @@ def _faixa(x: pd.Series, padrao: float, v: float, nega: str) -> pd.Series:
     return (x >= lo) & (x < hi)  # nega x < corte: a faixa é [lo, hi)
 
 
-def _dispara(x: pd.Series, corte: float, nega: str) -> pd.Series:
-    """Mesma comparação do pipeline: medida ausente (NaN) não dispara a regra."""
+def _dispara(x: pd.Series, corte: float | None, nega: str) -> pd.Series:
+    """Mesma comparação do pipeline: medida ausente (NaN) não dispara a regra; corte None = regra desligada."""
+    if corte is None:
+        return pd.Series(False, index=x.index)
     return ((x > corte) if nega == "maior" else (x < corte)).fillna(False)
 
 
@@ -131,6 +137,8 @@ def evidencia(hist: pd.DataFrame) -> dict:
     Para um teto do passo 4, os contratos sem nenhum sinal de alerta e dentro dos outros dois tetos.
       grupo_padrao: os que só esta regra nega com o corte padrão (o que desligar a regra libera);
       faixas[k]:    os que ficam entre o corte padrão e o corte k (o que a mudança libera ou passa a negar).
+    Regra desligada na proposta (corte padrão None): grupo_padrao fica vazio, e faixas[k] traz os que ligar a
+    regra no corte k passaria a negar.
     """
     pad = asdict(Parametros())
     med, med_teto = medidas(hist), _medidas_teto(hist)
@@ -141,6 +149,10 @@ def evidencia(hist: pd.DataFrame) -> dict:
         outras = np.logical_or.reduce([d.values for k, d in dispara.items() if k != r["id"]])
         base = pd.Series(~outras, index=hist.index)
         x, p0 = med[r["id"]], pad[r["id"]]
+        if p0 is None:
+            out[r["id"]] = {"grupo_padrao": {"n": 0, "pd": None},
+                            "faixas": [_km(hist, base & _dispara(x, v, r["nega"])) for v in r["valores"]]}
+            continue
         out[r["id"]] = {
             "grupo_padrao": _km(hist, base & dispara[r["id"]]),
             "faixas": [None if v == p0 else _km(hist, base & _faixa(x, p0, v, r["nega"])) for v in r["valores"]],
@@ -231,7 +243,7 @@ def montar(novos: pd.DataFrame, hist: pd.DataFrame, modelo, taxa_atraso: dict, o
         "atual_ev": col(atual["ev_modelo"], 4),
     }
     regras = [{"id": r["id"], "passo": r["passo"], "nome": r["nome"], "nega": r["nega"], "valores": r["valores"],
-               "rotulos": [r["rotulo"](v) for v in r["valores"]]} for r in REGRAS]
+               "ligar_em": r.get("ligar_em"), "nota_desligada": r.get("nota_desligada"), "rotulos": [r["rotulo"](v) for v in r["valores"]]} for r in REGRAS]
     tetos = [{"id": r["id"], "nome": r["nome"], "valores": r["valores"], "rotulos": [r["rotulo"](v) for v in r["valores"]]}
              for r in TETOS]
     return {

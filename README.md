@@ -6,10 +6,10 @@ Hackathon GOW 2026. Nova política de crédito para a Fortuna, construída com I
 
 | | Política atual (réplica) | Política proposta |
 |---|---|---|
-| Aprovados (2.000 pedidos novos) | 1.145 | 1.365 (114 com valor reduzido) |
-| Valor aprovado | R$ 8,86 mi | R$ 9,15 mi |
-| Ganho esperado sobre a atual (modelo) | | **+R$ 608 mil** |
-| Backtest cross-fitted nos 10 mil pedidos históricos (resultado esperado pelo modelo, fora da amostra) | −R$ 211 mil | +R$ 3,02 mi (**+R$ 3,23 mi**) |
+| Aprovados (2.000 pedidos novos) | 1.145 | 1.371 (115 com valor reduzido) |
+| Valor aprovado | R$ 8,86 mi | R$ 9,20 mi |
+| Ganho esperado sobre a atual (modelo) | | **+R$ 611 mil** |
+| Backtest cross-fitted nos 10 mil pedidos históricos (resultado esperado pelo modelo, fora da amostra) | −R$ 211 mil | +R$ 3,03 mi (**+R$ 3,24 mi**) |
 
 Os dois números de ganho usam o próprio modelo como juiz. O modelo considera lucrativos os pedidos acima de 6x as entradas
 e os de dívida acima de 35% das entradas, grupos que a v3 passou a negar. Por isso, nessa métrica, a v3 fica abaixo da v2
@@ -18,7 +18,7 @@ lucro esperado pelas taxas observadas no histórico sobe de R$ 459 mil (v2) para
 
 O ganho vem de três frentes:
 - **Reduzir o valor** quando a parcela não cabe na sobra mensal do cliente.
-- **Negar** aprovados com sinais de alerta, que deram 56% de calote no histórico.
+- **Negar** aprovados com sinais de alerta, que deram 57% de calote no histórico.
 - **Aprovar** quem a política atual nega sem motivo: score de 450 a 600, renda de até R$ 2.000 ou 1 restrição, desde que sem sinais de alerta. No piloto, esse grupo deu 8% de calote.
 
 A réplica da política atual reproduz 100% das 8.737 decisões que ela tomou no histórico (`tests/test_politica.py`).
@@ -33,13 +33,14 @@ Os passos são aplicados nesta ordem. O primeiro que nega encerra a análise.
    - score abaixo de 450;
    - renda abaixo de R$ 1.500.
 3. **Sinais de alerta.** Padrões que a IA encontrou no histórico, com calote bem acima da média de 17% (de cerca de 27% a 100%):
-   - cheque especial em 2 ou mais meses;
    - saídas acima de 80% das entradas;
-   - 8 ou mais consultas ao CPF em 90 dias;
    - renda declarada maior que 2 vezes as entradas reais;
    - pico de entradas: os 3 meses antes do pedido 35% ou mais acima dos meses anteriores (cerca de 27% de calote);
    - pedido maior que 6 vezes o que entra por mês na conta (cerca de 74% de calote; mesmo com a parcela entre 30% e 50% da sobra, perto de 50%, contra 11% a 19% de quem pede menos: por isso nega em vez de reduzir);
    - parcelas em outros bancos acima de 35% do que entra na conta (cerca de 32% de calote).
+
+   Cheque especial em 2 ou mais meses e 8 ou mais consultas ao CPF deixaram de negar sozinhos na v4, depois das respostas da Fortuna.
+   São marcas de quem gasta mais de 80% do que entra, e essa regra já nega o cliente. As duas medidas continuam no modelo do passo 5.
 4. **Capacidade de pagamento.** Teto de valor:
    - parcela até 40% da sobra mensal (entradas menos saídas);
    - parcela até 30% das entradas reais, usando a menor entre a média de 12 meses e a de 3 meses;
@@ -142,7 +143,7 @@ python avaliar_historico.py           # validação fora do tempo + backtest (ce
 python gerar_painel.py                # só regera o painel
 python explicar.py P-00070 P-01208    # explica a decisão de pedidos específicos (demo)
 python gerar_decisoes.py --so-cache   # roda sem chamar a API (usa só o cache)
-python -m unittest discover tests     # testes: falhas do bureau (API simulada), réplica da política atual, regras da v3 e simulador
+python -m unittest discover tests     # testes: falhas do bureau (API simulada), réplica da política atual, regras da v3 e da v4 e simulador
 python gerar_decisoes.py --parametros parametros_aprovados.json   # aplica a versão aprovada no simulador do painel
 ```
 

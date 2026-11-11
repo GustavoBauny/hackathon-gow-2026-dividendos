@@ -1,5 +1,23 @@
 # Changelog
 
+## v4 · cheque especial e consultas ao CPF deixam de negar sozinhos (11/11, ~13h30)
+
+Mudança feita depois das respostas da Fortuna. Perguntamos se cheque especial e muitas consultas ao CPF deveriam negar o pedido, e a Fortuna pediu que a solução respondesse.
+
+- **O que os dados mostram.** As duas regras são marcas de quem gasta mais de 80% do que entra, e essa regra já nega o cliente.
+  - Consultas 8+: todos os clientes também gastam mais de 80% (177 de 177 no histórico, 38 de 38 nos novos). Desligar a regra não muda nenhuma decisão.
+  - Cheque em 2+ meses: 451 de 521 no histórico e 92 de 105 nos novos também gastam mais de 80%. Fora disso, cheque em 1 mês não muda o risco (9,3% contra 9,3%, por Kaplan-Meier).
+  - Endurecer perde dinheiro: negar cheque em 1 mês custaria R$ 185 mil nos novos e R$ 842 mil no backtest.
+- **O que mudou.** `meses_cheque_max` e `consultas_90d_max` passam a `None` (regra desligada).
+  - As duas medidas continuam no modelo do passo 5.
+  - No simulador, o analista pode religar as regras. Religadas no corte antigo, o simulador reproduz o CSV da v3 pedido a pedido.
+- **2.000 pedidos novos:** 6 pedidos passam a ser aprovados (R$ 40.500): P-17918, P-25663, P-32545, P-67368, P-83247 e P-86715. Nenhuma outra decisão muda.
+  - A proposta aprova 1.371 pedidos (R$ 9,20 mi), 115 deles com valor reduzido.
+  - Ganho esperado pelo modelo: +R$ 611 mil, contra +R$ 608 mil na v3.
+- **Backtest cross-fitted:** ganho de +R$ 3,24 mi, contra +R$ 3,23 mi na v3.
+- **Desfecho real dos que entram:** só 2 calotes em 24 contratos com desfecho. Esse número não confirma nem desmente o ganho. O modelo está calibrado nesse grupo (prevê 14%, e o observado foi 14%).
+- **Testes:** `tests/test_politica_v4.py` cobre as regras desligadas, o gasto acima de 80% que continua negando e as regras religadas pelo analista.
+
 ## Painel do analista, agentes de IA e Docker (11/11, ~12h)
 
 Nenhuma decisão mudou: o CSV é o mesmo da v3, byte a byte.

@@ -130,9 +130,13 @@ def arvore_combinacoes(h: pd.DataFrame, profundidade: int = 3, min_folha: int = 
 
 
 def _alerta(df: pd.DataFrame, incluir_pico: bool = True) -> pd.Series:
+    """Os sinais de alerta que negam no passo 3 da proposta.
+
+    v4: cheque especial (2+ meses) e consultas (8+) saíram depois das respostas da Fortuna. São marcas de quem
+    gasta mais de 80% do que entra, que este conjunto já cobre.
+    """
     entradas = df["mov_entradas_med"].where(df["mov_entradas_med"] > 0)
-    a = ((df["mov_meses_cheque"] >= 2) | (df["mov_saidas_sobre_entradas"] > 0.8) |
-         (df["consultas_90_dias"] >= 8) | (df["renda_decl_sobre_real"] > 2) |
+    a = ((df["mov_saidas_sobre_entradas"] > 0.8) | (df["renda_decl_sobre_real"] > 2) |
          (df["valor_solicitado"] / entradas > 6).fillna(False) |                     # v3: pedido excessivo
          (df["parcelas_outras_instituicoes"] / entradas > 0.35).fillna(False))       # v3: dívida sobre as entradas
     return a | (df["mov_tendencia_entradas"] > 1.35) if incluir_pico else a
@@ -160,13 +164,15 @@ SPECS = [
      "na conta: é principalmente o pedido excessivo que explica o calote, e reduzir o valor não tirou esse risco."),
     ("risco", "Cheque especial recorrente", "que usaram cheque especial em 2 ou mais meses no último ano",
      lambda h, a: h["mov_meses_cheque"] >= 2,
-     "Uso recorrente indica aperto financeiro crônico. Um mês isolado não muda o risco."),
+     "Uso recorrente indica aperto financeiro crônico. Um mês isolado não muda o risco. Quase sempre vem com gasto acima de 80% "
+     "das entradas, que a proposta já nega. Por isso, na proposta v4, não nega sozinho: pesa no modelo do passo 5."),
     ("risco", "Gasto acima de 80% das entradas", "que gastam mais de 80% do que entra na conta",
      lambda h, a: h["mov_saidas_sobre_entradas"] > 0.8,
      "Sem folga no orçamento, qualquer parcela nova vira atraso."),
     ("risco", "8+ consultas ao CPF em 90 dias", "com 8 ou mais consultas ao CPF nos últimos 90 dias",
      lambda h, a: h["consultas_90_dias"] >= 8,
-     "Busca intensa por crédito na praça. Até 7 consultas o risco é normal."),
+     "Busca intensa por crédito na praça. Até 7 consultas o risco é normal. Todos com 8 ou mais também gastam mais de 80% das "
+     "entradas, que a proposta já nega. Por isso, na proposta v4, não nega sozinho: pesa no modelo do passo 5."),
     ("risco", "Renda declarada inflada", "com renda declarada maior que o dobro das entradas reais na conta",
      lambda h, a: h["renda_decl_sobre_real"] > 2,
      "A movimentação da conta desmente a renda informada no cadastro."),

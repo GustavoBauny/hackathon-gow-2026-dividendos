@@ -6,9 +6,9 @@ São 5 minutos de apresentação e 2 de perguntas. Deixe o painel aberto (`outpu
 
 A política atual nega quem pagaria e aprova quem não consegue pagar. Nos 2.000 pedidos novos, a nossa:
 
-- aprova **1.365** clientes, contra 1.145 da atual;
+- aprova **1.371** clientes, contra 1.145 da atual;
 - empresta **R$ 9,2 mi**, contra R$ 8,9 mi;
-- dá um ganho esperado de **+R$ 608 mil** sobre a atual.
+- dá um ganho esperado de **+R$ 611 mil** sobre a atual.
 
 *Mostrar:* os quadros do Resumo.
 
@@ -29,7 +29,7 @@ A política atual nega quem pagaria e aprova quem não consegue pagar. Nos 2.000
 - **Manchete: o tamanho da parcela.** Com parcela acima de 50% da sobra mensal (entradas menos saídas), **99%** não pagam, seja qual for o tamanho do pedido. Para quem pede um valor proporcional à conta, reduzir o valor resolve.
 - **A política atual erra porque olha a renda declarada.** Quem ela reduziu para caber em 30% da renda declarada deu 58% de calote: 3 em cada 4 tinham pedido mais de 6x o que entra na conta, e reduzir não tirou o risco.
 - **Sinais de alerta na movimentação da conta, que o manual disse que passavam despercebidos:**
-  - cheque especial em 2 ou mais meses: 82% de calote;
+  - cheque especial em 2 ou mais meses: 82% de calote. É marca de quem gasta tudo o que entra: desde a v4, não nega sozinho;
   - gasto acima de 80% das entradas: 98%;
   - renda declarada maior que 2x a real: 92%;
   - pico de entradas nos 3 meses antes do pedido: 27%;
@@ -50,18 +50,18 @@ Os 6 passos, cada um com quantos pedidos decidiu:
 
 1. Bureau.
 2. Faixas sem histórico, com 2+ restrições: 174.
-3. Sinais de alerta: 360 (90 de pedido excessivo e 104 de dívida alta, as duas regras novas da v3).
+3. Sinais de alerta: 352 (92 de pedido excessivo e 106 de dívida alta, as duas regras novas da v3).
 4. Teto de parcela: 40% da sobra e 30% das entradas reais.
-5. Valor ótimo pelo resultado esperado: 71 negados.
-6. Aprovação: 1.365, dos quais 114 com valor reduzido.
+5. Valor ótimo pelo resultado esperado: 73 negados.
+6. Aprovação: 1.371, dos quais 115 com valor reduzido.
 
 O ganho vem de três frentes:
 
 | Frente | Pedidos | Ganho esperado |
 |---|---|---|
-| Negar quem a atual aprova | 199 | +R$ 407 mil |
-| Aprovar quem a atual nega | 419 | +R$ 139 mil |
-| Reduzir valor | 63 | +R$ 62 mil |
+| Negar quem a atual aprova | 196 | +R$ 409 mil |
+| Aprovar quem a atual nega | 422 | +R$ 140 mil |
+| Reduzir valor | 64 | +R$ 62 mil |
 
 A maior frente é cortar as aprovações ruins da política atual. Reduzir o valor ficou menor na v3 porque boa parte dos pedidos grandes demais agora é negada antes, no passo 3.
 
@@ -90,9 +90,13 @@ Na seção "Consultar pedido" do painel, ou no terminal com `python explicar.py 
   - v1 trouxe o alvo com censura e o valor ótimo.
   - v2 trouxe o pico de entradas e o ensemble estável.
   - v3 comparou a política com uma segunda abordagem do time (regras descobertas por agentes de IA + modelo explicável). Dela vieram dois sinais de alerta: o pedido excessivo e a dívida sobre as entradas reais. Isso tirou 145 aprovações que o histórico mostra que dariam prejuízo.
+- **Depois das respostas da Fortuna (v4):** perguntamos se cheque especial e muitas consultas ao CPF deveriam negar o pedido, e a Fortuna pediu que a solução respondesse. Os dados dizem que não, sozinhos: todo cliente com 8 ou mais consultas, e quase todo cliente com cheque em 2 ou mais meses, já gasta mais de 80% do que entra, e essa regra o nega. Desligamos as duas regras: 6 pedidos passam a ser aprovados, e o ganho sobe para R$ 611 mil nos novos e R$ 3,24 mi no backtest. As duas medidas continuam no modelo, e o analista pode religá-las no simulador.
 - **Depois do checkpoint:** *(preencher com o que mudar após a conversa com o mentor; se nada mudar, dizer o que o relatório confirmou, por exemplo as 618 decisões diferentes da atual)*.
 
 ## Perguntas prováveis
+
+**Por que tiraram o cheque especial e as consultas, se dão 82% e 100% de calote?**
+Porque o calote vem do gasto acima de 80% do que entra, que já é negado. Todos os 38 pedidos novos com 8 ou mais consultas e 92 dos 105 com cheque em 2 ou mais meses já caem nessa regra. Fora dela, cheque em 1 mês não muda o risco (9,3% contra 9,3%). Endurecer, negando cheque em 1 mês, custaria R$ 185 mil nos 2.000 pedidos.
 
 **Por que negar 2+ restrições, se 1 restrição paga bem?**
 Ninguém com 2+ foi aprovado no histórico, então não há desfecho para medir. São 84 pedidos novos assim sem nenhum sinal de alerta, e aprová-los seria uma aposta. A recomendação é um piloto controlado, e a decisão é do analista.

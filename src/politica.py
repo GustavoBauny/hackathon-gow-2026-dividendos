@@ -47,9 +47,14 @@ class Parametros:
     renda_min: float | None = 1500           # menor renda aprovada no histórico: 1.550
     restricoes_max: int | None = 1           # piloto aprovou até 1 restrição; 2+ nunca foi aprovado
     # Passo 3: sinais de alerta descobertos no histórico (calote de 70% a 100%)
-    meses_cheque_max: int | None = 1         # 2+ meses no cheque especial nos últimos 12
+    # v4 (respostas da Fortuna, 11/11): cheque especial e consultas ao CPF deixaram de negar sozinhos.
+    # São marcas de quem gasta mais de 80% do que entra, que a regra das saídas já nega: todos os clientes
+    # com 8+ consultas e 92 de 105 novos com cheque em 2+ meses. Desligar as consultas não muda nenhuma decisão.
+    # Desligar o cheque aprova 6 pedidos, e o resultado esperado sobe pelo modelo e no backtest.
+    # As duas medidas continuam no modelo do passo 5, e o analista pode religar as regras no simulador.
+    meses_cheque_max: int | None = None      # religada: 1 = nega 2+ meses no cheque especial nos últimos 12
     saidas_sobre_entradas_max: float | None = 0.80
-    consultas_90d_max: int | None = 7        # 8+ consultas ao CPF em 90 dias
+    consultas_90d_max: int | None = None     # religada: 7 = nega 8+ consultas ao CPF em 90 dias
     renda_decl_sobre_real_max: float | None = 2.0
     tendencia_entradas_max: float | None = 1.35      # entradas dos últimos 3 meses / meses anteriores (pico antes do pedido)
     pedido_sobre_entradas_max: float | None = 6.0    # v3: valor PEDIDO / entradas médias. Acima, ~74% de calote (~50% mesmo com parcela de 30-50% da sobra)

@@ -150,6 +150,58 @@ SIM_CSS = """
 """
 
 
+NOTA_CHEQUE_CONSULTAS = """<p class="small"><b>Mudança depois das respostas da Fortuna (v4).</b> Perguntamos se cheque especial e muitas consultas ao CPF
+      deveriam negar o pedido. A Fortuna pediu que a solução respondesse. Os dados dizem que não, sozinhos: todo cliente com 8 ou mais consultas,
+      e quase todo cliente com cheque especial em 2 ou mais meses, também gasta mais de 80% do que entra, e essa regra já o nega.
+      Desligar as consultas não mudou nenhuma decisão. Desligar o cheque aprovou 6 pedidos, e o resultado esperado subiu pelo modelo e no backtest.
+      As duas medidas continuam no modelo do passo 5, e o analista pode religar as regras no simulador.</p>"""
+
+
+def itens_passo2(P: dict, restr2: int) -> str:
+    """Regras do passo 2 que estão ligadas (None = desligada pelo analista)."""
+    itens = []
+    if P["restricoes_max"] is not None:
+        itens.append(f"{P['restricoes_max'] + 1:.0f} ou mais restrições ativas ({num(restr2)} pedidos). "
+                     "Ninguém assim foi aprovado no histórico, então não há como medir o risco.")
+    faixas = [t for t in (f"score abaixo de {num(P['score_min'])}" if P["score_min"] is not None else "",
+                          f"renda abaixo de {brl(P['renda_min'])}" if P["renda_min"] is not None else "") if t]
+    if faixas:
+        frase = " ou ".join(faixas)
+        itens.append(frase[0].upper() + frase[1:] + ", abaixo de qualquer cliente já aprovado.")
+    return "".join(f"<li>{t}</li>" for t in itens) or "<li>Nenhuma regra ligada neste passo.</li>"
+
+
+def itens_passo3(P: dict) -> str:
+    """Sinais de alerta que estão ligados (None = desligado)."""
+    itens = [
+        ("meses_cheque_max", lambda v: f"Cheque especial em {v + 1:.0f} ou mais meses no último ano."),
+        ("saidas_sobre_entradas_max", lambda v: f"Saídas acima de {pct(v, 0)} das entradas da conta."),
+        ("consultas_90d_max", lambda v: f"{v + 1:.0f} ou mais consultas ao CPF em 90 dias."),
+        ("renda_decl_sobre_real_max", lambda v: f"Renda declarada mais que {num(v)} vezes as entradas reais."),
+        ("tendencia_entradas_max", lambda v: f"Pico de entradas: os 3 meses antes do pedido vêm {num((v - 1) * 100)}% ou mais "
+                                             "acima da média dos meses anteriores."),
+        ("pedido_sobre_entradas_max", lambda v: f"Pedido maior que {num(v)} vezes o que entra por mês na conta. Nega em vez de reduzir: "
+                                                "no histórico, reduzir o valor não tirou o risco."),
+        ("outras_sobre_entradas_max", lambda v: f"Parcelas em outros bancos acima de {pct(v, 0)} do que entra na conta."),
+    ]
+    lis = "".join(f"<li>{texto(P[k])}</li>" for k, texto in itens if P[k] is not None)
+    return lis or "<li>Nenhum sinal de alerta ligado.</li>"
+
+
+def nota_passo3(P: dict) -> str:
+    """Explica o cheque especial e as consultas quando estão desligados (v4)."""
+    desligados = [nome for k, nome in (("meses_cheque_max", "cheque especial recorrente"),
+                                       ("consultas_90d_max", "muitas consultas ao CPF")) if P[k] is None]
+    if not desligados:
+        return ""
+    if len(desligados) == 2 and P["saidas_sobre_entradas_max"] == 0.80:
+        return NOTA_CHEQUE_CONSULTAS
+    if P["saidas_sobre_entradas_max"] is not None:
+        return (f'<p class="small"><b>Não nega sozinho nesta versão:</b> {" e ".join(desligados)}. É marca de quem gasta mais do que '
+                f'{pct(P["saidas_sobre_entradas_max"], 0)} do que entra, que a regra das saídas já nega. Continua no modelo do passo 5.</p>')
+    return f'<p class="small"><b>Desligados nesta versão:</b> {" e ".join(desligados)}. Continuam no modelo do passo 5.</p>'
+
+
 AGENTES_HTML = """
   <h3>Segunda frente: agentes de IA leram o histórico e tentaram derrubar cada achado</h3>
   <p>Em paralelo à varredura, 7 pares de agentes de IA (modelos de linguagem) analisaram o histórico, cada par num tema:
@@ -173,7 +225,7 @@ AGENTES_HTML = """
       <tr><td>Entradas instáveis (variação acima de 35%), só em autônomos e empresários: cerca de 20% de calote.</td><td>Confirmado, no ponto de equilíbrio</td>
         <td>Entra no modelo do passo 5, não como corte.</td></tr>
       <tr><td>8 ou mais consultas ao CPF; cheque especial em 2 ou mais meses.</td><td>Derrubados como regra própria: são marcas do perfil que gasta tudo o que entra</td>
-        <td>Mantidos como alerta, com efeito pequeno: no simulador, desligar as consultas não libera nenhum pedido, e desligar o cheque especial libera 6.</td></tr>
+        <td>Na proposta v4, depois das respostas da Fortuna, não negam sozinhos: desligar as consultas não mudou nenhuma decisão, e desligar o cheque especial aprovou 6 pedidos. Continuam no modelo do passo 5.</td></tr>
       <tr><td>CEP iniciado em 1, a partir de abril de 2025: risco cerca de 2 vezes maior.</td><td>Achado, mas <b>não usado</b></td>
         <td>É atributo sensível. Os agentes estimaram que usá-lo renderia só cerca de R$ 300 a mais. Não usamos gênero, CEP, estado civil nem idade.</td></tr>
     </tbody></table></div>
@@ -339,7 +391,9 @@ def gerar(resumo_path: Path = SAIDA / "resumo.json", destino: Path = SAIDA / "pa
     alvo = r["alvo"]
     restr2 = por_motivo.get("2+ restrições ativas (nunca aprovado no histórico)", 0)
 
-    pagina = f"""<title>Painel de Risco Fortuna</title>
+    # charset primeiro: servido por http.server (Docker) sem charset no cabeçalho, o navegador cairia em Latin-1
+    pagina = f"""<meta charset="utf-8">
+<title>Painel de Risco Fortuna</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -496,7 +550,7 @@ footer.wrap {{ padding-block: 24px 40px; color: var(--muted); font-size: 12.5px;
   <h3>Como a IA chegou a esses padrões</h3>
   <p><b>Varredura automática.</b> Para cada variável, uma árvore de decisão testou todos os cortes e escolheu o que mais separa quem pagou de quem não pagou.
   A árvore aponta a região. O corte final da política fica no ponto em que a taxa salta quando se olha faixa por faixa.
-  Exemplo: com 7 consultas ao CPF, a inadimplência é de 26%; com 8, chega a 100%. Por isso o corte é 8, e não o 7 da árvore.
+  Exemplo: com 7 consultas ao CPF, a inadimplência é de 26%; com 8, chega a 100%. Por isso o padrão marca 8 ou mais, e não 7 como sugeria a árvore.
   Outro caso: renda declarada entre 1,5x e 2x as entradas, sem outros alertas, dá só 7%. Por isso o corte é 2x.</p>
   {varr}
   <p><b>Combinações.</b> Uma árvore de 3 níveis sobre todas as variáveis encontrou estes grupos:</p>
@@ -514,17 +568,11 @@ footer.wrap {{ padding-block: 24px 40px; color: var(--muted); font-size: 12.5px;
     <li><h4>Consulta o bureau</h4> <span class="cnt">{num(cont.get(1, 0))} negados</span>
       <p>Com repetição automática quando o bureau falha. Se nada voltar depois de todas as tentativas, nega e registra o caso para reanálise.</p></li>
     <li><h4>Nega o que o histórico não sabe avaliar</h4> <span class="cnt">{num(cont.get(2, 0))} negados</span>
-      <ul><li>{P['restricoes_max'] + 1} ou mais restrições ativas ({num(restr2)} pedidos). Ninguém assim foi aprovado no histórico, então não há como medir o risco.</li>
-      <li>Score abaixo de {num(P['score_min'])} ou renda abaixo de {brl(P['renda_min'])}, abaixo de qualquer cliente já aprovado.</li></ul></li>
+      <ul>{itens_passo2(P, restr2)}</ul></li>
     <li><h4>Nega sinais de alerta</h4> <span class="cnt">{num(cont.get(3, 0))} negados</span>
-      <ul><li>Cheque especial em {P['meses_cheque_max'] + 1} ou mais meses no último ano.</li>
-      <li>Saídas acima de {pct(P['saidas_sobre_entradas_max'], 0)} das entradas da conta.</li>
-      <li>{P['consultas_90d_max'] + 1} ou mais consultas ao CPF em 90 dias.</li>
-      <li>Renda declarada mais que {num(P['renda_decl_sobre_real_max'])} vezes as entradas reais.</li>
-      <li>Pico de entradas: os 3 meses antes do pedido vêm {num((P['tendencia_entradas_max'] - 1) * 100)}% ou mais acima da média dos meses anteriores.</li>
-      <li>Pedido maior que {num(P['pedido_sobre_entradas_max'])} vezes o que entra por mês na conta. Nega em vez de reduzir: no histórico, reduzir o valor não tirou o risco.</li>
-      <li>Parcelas em outros bancos acima de {pct(P['outras_sobre_entradas_max'], 0)} do que entra na conta.</li></ul>
-      <p class="small muted">Nos quatro primeiros grupos, de 82% a 100% dos clientes deixaram de pagar. No pico de entradas, cerca de 27%, bem acima do limite (cerca de 16%) em que emprestar deixa de dar lucro. No pedido excessivo, cerca de 74%. Mesmo com a parcela entre 30% e 50% da sobra, fica perto de 50%, contra 11% a 19% de quem pede menos; na dívida acima de 35% das entradas, cerca de 32%.</p></li>
+      <ul>{itens_passo3(P)}</ul>
+      {nota_passo3(P)}
+      <p class="small muted">Com gasto acima de 80% das entradas ou renda declarada inflada, mais de 90% dos clientes deixaram de pagar. No pico de entradas, cerca de 27%, bem acima do limite (cerca de 16%) em que emprestar deixa de dar lucro. No pedido excessivo, cerca de 74%. Mesmo com a parcela entre 30% e 50% da sobra, fica perto de 50%, contra 11% a 19% de quem pede menos; na dívida acima de 35% das entradas, cerca de 32%.</p></li>
     <li><h4>Calcula o valor máximo que cabe no bolso</h4> <span class="cnt">{num(cont.get(4, 0))} negados</span>
       <ul><li>A parcela pode ser no máximo {pct(P['teto_parcela_sobre_sobra'], 0)} da sobra mensal (entradas menos saídas, média de 12 meses). Acima de 50%, quase todos deram calote.</li>
       <li>A parcela também fica em no máximo {pct(P['teto_parcela_sobre_entradas'], 0)} das entradas reais da conta. Vale a menor entre a média de 12 meses e a de 3 meses.</li>
@@ -543,7 +591,7 @@ footer.wrap {{ padding-block: 24px 40px; color: var(--muted); font-size: 12.5px;
   <div class="decide">
     <b>O analista decide.</b> Cada corte acima pode ser ligado, desligado ou mudado no <a href="#simulador">simulador</a>, logo abaixo,
     com o efeito nos 2.000 pedidos e o calote de clientes iguais no histórico. Só uma versão aprovada por ele vai para o pipeline.
-    Sugestão para decidir: um piloto pequeno e controlado com clientes de {P['restricoes_max'] + 1}+ restrições, hoje negados por falta de evidência, para medir o risco deles.
+    {f"Sugestão para decidir: um piloto pequeno e controlado com clientes de {P['restricoes_max'] + 1:.0f}+ restrições, hoje negados por falta de evidência, para medir o risco deles." if P['restricoes_max'] is not None else ""}
   </div>
 </section>
 

@@ -71,40 +71,40 @@
     },
     {
       "cfg": "margem 0%",
-      "aprovados": 6977,
-      "valor": 49744619.7,
-      "resultado": 3022374.941838489,
-      "ganho_vs_atual": 3233003.001647893
+      "aprovados": 7015,
+      "valor": 50036342.76,
+      "resultado": 3035050.252583585,
+      "ganho_vs_atual": 3245678.312392989
     },
     {
       "cfg": "margem 3%",
-      "aprovados": 6532,
-      "valor": 46638219.7,
-      "resultado": 2964484.6095571723,
-      "ganho_vs_atual": 3175112.6693665762
+      "aprovados": 6560,
+      "valor": 46841042.76,
+      "resultado": 2975339.6245119935,
+      "ganho_vs_atual": 3185967.6843213974
     },
     {
       "cfg": "proposta",
-      "aprovados": 6879,
-      "valor": 49199419.7,
-      "resultado": 3019494.478567896,
-      "ganho_vs_atual": 3230122.5383773
+      "aprovados": 6916,
+      "valor": 49482742.76,
+      "resultado": 3032124.197136048,
+      "ganho_vs_atual": 3242752.256945452
     },
     {
       "cfg": "teto 30% da sobra",
-      "aprovados": 6880,
-      "valor": 48833350.02,
-      "resultado": 3004214.7315773666,
-      "ganho_vs_atual": 3214842.7913867706
+      "aprovados": 6917,
+      "valor": 49114723.94,
+      "resultado": 3016727.1076116674,
+      "ganho_vs_atual": 3227355.1674210713
     },
     {
       "cfg": "teto 50% da sobra",
-      "aprovados": 6879,
-      "valor": 49221651.71,
-      "resultado": 3020313.2522010566,
-      "ganho_vs_atual": 3230941.3120104605
+      "aprovados": 6916,
+      "valor": 49504974.77,
+      "resultado": 3032942.970769209,
+      "ganho_vs_atual": 3243571.030578613
     }
   ],
   "n_pedidos": 10000,
-  "duracao_s": 89.9
+  "duracao_s": 108.5
 }

@@ -1,12 +1,12 @@
 {
-  "gerado_em": "2026-11-11 12:52:55",
-  "duracao_s": 41.6,
+  "gerado_em": "2026-11-11 13:38:11",
+  "duracao_s": 15.7,
   "csv": {
     "arquivo": "dividendos_final.csv",
     "linhas": 2000,
-    "aprovados": 1365,
-    "negados": 635,
-    "valor_total_aprovado": 9154655.97
+    "aprovados": 1371,
+    "negados": 629,
+    "valor_total_aprovado": 9195155.97
   },
   "diferencas_vs_atual": 618,
   "atual": {
@@ -15,52 +15,52 @@
     "ev_modelo": -12706.515984793758
   },
   "proposta": {
-    "aprovados": 1365,
-    "valor": 9154655.969999999,
-    "ev_modelo": 595744.9234189349,
-    "reduzidos": 114
+    "aprovados": 1371,
+    "valor": 9195155.969999999,
+    "ev_modelo": 598046.644976742,
+    "reduzidos": 115
   },
-  "ganho_estimado": 608451.4394037287,
+  "ganho_estimado": 610753.1609615358,
   "decomposicao": [
     {
       "grupo": "A atual aprova, a proposta nega",
-      "pedidos": 199,
-      "valor_atual": 1969634.39,
+      "pedidos": 196,
+      "valor_atual": 1943934.39,
       "valor_proposta": 0.0,
-      "ev_atual": -407324.9302293501,
+      "ev_atual": -408635.511498784,
       "ev_proposta": 0.0,
-      "ganho": 407324.9302293501
+      "ganho": 408635.511498784
     },
     {
       "grupo": "A atual nega, a proposta aprova",
-      "pedidos": 419,
+      "pedidos": 422,
       "valor_atual": 0.0,
-      "valor_proposta": 2397076.83,
+      "valor_proposta": 2413176.83,
       "ev_atual": 0.0,
-      "ev_proposta": 138920.40465624418,
-      "ganho": 138920.40465624418
+      "ev_proposta": 139823.00667942045,
+      "ganho": 139823.00667942045
     },
     {
       "grupo": "As duas aprovam o mesmo valor (ou maior)",
-      "pedidos": 883,
-      "valor_atual": 6218400.0,
-      "valor_proposta": 6218400.0,
-      "ev_atual": 422986.2347620817,
-      "ev_proposta": 422986.2347620817,
+      "pedidos": 885,
+      "valor_atual": 6236600.0,
+      "valor_proposta": 6236600.0,
+      "ev_atual": 424142.5471252196,
+      "ev_proposta": 424142.5471252196,
       "ganho": 0.0
     },
     {
       "grupo": "As duas aprovam, a proposta reduz o valor",
-      "pedidos": 63,
-      "valor_atual": 668411.74,
-      "valor_proposta": 539179.14,
-      "ev_atual": -28367.820517525346,
-      "ev_proposta": 33838.28400060906,
-      "ganho": 62206.10451813441
+      "pedidos": 64,
+      "valor_atual": 675911.74,
+      "valor_proposta": 545379.14,
+      "ev_atual": -28213.551611229355,
+      "ev_proposta": 34081.091172101864,
+      "ganho": 62294.64278333122
     },
     {
       "grupo": "As duas negam",
-      "pedidos": 436,
+      "pedidos": 433,
       "valor_atual": 0.0,
       "valor_proposta": 0.0,
       "ev_atual": 0.0,
@@ -91,25 +91,25 @@
       "passo": 3,
       "passo_nome": "Sinal de alerta",
       "motivo": "gasta mais de 80% do que entra na conta",
-      "pedidos": 5
+      "pedidos": 72
     },
     {
       "passo": 3,
       "passo_nome": "Sinal de alerta",
       "motivo": "parcelas em outros bancos acima de 35% do que entra na conta",
-      "pedidos": 104
+      "pedidos": 106
     },
     {
       "passo": 3,
       "passo_nome": "Sinal de alerta",
       "motivo": "pede mais de 6x o que entra por mês na conta (reduzir o valor não tira o risco)",
-      "pedidos": 90
+      "pedidos": 92
     },
     {
       "passo": 3,
       "passo_nome": "Sinal de alerta",
       "motivo": "pico de entradas nos 3 meses antes do pedido (35%+ acima da média anterior)",
-      "pedidos": 41
+      "pedidos": 42
     },
     {
       "passo": 3,
@@ -118,33 +118,38 @@
       "pedidos": 40
     },
     {
-      "passo": 3,
-      "passo_nome": "Sinal de alerta",
-      "motivo": "usou cheque especial em 2+ meses no último ano",
-      "pedidos": 80
-    },
-    {
       "passo": 5,
       "passo_nome": "Risco x retorno (modelo)",
       "motivo": "risco de calote alto mesmo com valor reduzido",
-      "pedidos": 71
+      "pedidos": 73
     },
     {
       "passo": 6,
       "passo_nome": "Aprovado",
       "motivo": "aprovado com valor reduzido",
-      "pedidos": 114
+      "pedidos": 115
     },
     {
       "passo": 6,
       "passo_nome": "Aprovado",
       "motivo": "aprovado no valor pedido",
-      "pedidos": 1251
+      "pedidos": 1256
     }
   ],
   "bureau": {
-    "modo": "so_cache",
-    "clientes_no_cache": 2000,
+    "modo": "api",
+    "duracao_s": 0.0,
+    "chamadas_http": 0,
+    "sucesso": 0,
+    "respostas_503": 0,
+    "timeouts": 0,
+    "erros_conexao": 0,
+    "404": 0,
+    "falha_definitiva": 0,
+    "lidos_do_cache": 2000,
+    "latencia_p50_s": null,
+    "latencia_p95_s": null,
+    "latencia_max_s": null,
     "clientes": 2000,
     "com_dados": 2000,
     "sem_dados": 0,
@@ -176,9 +181,9 @@
     "score_min": 450,
     "renda_min": 1500,
     "restricoes_max": 1,
-    "meses_cheque_max": 1,
+    "meses_cheque_max": null,
     "saidas_sobre_entradas_max": 0.8,
-    "consultas_90d_max": 7,
+    "consultas_90d_max": null,
     "renda_decl_sobre_real_max": 2.0,
     "tendencia_entradas_max": 1.35,
     "pedido_sobre_entradas_max": 6.0,
@@ -380,7 +385,7 @@
       "pd_media": 0.16653163037656937,
       "depende_valor": false,
       "lift": 4.908966687538324,
-      "leitura": "Uso recorrente indica aperto financeiro crônico. Um mês isolado não muda o risco.",
+      "leitura": "Uso recorrente indica aperto financeiro crônico. Um mês isolado não muda o risco. Quase sempre vem com gasto acima de 80% das entradas, que a proposta já nega. Por isso, na proposta v4, não nega sozinho: pesa no modelo do passo 5.",
       "taxa_atraso": 0.5,
       "n_novos": 105
     },
@@ -406,7 +411,7 @@
       "pd_media": 0.16653163037656937,
       "depende_valor": false,
       "lift": 6.004865248354031,
-      "leitura": "Busca intensa por crédito na praça. Até 7 consultas o risco é normal.",
+      "leitura": "Busca intensa por crédito na praça. Até 7 consultas o risco é normal. Todos com 8 ou mais também gastam mais de 80% das entradas, que a proposta já nega. Por isso, na proposta v4, não nega sozinho: pesa no modelo do passo 5.",
       "taxa_atraso": NaN,
       "n_novos": 38
     },
@@ -453,53 +458,53 @@
       "tipo": "risco",
       "titulo": "Pico de entradas antes do pedido",
       "sujeito": "sem outros sinais de alerta, mas com entradas nos 3 meses antes do pedido 35% ou mais acima da média dos meses anteriores",
-      "pd": 0.2730048391118338,
-      "n": 122,
+      "pd": 0.27130087576281037,
+      "n": 126,
       "pd_media": 0.16653163037656937,
       "depende_valor": false,
-      "lift": 1.6393572710151343,
+      "lift": 1.6291252007161146,
       "leitura": "A conta \"engorda\" pouco antes do pedido: a movimentação recente não representa a renda de verdade. Entre 1,2x e 1,35x o risco é normal.",
-      "taxa_atraso": 0.125,
-      "n_novos": 39
+      "taxa_atraso": 0.11904761904761904,
+      "n_novos": 40
     },
     {
       "tipo": "risco",
       "titulo": "Entradas instáveis",
       "sujeito": "sem sinais de alerta, mas com entradas instáveis (variação mensal acima de 30%)",
-      "pd": 0.15952320156902933,
-      "n": 527,
+      "pd": 0.15871274557764714,
+      "n": 540,
       "pd_media": 0.16653163037656937,
       "depende_valor": false,
-      "lift": 0.9579153294080395,
+      "lift": 0.9530486503900683,
       "leitura": "Renda irregular quase dobra o risco em relação aos clientes sem sinais de alerta (16% contra 8%) e fica perto do ponto em que emprestar deixa de dar lucro. Entra no modelo, não é corte.",
-      "taxa_atraso": 0.2264957264957265,
-      "n_novos": 202
+      "taxa_atraso": 0.226890756302521,
+      "n_novos": 206
     },
     {
       "tipo": "neutro",
       "titulo": "Dívidas fora acima de 30% da renda",
       "sujeito": "sem sinais de alerta (dívida abaixo de 35% das entradas), mas com dívidas em outros bancos acima de 30% da renda declarada",
-      "pd": 0.04656525740269579,
-      "n": 142,
+      "pd": 0.046012814091326515,
+      "n": 143,
       "pd_media": 0.16653163037656937,
       "depende_valor": false,
-      "lift": 0.27961809595810827,
+      "lift": 0.2763007483159813,
       "leitura": "Parece risco, mas não é: contra a renda declarada a dívida parece alta, mas, enquanto fica abaixo de 35% do que entra na conta, o calote é menor que o dos clientes sem alerta. O que importa é a dívida sobre as entradas reais (v3).",
-      "taxa_atraso": 0.29850746268656714,
+      "taxa_atraso": 0.29411764705882354,
       "n_novos": 46
     },
     {
       "tipo": "oportunidade",
       "titulo": "Score 450 a 600 sem alertas",
       "sujeito": "com score entre 450 e 600 e sem sinais de alerta",
-      "pd": 0.10591784440499241,
-      "n": 215,
+      "pd": 0.10568262884978008,
+      "n": 216,
       "pd_media": 0.16653163037656937,
       "depende_valor": false,
-      "lift": 0.6360223830481084,
+      "lift": 0.6346099453347416,
       "leitura": "A política atual nega todos. Score baixo, sozinho, quase não prevê calote nesta base.",
       "taxa_atraso": 0.2,
-      "n_novos": 336
+      "n_novos": 337
     },
     {
       "tipo": "oportunidade",
@@ -512,7 +517,7 @@
       "lift": 0.22758964498134848,
       "leitura": "A política atual nega todos. Com parcela proporcional à renda, pagam como a média.",
       "taxa_atraso": 0.23529411764705882,
-      "n_novos": 92
+      "n_novos": 93
     },
     {
       "tipo": "oportunidade",
@@ -525,17 +530,17 @@
       "lift": 0.11120120830285225,
       "leitura": "A política atual nega todos. Pagam, mas atrasam mais: cerca de um terço tem alguma parcela em atraso, contra cerca de 22% dos demais.",
       "taxa_atraso": 0.3333333333333333,
-      "n_novos": 89
+      "n_novos": 92
     },
     {
       "tipo": "oportunidade",
       "titulo": "Aposentados",
       "sujeito": "aposentados sem sinais de alerta",
-      "pd": 0.06429799382069656,
-      "n": 532,
+      "pd": 0.06713537833721395,
+      "n": 533,
       "pd_media": 0.16653163037656937,
       "depende_valor": false,
-      "lift": 0.386100788632783,
+      "lift": 0.4031389003122361,
       "leitura": "Renda estável: o grupo de menor risco da base.",
       "taxa_atraso": 0.23183391003460208,
       "n_novos": 154
@@ -544,11 +549,11 @@
       "tipo": "neutro",
       "titulo": "Conta aberta há 3 meses ou menos",
       "sujeito": "sem sinais de alerta e com conta na Fortuna aberta há 3 meses ou menos",
-      "pd": 0.06272364634002658,
-      "n": 138,
+      "pd": 0.06204461763280167,
+      "n": 139,
       "pd_media": 0.16653163037656937,
       "depende_valor": false,
-      "lift": 0.3766470441572742,
+      "lift": 0.3725695682706245,
       "leitura": "Parece risco, mas não é. Na base inteira o grupo tem calote alto, mas por causa dos sinais de alerta que muitos deles têm. Sem os sinais, paga como a média. Por isso não é corte.",
       "taxa_atraso": 0.2222222222222222,
       "n_novos": 38
@@ -557,21 +562,21 @@
       "tipo": "neutro",
       "titulo": "Score acima de 800",
       "sujeito": "sem sinais de alerta e com score acima de 800",
-      "pd": 0.08322169728698825,
-      "n": 1912,
+      "pd": 0.0834532866911264,
+      "n": 1926,
       "pd_media": 0.16653163037656937,
       "depende_valor": false,
-      "lift": 0.4997350779476747,
+      "lift": 0.5011257411124709,
       "leitura": "Score alto não protege. Esse grupo paga igual ao de score 600 a 800, então o score pesa pouco na decisão.",
-      "taxa_atraso": 0.20546448087431693,
-      "n_novos": 452
+      "taxa_atraso": 0.20629750271444083,
+      "n_novos": 457
     }
   ],
   "padroes_ref": {
     "pd_media": 0.16653163037656937,
     "n": 6033,
-    "pd_sem_alerta": 0.08052896455561964,
-    "n_sem_alerta": 5021
+    "pd_sem_alerta": 0.0804646162932029,
+    "n_sem_alerta": 5047
   },
   "varredura": [
     {
@@ -894,15 +899,15 @@
     },
     {
       "grupo": "…desses, com sinal de alerta ou parcela > 50% da sobra (a atual aprova; a proposta nega ou reduz o valor)",
-      "pd": 0.5573186868532276,
-      "n": 887,
-      "valor_total": 8909414.94
+      "pd": 0.5705283468278808,
+      "n": 862,
+      "valor_total": 8699314.94
     },
     {
       "grupo": "…desses, sem sinal de alerta",
-      "pd": 0.08026619575249416,
-      "n": 4719,
-      "valor_total": 36516587.0
+      "pd": 0.08021242320886213,
+      "n": 4744,
+      "valor_total": 36726687.0
     },
     {
       "grupo": "Aprovados no piloto que a política atual negaria",
@@ -912,15 +917,15 @@
     },
     {
       "grupo": "…desses, sem sinal de alerta (a atual nega, a proposta aprova)",
-      "pd": 0.08477321326980203,
-      "n": 302,
-      "valor_total": 1867300.0
+      "pd": 0.0846136736049179,
+      "n": 303,
+      "valor_total": 1882500.0
     },
     {
       "grupo": "…desses, com sinal de alerta",
-      "pd": 0.9251586314655172,
-      "n": 125,
-      "valor_total": 1051020.7
+      "pd": 0.9257290774790512,
+      "n": 124,
+      "valor_total": 1035820.7000000001
     }
   ]
 }
