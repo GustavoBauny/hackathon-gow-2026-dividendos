@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import html
 import json
+import re
 from pathlib import Path
 
 import numpy as np
@@ -244,6 +245,653 @@ AGENTES_HTML = """
   </details>"""
 
 
+MUDA_CSS = """
+:root { --warn-bg: #fdf1e3; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --warn-bg: #3a2a12; } }
+:root[data-theme="dark"] { --warn-bg: #3a2a12; }
+.ad-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 16px; }
+.ad { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; min-width: 0; }
+.ad .k { font-size: 12px; color: var(--muted); }
+.ad-v { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 10px; font-family: var(--f-mono); font-variant-numeric: tabular-nums; margin-top: 4px; }
+.ad-v .antes { font-size: 16px; color: var(--muted); }
+.ad-v .seta { color: var(--muted); }
+.ad-v .depois { font-size: 26px; font-weight: 500; }
+.ad .s { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.ad.destaque { border-color: var(--accent); }
+.ad.destaque .depois, .ad .s b { color: var(--accent); }
+.fluxo { display: flex; gap: 2px; height: 34px; border-radius: 6px; overflow: hidden; margin: 10px 0 8px; }
+.fluxo span { display: grid; place-items: center; min-width: 3px; font-family: var(--f-mono); font-size: 12.5px; font-weight: 500;
+  color: var(--surface); white-space: nowrap; overflow: hidden; }
+.f-igual { background: var(--muted); } .f-reduz { background: var(--warn); } .f-nega { background: var(--risk); }
+.f-aprova { background: var(--good); } .fluxo span.f-negam { background: var(--band); color: var(--muted); }
+.fluxo-leg { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--muted); }
+.fluxo-leg b { color: var(--fg); font-family: var(--f-mono); font-weight: 500; }
+.fluxo-leg i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 6px; }
+.fluxo-leg i.f-negam { background: var(--band); border: 1px solid var(--line); }
+.chip.reduz { color: var(--warn); background: var(--warn-bg); }
+.mud { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 12px 28px; background: var(--surface);
+  border: 1px solid var(--line); border-left: 4px solid var(--c); border-radius: 8px; padding: 16px 18px; margin-top: 12px; }
+.mud.nega { --c: var(--risk); } .mud.aprova { --c: var(--good); } .mud.reduz { --c: var(--warn); }
+.mud h3 { margin: 8px 0 4px; font-size: 18px; text-wrap: balance; }
+.mud-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.mud-n { font-family: var(--f-mono); font-size: 13px; color: var(--muted); white-space: nowrap; }
+.mud-nota { margin-top: 16px; }
+.mud-n b { color: var(--fg); font-weight: 500; } .mud-n b.g { color: var(--c); }
+.mud .porque { margin: 0; }
+.mud-linhas { list-style: none; margin: 0; padding: 0; display: grid; align-content: start; font-size: 13.5px; }
+.mud-linhas li { display: grid; grid-template-columns: minmax(0, 1fr) 52px 96px 42px; gap: 10px; align-items: center;
+  padding: 6px 0; border-bottom: 1px dashed var(--line); }
+.mud-linhas li:last-child { border-bottom: 0; }
+.mud-linhas li.cab { font-size: 11.5px; color: var(--muted); padding-top: 0; border-bottom: 1px solid var(--line); }
+.mud-linhas .q, .mud-linhas .pv { font-family: var(--f-mono); font-variant-numeric: tabular-nums; text-align: right; }
+.mud-linhas .bar { height: 8px; } .mud .bar .fill { background: var(--c); }
+.mud .rodape { grid-column: 1 / -1; font-size: 12.5px; color: var(--muted); margin: 0; max-width: none; }
+:root { --fx0: #1f8a5b; --fx1: #8cc9a8; --fx2: #e8a33d; --fx3: #c8371f; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --fx0: #47cd89; --fx1: #2b6e50; --fx2: #fdb022; --fx3: #f97066; } }
+:root[data-theme="dark"] { --fx0: #47cd89; --fx1: #2b6e50; --fx2: #fdb022; --fx3: #f97066; }
+.ad-grid { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+.ad-v .depois { flex-basis: 100%; }
+.cen { display: grid; gap: 10px; margin-top: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+.cen-linha { display: grid; grid-template-columns: minmax(0, 1fr) 96px; gap: 3px 12px; align-items: center; }
+.cen-lab { grid-column: 1 / -1; font-size: 13px; font-weight: 600; }
+.cen-trilha { position: relative; height: 12px; }
+.cen-zero { position: absolute; top: -3px; bottom: -3px; width: 1px; background: var(--fg); opacity: .5; }
+.cen-bar { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
+.cen-bar.atual { background: var(--muted); } .cen-bar.prop { background: var(--accent); }
+.cen-v { font-family: var(--f-mono); font-size: 12.5px; text-align: right; font-variant-numeric: tabular-nums; }
+.cen-v.neg { color: var(--risk); }
+.fx { display: grid; gap: 8px; margin-top: 8px; }
+.fx-linha { display: grid; grid-template-columns: 70px minmax(0, 1fr) 86px; gap: 10px; align-items: center; font-size: 13px; }
+.fx-trilha { display: flex; gap: 1px; height: 22px; }
+.fx-trilha span:first-child { border-radius: 4px 0 0 4px; } .fx-trilha span:last-child { border-radius: 0 4px 4px 0; }
+.fx-v { font-family: var(--f-mono); font-size: 12.5px; text-align: right; }
+.fx0 { background: var(--fx0); } .fx1 { background: var(--fx1); } .fx2 { background: var(--fx2); } .fx3 { background: var(--fx3); }
+ul.fo { list-style: none; padding: 0; margin: 10px 0; display: grid; gap: 8px; }
+ul.fo li { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) 92px 40px; gap: 12px; align-items: center; font-size: 13.5px; }
+.fo-trilha { height: 12px; background: var(--band); border-radius: 3px; position: relative; }
+.fo-trilha span { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--muted); }
+ul.fo li.nega .fo-trilha span { background: var(--risk); } ul.fo li.aprova .fo-trilha span { background: var(--good); }
+ul.fo li.reduz .fo-trilha span { background: var(--warn); }
+.fo-v, .fo-p { font-family: var(--f-mono); font-size: 12.5px; text-align: right; font-variant-numeric: tabular-nums; }
+.fo-p { font-weight: 600; }
+.fo-call { border-left: 3px solid var(--risk); border-radius: 0 8px 8px 0; }
+.fo-call p { max-width: none; }
+td.n.neg { color: var(--risk); } td.n.pos { color: var(--good); }
+ul.atencao { padding-left: 18px; display: grid; gap: 8px; margin: 8px 0; }
+ul.atencao li { max-width: 90ch; }
+@media (max-width: 720px) { .mud { grid-template-columns: minmax(0, 1fr); }
+  ul.fo li { grid-template-columns: minmax(0, 1fr) 84px 36px; } ul.fo .fo-trilha { grid-column: 1 / -1; grid-row: 2; } }
+@media (max-width: 440px) { .mud-linhas li { grid-template-columns: minmax(0, 1fr) 44px 42px; } .mud-linhas .bh, .mud-linhas .bar { display: none; } }
+"""
+
+
+def _pd_padrao(pads: list[dict], trecho: str, tipo: str | None = None):
+    """Inadimplência do primeiro padrão cujo título contém o trecho."""
+    for p in pads:
+        if (tipo is None or p["tipo"] == tipo) and trecho.lower() in p["titulo"].lower():
+            return p["pd"]
+    return None
+
+
+# trecho do motivo de negação -> trecho do título do padrão com a inadimplência do grupo
+MOTIVO_PADRAO = [("outros bancos", "Dívidas fora acima de 35%"), ("pede mais de", "Pedido acima de"),
+                 ("gasta mais de", "Gasto acima de"), ("pico de entradas", "Pico de entradas"),
+                 ("renda declarada mais que", "Renda declarada inflada"), ("cheque", "Cheque especial"),
+                 ("consultas", "consultas ao CPF")]
+
+
+def _linha_mud(rotulo: str, qtd, pdv, media: float, tip: str = "") -> str:
+    q = "" if qtd is None else num(qtd)
+    if pdv is None:
+        barra, pv = '<span class="bh"></span>', "—"
+    else:
+        dica = e(tip or f"{rotulo}: {pct(pdv, 0)} de calote no histórico (média {pct(media, 0)})")
+        barra = (f'<span class="bar" data-tip="{dica}"><span class="fill" style="width:{min(100, pdv * 100):.1f}%"></span>'
+                 f'<span class="media" style="left:{media * 100:.1f}%"></span></span>')
+        pv = pct(pdv, 0)
+    return f'<li><span>{e(rotulo)}</span><span class="q">{q}</span>{barra}<span class="pv">{pv}</span></li>'
+
+
+def _cartao_mud(classe: str, chip: str, titulo: str, d: dict | None, porque: str, linhas: list[str], rodape: str,
+                cab_qtd: str = "Pedidos") -> str:
+    n = num(d["pedidos"]) if d else "0"
+    ganho = mi(d["ganho"]) if d else "R$ 0"
+    cab = (f'<li class="cab"><span>Motivo</span><span class="q">{cab_qtd}</span><span class="bh"></span>'
+           f'<span class="pv">Calote</span></li>')
+    chip_cls = {"nega": "risco", "aprova": "oportunidade", "reduz": "reduz"}[classe]
+    return f"""
+  <article class="mud {classe}">
+    <div><div class="mud-top"><span class="chip {chip_cls}">{chip}</span><span class="mud-n"><b>{n}</b> pedidos · <b class="g">{ganho}</b></span></div>
+      <h3>{titulo}</h3><p class="porque">{porque}</p></div>
+    <ul class="mud-linhas">{cab}{"".join(linhas)}</ul>
+    <p class="rodape">{rodape}</p>
+  </article>"""
+
+
+GANHO_EM_DIA, GANHO_ATRASO, PERDA_CALOTE = 0.15, 0.05, 0.60  # regras do desafio (as mesmas de src/politica.py)
+PD_EQUILIBRIO = 0.16  # acima desta chance de calote, emprestar dá prejuízo (de 15,5% a 17,8%, conforme a chance de atraso)
+FAIXAS_RISCO = [(0.0, 0.10, "até 10%"), (0.10, 0.16, "10% a 16%"), (0.16, 0.30, "16% a 30%"), (0.30, 1.01, "acima de 30%")]
+CENARIOS = [("Previsto", GANHO_ATRASO, 1.0), ("Atraso custa −10%, como a Fortuna estimou", -0.10, 1.0),
+            ("Calote 20% maior que o previsto", GANHO_ATRASO, 1.2), ("Calote 50% maior", GANHO_ATRASO, 1.5),
+            ("Calote dobra", GANHO_ATRASO, 2.0)]
+
+
+def curto(v: float) -> str:
+    """R$ em mi ou mil, sem sinal de mais (para estoques: valor emprestado, perda)."""
+    sinal, a = ("−" if v < 0 else ""), abs(v)
+    return f"{sinal}R$ {num(a / 1e6, 2)} mi" if a >= 1e6 else f"{sinal}R$ {num(a / 1e3, 0)} mil"
+
+
+def _atraso_por_pedido(r: dict, det: pd.DataFrame) -> pd.Series:
+    """Chance de atrasar entre os que pagam, para todos os pedidos (o arquivo de decisões só traz para quem chegou ao passo 5)."""
+    a = det["p_atraso"].copy()
+    caminho = SAIDA / "simulador.json"
+    if caminho.exists():
+        s = json.loads(caminho.read_text(encoding="utf-8"))["pedidos"]
+        a = det["id_pedido"].map(dict(zip(s["id"], s["atraso"]))).fillna(a)
+    return a.fillna(r["taxa_atraso"]["sem_restricao"]).astype(float)
+
+
+def _lucro(v, p, a, atraso=GANHO_ATRASO, k=1.0) -> float:
+    margem = GANHO_EM_DIA * (1 - a) + atraso * a
+    q = np.minimum(k * p, 1.0)
+    return float((v * ((1 - q) * margem - PERDA_CALOTE * q)).sum())
+
+
+def numeros_carteira(r: dict, det: pd.DataFrame) -> tuple[dict, pd.Series]:
+    """Dinheiro e risco das carteiras que cada política aprova nos pedidos novos, pelo modelo.
+
+    A chance de calote da política atual, no valor que ela aprova, sai do resultado esperado que o pipeline calculou para ela
+    (o resultado esperado é linear na chance de calote, então dá para inverter)."""
+    a_ = _atraso_por_pedido(r, det)
+    m = GANHO_EM_DIA * (1 - a_) + GANHO_ATRASO * a_
+    with np.errstate(divide="ignore", invalid="ignore"):
+        pd_atual = (m - det["ev_atual"] / det["valor_atual"]) / (m + PERDA_CALOTE)
+    cart = {}
+    for nome, sel, v, p in (("atual", det["decisao_atual"] == "APROVADO", det["valor_atual"], pd_atual),
+                            ("proposta", det["decisao"] == "APROVADO", det["valor_aprovado"], det["pd"])):
+        v, p, a = v[sel].to_numpy(float), p[sel].to_numpy(float), a_[sel].to_numpy(float)
+        mm = GANHO_EM_DIA * (1 - a) + GANHO_ATRASO * a
+        cart[nome] = dict(
+            valor=v.sum(), calote=(v * p).sum() / v.sum(), contratos_calote=p.sum(), perda=(v * p * PERDA_CALOTE).sum(),
+            lucro=_lucro(v, p, a), equilibrio=(v * mm).sum() / (v * p * (mm + PERDA_CALOTE)).sum(),
+            cenarios=[_lucro(v, p, a, at, k) for _, at, k in CENARIOS],
+            faixas=[(v[(p >= lo) & (p < hi)].sum(), int(((p >= lo) & (p < hi)).sum())) for lo, hi, _ in FAIXAS_RISCO])
+    return cart, pd_atual
+
+
+def bloco_cenarios(cart: dict) -> str:
+    """Lucro das duas carteiras em cenários piores que o previsto."""
+    ca, cp = cart["atual"], cart["proposta"]
+    vals = ca["cenarios"] + cp["cenarios"]
+    neg, pos = max(0.0, -min(vals)), max(0.0, max(vals))
+    escala = (neg + pos) * 1.04 or 1.0
+    zero = neg / escala * 100
+
+    def barra(v, cls, quem):
+        w = abs(v) / escala * 100
+        x = zero if v >= 0 else zero - w
+        return (f'<div class="cen-trilha"><span class="cen-zero" style="left:{zero:.1f}%"></span>'
+                f'<span class="cen-bar {cls}" style="left:{x:.1f}%;width:{w:.1f}%" data-tip="{e(quem)}: {mi(v)}"></span></div>'
+                f'<span class="cen-v{" neg" if v < 0 else ""}">{mi(v)}</span>')
+
+    linhas = "".join(
+        f'<div class="cen-linha"><div class="cen-lab">{e(nome)}</div>'
+        f'{barra(ca["cenarios"][i], "atual", "Política atual")}{barra(cp["cenarios"][i], "prop", "Proposta")}</div>'
+        for i, (nome, _, _) in enumerate(CENARIOS))
+    folga = cp["equilibrio"] - 1
+    frase_atual = ("A atual já está no zero: qualquer piora vira prejuízo." if ca["equilibrio"] < 1.05
+                   else f"A atual aguenta o calote subir {pct(ca['equilibrio'] - 1, 0)} antes de dar prejuízo.")
+    return f"""
+  <h3>E se o cenário piorar?</h3>
+  <p>{frase_atual} A proposta só dá prejuízo se o calote passar de <b>{num(cp['equilibrio'], 1)} vezes</b> o previsto
+  (folga de {pct(folga, 0)}).</p>
+  <div class="legend"><span><i class="sw" style="background:var(--muted)"></i>Política atual</span><span><i class="sw" style="background:var(--accent)"></i>Proposta</span>
+    <span>lucro esperado em cada cenário</span></div>
+  <div class="cen">{linhas}</div>"""
+
+
+def bloco_faixas(cart: dict) -> str:
+    """Quanto dinheiro cada carteira põe em cada faixa de chance de calote."""
+    vmax = max(cart["atual"]["valor"], cart["proposta"]["valor"])
+
+    def linha(nome, c):
+        segs = "".join(
+            f'<span class="fx{k}" style="width:{v / vmax * 100:.2f}%" data-tip="{e(nome)}, chance de calote {rot}: {curto(v)} em {num(n)} contratos"></span>'
+            for k, ((v, n), (_, _, rot)) in enumerate(zip(c["faixas"], FAIXAS_RISCO)) if v > 0)
+        return f'<div class="fx-linha"><span class="fx-lab">{nome}</span><div class="fx-trilha">{segs}</div><span class="fx-v">{curto(c["valor"])}</span></div>'
+
+    def acima(c):
+        v = sum(f[0] for f, (lo, _, _) in zip(c["faixas"], FAIXAS_RISCO) if lo >= PD_EQUILIBRIO)
+        n = sum(f[1] for f, (lo, _, _) in zip(c["faixas"], FAIXAS_RISCO) if lo >= PD_EQUILIBRIO)
+        return v, n
+    va, na = acima(cart["atual"])
+    vp, np_ = acima(cart["proposta"])
+    prop = "nada" if vp < 500 else f"{curto(vp)} ({num(np_)} contrato{'s' if np_ != 1 else ''})"
+    leg = "".join(f'<span><i class="sw fx{k}"></i>{rot}</span>' for k, (_, _, rot) in enumerate(FAIXAS_RISCO))
+    return f"""
+  <h3>Onde está o dinheiro</h3>
+  <p>Acima de cerca de {pct(PD_EQUILIBRIO, 0)} de chance de calote, emprestar dá prejuízo. A atual põe <b>{curto(va)}</b> ({num(na)} contratos) nessa faixa.
+  A proposta, {prop}.</p>
+  <div class="legend"><span>Chance de calote de cada contrato:</span>{leg}</div>
+  <div class="fx">{linha("Atual", cart["atual"])}{linha("Proposta", cart["proposta"])}</div>"""
+
+
+def _rotulo_motivo(motivo: str) -> str:
+    rot = re.sub(r"\s*\(.*\)$", "", motivo)
+    if motivo.startswith("risco de calote alto"):
+        return "Nega por risco alto no modelo, mesmo com valor menor"
+    return ("Nega quem " if rot.split()[0] in ("pede", "gasta") else "Nega: ") + rot
+
+
+def fontes_do_ganho(r: dict, det: pd.DataFrame) -> list[dict]:
+    """Ganho sobre a atual separado por regra. Soma exatamente o ganho total.
+
+    Negados que a atual aprovava: cada um conta para a regra que o negou (a primeira, na ordem dos passos)."""
+    ap, pp = det["decisao_atual"] == "APROVADO", det["decisao"] == "APROVADO"
+    itens = [dict(tipo="nega", motivo=m, rotulo=_rotulo_motivo(m), n=len(t), ganho=float(-t["ev_atual"].sum()))
+             for m, t in det[ap & ~pp].groupby("motivo")]
+    novos = det[~ap & pp]
+    itens.append(dict(tipo="aprova", rotulo="Aprova bom pagador que a atual nega", n=len(novos), ganho=float(novos["ev_modelo"].sum())))
+    ambas = det[ap & pp]
+    itens.append(dict(tipo="reduz", rotulo="Empresta menos quando a parcela não cabe na sobra",
+                      n=int((ambas["valor_aprovado"] < ambas["valor_atual"] - 0.005).sum()),
+                      ganho=float((ambas["ev_modelo"] - ambas["ev_atual"]).sum())))
+    return sorted(itens, key=lambda x: -x["ganho"])
+
+
+def bloco_fontes(r: dict, det: pd.DataFrame, pd_atual: pd.Series) -> str:
+    """De onde vem o ganho, regra a regra, e por que a maior fatia é tão grande."""
+    itens = fontes_do_ganho(r, det)
+    total = sum(i["ganho"] for i in itens)
+    grandes = [i for i in itens if i["ganho"] >= 0.05 * total]
+    resto = [i for i in itens if i["ganho"] < 0.05 * total]
+    if resto:
+        grandes.append(dict(tipo="resto", rotulo=f"Outras {len(resto)} regras", n=sum(i["n"] for i in resto),
+                            ganho=sum(i["ganho"] for i in resto), dica="; ".join(f"{i['rotulo']}: {mi(i['ganho'])}" for i in resto)))
+    gmax = max(abs(i["ganho"]) for i in grandes)
+    linhas = "".join(
+        f'<li class="{i["tipo"]}"><span class="fo-lab">{e(i["rotulo"])}<span class="muted"> · {num(i["n"])} pedidos</span></span>'
+        f'<span class="fo-trilha" data-tip="{e(i.get("dica") or i["rotulo"])}"><span style="width:{abs(i["ganho"]) / gmax * 100:.1f}%"></span></span>'
+        f'<span class="fo-v">{mi(i["ganho"])}</span><span class="fo-p">{pct(i["ganho"] / total, 0)}</span></li>'
+        for i in grandes)
+
+    # a maior fatia: por que rende tanto, e se é erro
+    top = itens[0]
+    explica = ""
+    if top["tipo"] == "nega" and top["ganho"] / total >= 0.25:
+        sel = (det["decisao_atual"] == "APROVADO") & (det["decisao"] == "NEGADO") & (det["motivo"] == top["motivo"])
+        t = det[sel]
+        pd_mod = float((t["valor_atual"] * pd_atual[sel]).sum() / t["valor_atual"].sum())
+        chave = next((p for m, p in MOTIVO_PADRAO if m in top["motivo"]), None)
+        hist = next((p for p in r["padroes"] if chave and chave.lower() in p["titulo"].lower()), None)
+        cortado = t["valor_atual"].mean() < t["valor_solicitado"].mean() - 1
+        atual_faz = (f"A atual corta para {brl(t['valor_atual'].mean())}, para a parcela caber em 30% da renda declarada, e aprova."
+                     if cortado else "A atual aprova.")
+        hist_txt = f" No histórico, clientes assim deram <b>{pct(hist['pd'], 0)}</b> de calote ({num(hist['n'])} contratos)." if hist else ""
+        concorda = hist is not None and hist["pd"] > PD_EQUILIBRIO and pd_mod > PD_EQUILIBRIO
+        regra_top = next((k for m, k in MOTIVO_REGRA if m in top["motivo"]), None)
+        explica = f"""
+  <div class="callout fo-call">
+    <p><b>Por que {num(top['n'])} pedidos rendem {pct(top['ganho'] / total, 0)} do ganho?</b> São pedidos grandes: {brl(t['valor_solicitado'].mean())} em média.
+    {atual_faz} Mesmo assim, o modelo estima <b>{pct(pd_mod, 0)}</b> de chance de calote.{hist_txt}
+    Cada um custa em média {brl(top['ganho'] / top['n'])} de prejuízo esperado.</p>
+    <p id="fo-erro" data-regra="{e(regra_top or '')}"><b>É erro?</b> {"Não. No valor que a atual aprova, o modelo e o histórico concordam que esse cliente dá prejuízo." if concorda else "O modelo e o histórico não concordam: vale conferir no simulador."}
+    O analista pode testar outros cortes no <a href="#simulador">simulador</a>.</p>
+  </div>"""
+    return f"""
+  <h3>De onde vem o lucro</h3>
+  <p>O ganho de <b>{mi(total)}</b> sobre a atual, por regra. Cada pedido que muda de decisão conta para a primeira regra que o decidiu.</p>
+  <ul class="fo">{linhas}</ul>
+  {explica}
+  {bloco_sem_regra(r)}"""
+
+
+MOTIVO_REGRA = [("pede mais de", "pedido_sobre_entradas_max"), ("gasta mais de", "saidas_sobre_entradas_max"),
+                ("outros bancos", "outras_sobre_entradas_max"), ("pico de entradas", "tendencia_entradas_max"),
+                ("renda declarada mais que", "renda_decl_sobre_real_max"), ("cheque", "meses_cheque_max"),
+                ("consultas", "consultas_90d_max")]
+
+
+def bloco_sem_regra(r: dict) -> str:
+    """Quanto o lucro muda se o analista tirar cada regra. A página calcula com o motor do simulador (sem servidor)."""
+    if not (SAIDA / "simulador.json").exists():
+        return ""
+    P = r["parametros"]
+    rot = {"pedido_sobre_entradas_max": lambda v: f"Negar pedido acima de {num(v)}x o que entra por mês",
+           "saidas_sobre_entradas_max": lambda v: f"Negar gasto acima de {pct(v, 0)} do que entra",
+           "outras_sobre_entradas_max": lambda v: f"Negar dívida em outros bancos acima de {pct(v, 0)} do que entra",
+           "tendencia_entradas_max": lambda v: "Negar pico de entradas antes do pedido",
+           "renda_decl_sobre_real_max": lambda v: f"Negar renda declarada acima de {num(v)}x as entradas",
+           "meses_cheque_max": lambda v: f"Negar cheque especial em {v + 1:.0f} ou mais meses",
+           "consultas_90d_max": lambda v: f"Negar {v + 1:.0f} ou mais consultas ao CPF"}
+    testes = [[k, f(P[k]), None] for k, f in rot.items() if P.get(k) is not None]
+    if P["score_min"] is not None and P["score_min"] < 600:
+        testes.append(["score_min", f"Aprovar score de {num(P['score_min'])} a 600", 600])
+    if P["renda_min"] is not None and P["renda_min"] < 2000:
+        testes.append(["renda_min", f"Aprovar renda declarada de {brl(P['renda_min'])} a R$ 2.000", 2000])
+    if P["restricoes_max"] is not None and P["restricoes_max"] >= 1:
+        testes.append(["restricoes_max", "Aprovar quem tem restrição no nome", 0])
+    return f"""
+  <h3>E se tirar cada regra?</h3>
+  <p>Tirando uma regra de cada vez, sem mexer nas outras. "Se o histórico se repetir" supõe que os clientes liberados deem o calote que
+  clientes iguais deram no histórico.</p>
+  <div id="fo-sem" data-testes="{e(json.dumps(testes, ensure_ascii=False))}"><p class="small muted">Calculando…</p></div>
+  <p class="small"><b>Como ler.</b> As regras de alerta funcionam como seguro. Pelo modelo, tirar uma delas quase não muda o lucro, porque os passos 4 e 5
+  negariam ou cortariam a maioria desses pedidos. Elas protegem contra o modelo errar nesses grupos, como o histórico indica.
+  Aprovar quem a atual nega rende de fato: sem essas mudanças, o lucro cai pelos dois critérios.</p>"""
+
+
+SEM_REGRA_JS = r"""
+(function () {
+  const el = document.getElementById("fo-sem"), dadosEl = document.getElementById("sim-dados");
+  if (!el || !dadosEl || !window.Simulador) return;
+  const S = window.Simulador, D = JSON.parse(dadosEl.textContent), g = S.decodificarGrade(D.grade_pd_u16_b64);
+  const pad = { ...D.parametros_padrao }, base = S.resumir(D, S.simular(D, g, pad), pad);
+  const fmt = (v, c) => v.toLocaleString("pt-BR", { minimumFractionDigits: c, maximumFractionDigits: c });
+  const mil = v => { const a = Math.abs(v); if (a < 500) return "R$ 0"; const s = v < 0 ? "−" : "+";
+    return a >= 1e6 ? `${s}R$ ${fmt(a / 1e6, 2)} mi` : `${s}R$ ${fmt(Math.round(a / 1e3), 0)} mil`; };
+  const sem = s => s.replace(/^[+−]/, "");
+  const linhas = JSON.parse(el.dataset.testes).map(([id, rot, valor]) => {
+    const P = { ...pad, [id]: valor }, r = S.resumir(D, S.simular(D, g, P), P);
+    return { id, rot, n: r.aprovados - base.aprovados, mod: r.ganho - base.ganho, hist: r.ganhoHistorico - base.ganho };
+  });
+  const cls = v => (v <= -500 ? "neg" : v >= 500 ? "pos" : "");
+  const esc = s => String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]);
+  el.innerHTML = `<div class="tbl"><table><thead><tr><th>Se tirar</th><th>Aprovados</th><th>Lucro, pelo modelo</th>
+    <th>Lucro, se o histórico se repetir</th></tr></thead><tbody>` + linhas.map(l => `<tr><td>${esc(l.rot)}</td>
+    <td class="n">${l.n > 0 ? "+" : ""}${fmt(l.n, 0)}</td><td class="n ${cls(l.mod)}">${mil(l.mod)}</td>
+    <td class="n ${cls(l.hist)}">${mil(l.hist)}</td></tr>`).join("") + "</tbody></table></div>";
+  const p = document.getElementById("fo-erro");
+  const l = p && linhas.find(x => x.id === p.dataset.regra);
+  const ev = l && D.evidencia[l.id] && D.evidencia[l.id].grupo_padrao;
+  if (l && ev && ev.pd != null && l.hist < l.mod - 500) {
+    p.innerHTML = `<b>É erro?</b> Não, mas aqui o modelo e o histórico discordam. Sem essa regra, os passos 4 e 5 emprestariam um valor menor
+      a esses clientes, e o modelo acha que aí eles pagam: o lucro pelo modelo ${l.mod >= 500 ? "até sobe " + mil(l.mod) : "fica em " + mil(l.mod)}.
+      No histórico, porém, o calote desse grupo passou de <b>${fmt(Math.floor(ev.pd * 10) * 10, 0)}%</b>.
+      Se isso se repetir, tirar a regra custa <b>${sem(mil(l.hist))}</b>. A regra é um seguro:
+      ${l.mod >= 500 ? "deixa de ganhar " + sem(mil(l.mod)) + " se o modelo estiver certo e " : ""}evita ${sem(mil(l.hist))} de prejuízo se o histórico estiver.
+      Ficamos com o histórico. O analista pode testar outros cortes no <a href="#simulador">simulador</a>.`;
+  }
+})();
+"""
+
+
+def bloco_atencao(r: dict, det: pd.DataFrame, cart: dict, pd_atual: pd.Series) -> str:
+    """O que pode dar errado, para quem decide: incerteza do modelo, clientes novos, custo do atraso, regras sem evidência."""
+    av_path = SAIDA / "avaliacao.json"
+    av = json.loads(av_path.read_text(encoding="utf-8")) if av_path.exists() else None
+    itens = []
+    if av:
+        bt = {x["cfg"]: x for x in av["backtest"]}
+        bt_txt = f". Em 10 mil pedidos antigos, decididos por modelos que não os viram, rendeu {mi(bt['proposta']['ganho_vs_atual'])} sobre a atual" if "proposta" in bt else ""
+        itens.append(("Os números são uma estimativa do modelo.",
+                      f"Ele foi testado em pedidos que não viu: previu bem os calotes dos trimestres seguintes (nota {num(av['fora_do_tempo']['auc'], 2)}, numa escala de 0,5 a 1){bt_txt}."))
+    novos = det[(det["decisao_atual"] == "NEGADO") & (det["decisao"] == "APROVADO")]
+    piloto = next((g for g in r["onde_atual_erra"] if "a proposta aprova" in g["grupo"]), None)
+    itens.append((f"{num(len(novos))} clientes que a Fortuna hoje não atende ({curto(novos['valor_aprovado'].sum())}).",
+                  (f"No piloto, clientes assim, sem sinal de alerta, deram {pct(piloto['pd'], 1)} de calote ({num(piloto['n'])} contratos). " if piloto else "")
+                  + "Sugestão: acompanhar as primeiras parcelas desse grupo."))
+    ca, cp = cart["atual"], cart["proposta"]
+    itens.append(("O atraso pode custar mais que o manual diz.",
+                  f"A Fortuna estimou −10% no atraso, e não +5%. Nesse caso o lucro da proposta cai para {mi(cp['cenarios'][1])}, e a atual vai a {mi(ca['cenarios'][1])}. "
+                  f"A vantagem sobre a atual fica em {mi(cp['cenarios'][1] - ca['cenarios'][1])}."))
+    # regra em que o modelo vê empate, mas o histórico vê prejuízo: o ganho real tende a ser maior que o mostrado
+    for m, t in det[(det["decisao_atual"] == "APROVADO") & (det["decisao"] == "NEGADO")].groupby("motivo"):
+        chave = next((p for k, p in MOTIVO_PADRAO if k in m), None)
+        hist = next((p for p in r["padroes"] if chave and chave.lower() in p["titulo"].lower()), None)
+        pm = float(pd_atual[t.index].mean())
+        if hist and pm < PD_EQUILIBRIO + 0.01 and hist["pd"] > PD_EQUILIBRIO + 0.08:
+            itens.append((f"{_rotulo_motivo(m).replace('Nega: ', '').capitalize()}: o modelo e o histórico discordam.",
+                          f"O modelo vê esses {num(len(t))} pedidos quase no empate ({pct(pm, 0)} de chance de calote). No histórico, foram {pct(hist['pd'], 0)}. "
+                          "Ficamos com o histórico. Se ele estiver certo, o ganho real é maior que o mostrado."))
+    restr2 = next((p["pedidos"] for p in r["por_passo"] if p["motivo"].startswith("2+ restrições")), 0)
+    if restr2:
+        itens.append((f"{num(restr2)} pedidos com 2 ou mais restrições continuam negados.",
+                      "Ninguém assim foi aprovado no histórico, então não dá para medir o risco. Pode haver bom pagador aí. "
+                      "Sugestão: um piloto pequeno e controlado para medir."))
+    lis = "".join(f"<li><b>{e(t)}</b> {d}</li>" for t, d in itens)
+    return f"""
+  <h3>Pontos de atenção</h3>
+  <ul class="atencao">{lis}</ul>"""
+
+
+PITCH_CSS = """
+.pitch h2 { font-size: clamp(26px, 3.6vw, 36px); line-height: 1.15; margin: 0 0 4px; }
+.pitch .sub { color: var(--muted); margin: 0 0 14px; }
+.big-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.big { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; min-width: 0; }
+.big .k { font-size: 13px; color: var(--muted); }
+.big .v { font-family: var(--f-mono); font-size: clamp(30px, 4vw, 40px); font-weight: 500; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.big .s { font-size: 13px; color: var(--muted); }
+.big.destaque { border: 2px solid var(--accent); } .big.destaque .v { color: var(--accent); }
+.pq-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 12px; margin-top: 12px; }
+.pq { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; min-width: 0; }
+.pq h3 { margin: 0 0 6px; font-size: 16px; }
+.pq ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.pq li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; font-size: 14px; line-height: 1.45;
+  padding-top: 10px; border-top: 1px solid var(--line); }
+.pq li:first-child { border-top: 0; padding-top: 0; }
+.pq li .t { display: block; font-size: 15px; font-weight: 700; }
+.pq li .ev b { color: var(--fg); }
+.pq li .ev { color: var(--muted); }
+.pq .rs { font-family: var(--f-mono); font-size: 13.5px; font-weight: 600; white-space: nowrap; color: var(--good); }
+.pq .rs.neg { color: var(--risk); }
+.fontes { margin-top: 12px; background: var(--band); border-radius: 10px; padding: 10px 16px; font-size: 13px; }
+.fontes b { margin-right: 6px; }
+.fontes ul { list-style: none; display: inline; padding: 0; margin: 0; }
+.fontes li { display: inline; }
+.fontes li + li::before { content: " · "; color: var(--muted); }
+details.det-resumo { margin-top: 18px; }
+details.det-resumo > summary { font-size: 14px; font-weight: 600; padding: 8px 0; }
+"""
+
+
+def bloco_pitch(r: dict, det: pd.DataFrame, cart: dict) -> str:
+    """Uma tela para mostrar ao cliente: resultado, por quê, riscos e de onde vêm os números."""
+    P, pads = r["parametros"], r["padroes"]
+    media = r["padroes_ref"]["pd_media"]
+    dec = {d["grupo"]: d for d in r["decomposicao"]}
+    ca, cp = cart["atual"], cart["proposta"]
+    at, pr = r["atual"], r["proposta"]
+    g = lambda grupo: dec.get(grupo, {}).get("ganho", 0.0)  # noqa: E731
+
+    # por quê 1: as duas regras de negação que mais rendem, com o calote do histórico
+    fontes = [i for i in fontes_do_ganho(r, det) if i["tipo"] == "nega" and not i["motivo"].startswith("risco")]
+    exemplos = []
+    for i in fontes[:2]:
+        chave = next((p for m, p in MOTIVO_PADRAO if m in i["motivo"]), None)
+        pdh = _pd_padrao(pads, chave, "risco") if chave else None
+        rot = re.sub(r"\s*\(.*\)$", "", i["motivo"]).replace(" na conta", "")
+        if pdh is not None:
+            exemplos.append((("quem " if rot.split()[0] in ("pede", "gasta") else "") + rot, pdh))
+    if len(exemplos) == 2:
+        ev1 = (f"Quem {exemplos[0][0].removeprefix('quem ')} deu <b>{pct(exemplos[0][1], 0)}</b> de calote no histórico; "
+               f"quem {exemplos[1][0].removeprefix('quem ')}, <b>{pct(exemplos[1][1], 0)}</b>. A regra atual aprova os dois.")
+    else:
+        ev1 = "Sinais no extrato da conta que, no histórico, deram de 27% a 98% de calote. A regra atual aprova esses clientes."
+
+    quem = [t for t in (f"score de {num(P['score_min'])} a 600" if P["score_min"] is not None and P["score_min"] < 600 else "",
+                        f"renda de {brl(P['renda_min'])} a R$ 2.000" if P["renda_min"] is not None and P["renda_min"] < 2000 else "",
+                        "1 restrição no nome" if P["restricoes_max"] is not None and P["restricoes_max"] >= 1 else "") if t]
+    piloto = next((x for x in r["onde_atual_erra"] if "a proposta aprova" in x["grupo"]), None)
+    quem_txt = ", ".join(quem[:-1]) + " ou " + quem[-1] if len(quem) > 1 else (quem[0] if quem else "clientes")
+    ev2 = (quem_txt[:1].upper() + quem_txt[1:] + ", sem sinal de alerta"
+           + (f": no piloto, <b>{pct(piloto['pd'], 1)}</b> de calote, contra {pct(media, 0)} da média." if piloto else "."))
+    p50 = _pd_padrao(pads, "acima de 50% da sobra")
+    ev3 = (f"A parcela fica em até {pct(P['teto_parcela_sobre_sobra'], 0)} do que sobra na conta no mês."
+           + (f" Acima de 50%, <b>{pct(p50, 0)}</b> deram calote." if p50 else ""))
+
+    def item(titulo, ev, valor):
+        cls = " neg" if valor < 0 else ""
+        return f'<li><span><span class="t">{titulo}</span><span class="ev">{ev}</span></span><span class="rs{cls}">{mi(valor)}</span></li>'
+
+    porque = (item("Nega quem não consegue pagar.", ev1, g("A atual aprova, a proposta nega"))
+              + item("Aprova bom pagador que a regra atual recusa.", ev2, g("A atual nega, a proposta aprova"))
+              + item("Empresta o que cabe no bolso.", ev3, g("As duas aprovam, a proposta reduz o valor")))
+
+    # riscos: o resultado se sustenta em cenários piores
+    i_dobra = next(i for i, c in enumerate(CENARIOS) if c[2] == 2.0)
+    i_atr = next(i for i, c in enumerate(CENARIOS) if c[1] < 0)
+    novos = det[(det["decisao_atual"] == "NEGADO") & (det["decisao"] == "APROVADO")]
+    riscos = (item("E se o calote for o dobro do previsto?",
+                   f"A proposta {'ainda lucra' if cp['cenarios'][i_dobra] > 0 else 'perde'}. A regra atual perderia {curto(-ca['cenarios'][i_dobra])}.",
+                   cp["cenarios"][i_dobra])
+              + item("E se o atraso custar −10%, como a Fortuna estimou?",
+                     f"Continua no lucro. A regra atual vai a {mi(ca['cenarios'][i_atr])}.", cp["cenarios"][i_atr])
+              + f'<li><span><span class="t">{num(len(novos))} clientes que a Fortuna hoje não atende.</span><span class="ev">'
+                f'São {curto(novos["valor_aprovado"].sum())}. Acompanhar as primeiras parcelas desse grupo. '
+                f'O analista liga, desliga ou ajusta cada regra no simulador antes de aprovar.</span></span><span></span></li>')
+
+    av_path = SAIDA / "avaliacao.json"
+    av = json.loads(av_path.read_text(encoding="utf-8")) if av_path.exists() else None
+    fontes_txt = [f"{num(r['alvo']['contratos_aprovados'])} contratos reais, com 6 meses de piloto"]
+    if av:
+        fontes_txt.append(f"modelo testado em trimestres que nunca viu: previsto e real batem (nota {num(av['fora_do_tempo']['auc'], 2)})")
+        bt = {x["cfg"]: x for x in av["backtest"]}
+        if "proposta" in bt:
+            fontes_txt.append(f"em 10 mil pedidos antigos, {mi(bt['proposta']['ganho_vs_atual'])} sobre a regra atual")
+    fontes_txt += ["regra atual reproduzida: acerta 100% das 8.737 decisões dela",
+                   "sem CEP, gênero, idade ou estado civil"]
+
+    return f"""
+  <div class="pitch">
+    <h2>Mais crédito, metade do calote.</h2>
+    <p class="sub">A nova política nos {num(r['csv']['linhas'])} pedidos de outubro de 2026, comparada com a regra atual da Fortuna.</p>
+    <div class="big-grid">
+      <div class="big destaque"><div class="k">Lucro a mais que a regra atual</div><div class="v">{mi(r['ganho_estimado'])}</div>
+        <div class="s">a regra atual fica no zero ({mi(ca['lucro'])})</div></div>
+      <div class="big"><div class="k">Calote</div><div class="v">{pct(cp['calote'])}</div>
+        <div class="s">era {pct(ca['calote'])} do dinheiro emprestado</div></div>
+      <div class="big"><div class="k">Crédito liberado</div><div class="v">{curto(cp['valor'])}</div>
+        <div class="s">{mi(cp['valor'] - ca['valor'])} · {num(pr['aprovados'])} aprovados (eram {num(at['aprovados'])})</div></div>
+    </div>
+    <div class="pq-grid">
+      <div class="pq"><h3>Por que dá mais lucro</h3><ol>{porque}</ol></div>
+      <div class="pq"><h3>Riscos, e por que o resultado se sustenta</h3><ol>{riscos}</ol></div>
+    </div>
+    <div class="fontes"><b>De onde vêm os números:</b><ul>{"".join(f"<li>{t}</li>" for t in fontes_txt)}</ul></div>
+  </div>"""
+
+
+def bloco_o_que_muda(r: dict, det: pd.DataFrame) -> str:
+    """Topo do painel para o cliente: antes e depois, para onde vão os pedidos e as três mudanças com o motivo."""
+    P, pads = r["parametros"], r["padroes"]
+    media = r["padroes_ref"]["pd_media"]
+    dec = {d["grupo"]: d for d in r["decomposicao"]}
+    total = r["csv"]["linhas"]
+    at, pr = r["atual"], r["proposta"]
+
+    def ad(k, antes, depois, s="", destaque=False):
+        return (f'<div class="ad{" destaque" if destaque else ""}"><div class="k">{k}</div><div class="ad-v"><span class="antes">{antes}</span>'
+                f'<span class="seta" aria-label="passa para">→</span><span class="depois">{depois}</span></div>'
+                f'{f"<div class=s>{s}</div>" if s else ""}</div>')
+
+    cart, pd_atual = numeros_carteira(r, det)
+    ca, cp = cart["atual"], cart["proposta"]
+    antes_depois = (
+        ad("Dinheiro emprestado", curto(ca["valor"]), curto(cp["valor"]),
+           f"{mi(cp['valor'] - ca['valor'])} · {num(at['aprovados'])} → {num(pr['aprovados'])} aprovados")
+        + ad("Calote esperado", pct(ca["calote"]), pct(cp["calote"]),
+             f"do dinheiro emprestado · cerca de {num(ca['contratos_calote'])} → {num(cp['contratos_calote'])} contratos")
+        + ad("Perda com calote", curto(ca["perda"]), curto(cp["perda"]), f"{curto(ca['perda'] - cp['perda'])} a menos")
+        + ad("Lucro esperado", mi(ca["lucro"]), mi(cp["lucro"]),
+             f"<b>{mi(r['ganho_estimado'])}</b> sobre a atual · {pct(cp['lucro'] / cp['valor'])} sobre o emprestado", destaque=True))
+
+    # para onde vão os pedidos
+    segs = [("As duas aprovam o mesmo valor (ou maior)", "f-igual", "Igual: aprova"),
+            ("As duas aprovam, a proposta reduz o valor", "f-reduz", "Aprova com valor menor"),
+            ("A atual aprova, a proposta nega", "f-nega", "Passa a negar"),
+            ("A atual nega, a proposta aprova", "f-aprova", "Passa a aprovar"),
+            ("As duas negam", "f-negam", "Igual: nega")]
+    barras, leg = [], []
+    for g, cls, rot in segs:
+        n = dec.get(g, {}).get("pedidos", 0)
+        if not n:
+            continue
+        txt = num(n) if n / total >= 0.05 else ""
+        barras.append(f'<span class="{cls}" style="flex:{n} 1 0" data-tip="{e(rot)}: {num(n)} pedidos">{txt}</span>')
+        leg.append(f'<li><i class="{cls}"></i>{rot} <b>{num(n)}</b></li>')
+    n_reduz = dec.get("As duas aprovam, a proposta reduz o valor", {}).get("pedidos", 0)
+
+    # 1. passa a negar: motivo da proposta para cada pedido que a atual aprovava
+    nega = det[(det["decisao_atual"] == "APROVADO") & (det["decisao"] == "NEGADO")]
+    l_nega = []
+    for motivo, qtd in nega["motivo"].value_counts().items():
+        if nega.loc[nega["motivo"] == motivo, "passo"].iloc[0] == 5:
+            pd_mod = float(nega.loc[nega["motivo"] == motivo, "pd"].mean())
+            l_nega.append(_linha_mud("Risco alto pelo modelo, mesmo com valor menor", qtd, pd_mod, media,
+                                     f"Chance de calote estimada pelo modelo: {pct(pd_mod, 0)} em média (média da carteira {pct(media, 0)})"))
+            continue
+        rot = re.sub(r"\s*\(.*\)$", "", motivo)
+        chave = next((t for m, t in MOTIVO_PADRAO if m in motivo), None)
+        l_nega.append(_linha_mud(rot[:1].upper() + rot[1:], qtd, _pd_padrao(pads, chave, "risco") if chave else None, media))
+
+    # 2. passa a aprovar: por que a atual negava (score <= 600, renda <= R$ 2.000, restrição)
+    aprova = det[(det["decisao_atual"] == "NEGADO") & (det["decisao"] == "APROVADO")]
+    s, rd, x = aprova["score"] <= 600, aprova["renda_declarada"] <= 2000, aprova["restricoes_ativas"] >= 1
+    k = s.astype(int) + rd.astype(int) + x.astype(int)
+    rot_score = f"Score entre {num(P['score_min'])} e 600" if P["score_min"] is not None else "Score até 600"
+    rot_renda = (f"Renda declarada entre {brl(P['renda_min'])} e R$ 2.000" if P["renda_min"] is not None
+                 else "Renda declarada até R$ 2.000")
+    l_aprova = [_linha_mud(rot_score, int((s & (k == 1)).sum()), _pd_padrao(pads, "Score 450", "oportunidade"), media),
+                _linha_mud(rot_renda, int((rd & (k == 1)).sum()), _pd_padrao(pads, "Renda até", "oportunidade"), media),
+                _linha_mud("1 restrição no nome", int((x & (k == 1)).sum()), _pd_padrao(pads, "restrição", "oportunidade"), media)]
+    if (k >= 2).any():
+        l_aprova.append(_linha_mud("Mais de um desses", int((k >= 2).sum()), None, media))
+    restr = (f" {P['restricoes_max'] + 1:.0f} ou mais restrições continuam negadas: ninguém assim foi aprovado no histórico, "
+             "então não dá para medir o risco." if P["restricoes_max"] is not None else "")
+
+    # 3. empresta menos
+    l_reduz = [_linha_mud("Cortados pela regra atual (30% da renda declarada)", None,
+                          _pd_padrao(pads, "Reduzidos ao limite"), media),
+               _linha_mud("Parcela acima de 50% da sobra da conta", None, _pd_padrao(pads, "acima de 50% da sobra"), media)]
+    n_red_total = int(pr.get("reduzidos", 0))
+
+    cartoes = (
+        _cartao_mud("nega", "Passa a negar", "Quem a atual aprova, mas não paga", dec.get("A atual aprova, a proposta nega"),
+                    "A atual olha score e renda declarada e não vê quem já está no limite. O extrato da conta mostra.", l_nega,
+                    "Um calote apaga o lucro de 4 bons pagadores: perde 60% do valor, contra 15% de ganho de quem paga.")
+        + _cartao_mud("aprova", "Passa a aprovar", "Bom pagador que a atual nega", dec.get("A atual nega, a proposta aprova"),
+                      "Sem sinal de alerta no extrato, esses clientes pagam tão bem quanto a média, ou melhor.", l_aprova,
+                      "Só aprova quem não tem sinal de alerta." + restr)
+        + _cartao_mud("reduz", "Empresta menos", "Valor que cabe no bolso", dec.get("As duas aprovam, a proposta reduz o valor"),
+                      f"A atual limita a parcela a {pct(P['teto_comprometimento'], 0)} da renda declarada. A proposta também a limita a "
+                      f"{pct(P['teto_parcela_sobre_sobra'], 0)} do que sobra na conta (o que entra menos o que sai).", l_reduz,
+                      f"Contando os que passam a ser aprovados, {num(n_red_total)} pedidos saem com valor menor que o pedido.", cab_qtd=""))
+
+    v4 = ""
+    if P["meses_cheque_max"] is None and P["consultas_90d_max"] is None and P["saidas_sobre_entradas_max"] == 0.80:
+        v4 = ("""<p class="small mud-nota"><b>Depois das respostas da Fortuna (11/11):</b> cheque especial e consultas ao CPF deixaram de negar sozinhos.
+    Quase todos esses clientes gastam mais de 80% do que entra, e essa regra continua negando. Efeito: 6 pedidos a mais aprovados.</p>""")
+
+    return f"""
+<section class="wrap" id="resumo">
+  {bloco_pitch(r, det, cart)}
+  <details class="det-resumo"><summary>Ver em detalhe: cenários, onde está o dinheiro, de onde vem o lucro e cada regra</summary>
+  <h3>Antes e depois</h3>
+  <div class="ad-grid">{antes_depois}</div>
+  <p class="small muted">Nos {num(total)} pedidos de outubro de 2026, pela chance de calote que o modelo estima para cada pedido.
+  Regras do desafio: +15% em dia, +5% com atraso, −60% no calote.</p>
+
+  {bloco_cenarios(cart)}
+  {bloco_faixas(cart)}
+  {bloco_fontes(r, det, pd_atual)}
+
+  <h3>Para onde vão os {num(total)} pedidos</h3>
+  <p class="small"><b>{num(r['diferencas_vs_atual'])}</b> decisões mudam. Em outros <b>{num(n_reduz)}</b>, muda só o valor.</p>
+  <div class="fluxo" role="img" aria-label="{e(', '.join(re.sub('<[^>]+>', '', x) for x in leg))}">{"".join(barras)}</div>
+  <ul class="fluxo-leg">{"".join(leg)}</ul>
+
+  <h3>Como funciona cada mudança</h3>
+  <p class="small muted">Barras: calote que clientes iguais deram no histórico. O traço marca a média da carteira ({pct(media, 0)}).</p>
+  {cartoes}
+  {v4}
+  {bloco_atencao(r, det, cart, pd_atual)}
+  </details>
+</section>"""
+
+
 def bloco_simulador() -> tuple[str, str]:
     """Seção e scripts do simulador. Sem output/simulador.json, o painel sai sem o simulador."""
     caminho = SAIDA / "simulador.json"
@@ -416,7 +1064,7 @@ def gerar(resumo_path: Path = SAIDA / "resumo.json", destino: Path = SAIDA / "pa
 * {{ box-sizing: border-box; }}
 body {{ background: var(--bg); color: var(--fg); font-family: var(--f-sans); font-size: 15px; line-height: 1.55; }}
 .wrap {{ max-width: 1060px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }}
-header.wrap {{ padding-block: 36px 8px; }}
+header.wrap {{ padding-block: 24px 4px; }}
 .eyebrow {{ font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }}
 h1 {{ font-size: clamp(26px, 4vw, 36px); line-height: 1.15; margin: 8px 0 10px; text-wrap: balance; font-weight: 700; }}
 h2 {{ font-size: 24px; margin: 0 0 6px; text-wrap: balance; }}
@@ -501,30 +1149,20 @@ ol.trilha li.na {{ color: var(--muted); }}
 .muted {{ color: var(--muted); }} .small {{ font-size: 13px; }}
 footer.wrap {{ padding-block: 24px 40px; color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--line); }}
 @media (prefers-reduced-motion: no-preference) {{ .bar .fill {{ transition: width .4s ease-out; }} }}
-{SIM_CSS}</style>
+{SIM_CSS}{MUDA_CSS}{PITCH_CSS}</style>
 
 <header class="wrap">
   <div class="eyebrow">Fortuna Crédito · Time Dividendos · Hackathon GOW 2026</div>
   <h1>Política de crédito proposta</h1>
-  <p class="lead">O que a IA encontrou em {num(alvo['contratos_aprovados'])} contratos do histórico, como a nova política decide e o que ela faz com os {num(r['csv']['linhas'])} pedidos de outubro de 2026.
-  A IA sugere; o analista de risco decide o que entra em produção.</p>
+  <p class="lead">Feita com IA a partir de {num(alvo['contratos_aprovados'])} contratos do histórico. A IA sugere; o analista de risco decide o que entra em produção.</p>
   <p class="small muted">Gerado pelo pipeline em {e(r['gerado_em'])} · dados do histórico com corte em 30/09/2026 · arquivo <span class="mono">{e(r['csv']['arquivo'])}</span></p>
 </header>
 <nav class="wrap" aria-label="Seções">
-  <a href="#resumo">Resumo</a><a href="#padroes">1. Padrões encontrados</a><a href="#politica">2. Política proposta</a>{'<a href="#simulador">Simulador</a>' if sim_secao else ''}
+  <a href="#resumo">Resultado</a><a href="#padroes">1. Padrões encontrados</a><a href="#politica">2. Política proposta</a>{'<a href="#simulador">Simulador</a>' if sim_secao else ''}
   <a href="#ia">IA e analista</a><a href="#comparacao">Comparação com a atual</a><a href="#validacao">Validação</a><a href="#consulta">Consultar pedido</a><a href="#tecnico">Detalhes técnicos</a>
 </nav>
 
-<section class="wrap" id="resumo">
-  <h2>Resumo</h2>
-  <div class="tiles">
-    <div class="tile"><div class="k">Pedidos novos</div><div class="v">{num(r['csv']['linhas'])}</div><div class="s">outubro de 2026</div></div>
-    <div class="tile"><div class="k">Aprovados</div><div class="v">{num(r['proposta']['aprovados'])}</div><div class="s">política atual: {num(r['atual']['aprovados'])}</div></div>
-    <div class="tile"><div class="k">Valor aprovado</div><div class="v">{brl(r['proposta']['valor'] / 1e6, 1)} mi</div><div class="s">política atual: {brl(r['atual']['valor'] / 1e6, 1)} mi</div></div>
-    <div class="tile"><div class="k">Decisões diferentes da atual</div><div class="v">{num(r['diferencas_vs_atual'])}</div><div class="s">{num(r['proposta']['reduzidos'])} aprovados com valor reduzido</div></div>
-    <div class="tile destaque"><div class="k">Ganho estimado sobre a atual</div><div class="v">{mi(r['ganho_estimado'])}</div><div class="s">resultado esperado pelo modelo</div></div>
-  </div>
-</section>
+{bloco_o_que_muda(r, det)}
 
 <section class="wrap" id="padroes">
   <div class="parte">Parte 1</div>
@@ -728,7 +1366,7 @@ document.addEventListener("pointermove", ev => {{
   tip.style.left = x + "px"; tip.style.top = (ev.clientY + 14) + "px";
 }});
 </script>
-{sim_scripts}"""
+{sim_scripts}{'<script>' + SEM_REGRA_JS + '</script>' if sim_scripts else ''}"""
     Path(destino).write_text(pagina, encoding="utf-8")
     return destino
 

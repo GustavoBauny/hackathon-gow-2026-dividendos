@@ -22,7 +22,7 @@
 * { box-sizing: border-box; }
 body { background: var(--bg); color: var(--fg); font-family: var(--f-sans); font-size: 15px; line-height: 1.55; }
 .wrap { max-width: 1060px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-header.wrap { padding-block: 36px 8px; }
+header.wrap { padding-block: 24px 4px; }
 .eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 h1 { font-size: clamp(26px, 4vw, 36px); line-height: 1.15; margin: 8px 0 10px; text-wrap: balance; font-weight: 700; }
 h2 { font-size: 24px; margin: 0 0 6px; text-wrap: balance; }
@@ -127,29 +127,216 @@ footer.wrap { padding-block: 24px 40px; color: var(--muted); font-size: 12.5px; 
 .callout.aviso { background: var(--risk-bg); }
 #sim-mudancas .ok { color: var(--good); } #sim-mudancas .no { color: var(--risk); }
 #sim-mudancas button.ex { padding: 2px 8px; font-family: var(--f-mono); }
+
+:root { --warn-bg: #fdf1e3; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --warn-bg: #3a2a12; } }
+:root[data-theme="dark"] { --warn-bg: #3a2a12; }
+.ad-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 16px; }
+.ad { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; min-width: 0; }
+.ad .k { font-size: 12px; color: var(--muted); }
+.ad-v { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 10px; font-family: var(--f-mono); font-variant-numeric: tabular-nums; margin-top: 4px; }
+.ad-v .antes { font-size: 16px; color: var(--muted); }
+.ad-v .seta { color: var(--muted); }
+.ad-v .depois { font-size: 26px; font-weight: 500; }
+.ad .s { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.ad.destaque { border-color: var(--accent); }
+.ad.destaque .depois, .ad .s b { color: var(--accent); }
+.fluxo { display: flex; gap: 2px; height: 34px; border-radius: 6px; overflow: hidden; margin: 10px 0 8px; }
+.fluxo span { display: grid; place-items: center; min-width: 3px; font-family: var(--f-mono); font-size: 12.5px; font-weight: 500;
+  color: var(--surface); white-space: nowrap; overflow: hidden; }
+.f-igual { background: var(--muted); } .f-reduz { background: var(--warn); } .f-nega { background: var(--risk); }
+.f-aprova { background: var(--good); } .fluxo span.f-negam { background: var(--band); color: var(--muted); }
+.fluxo-leg { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--muted); }
+.fluxo-leg b { color: var(--fg); font-family: var(--f-mono); font-weight: 500; }
+.fluxo-leg i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 6px; }
+.fluxo-leg i.f-negam { background: var(--band); border: 1px solid var(--line); }
+.chip.reduz { color: var(--warn); background: var(--warn-bg); }
+.mud { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 12px 28px; background: var(--surface);
+  border: 1px solid var(--line); border-left: 4px solid var(--c); border-radius: 8px; padding: 16px 18px; margin-top: 12px; }
+.mud.nega { --c: var(--risk); } .mud.aprova { --c: var(--good); } .mud.reduz { --c: var(--warn); }
+.mud h3 { margin: 8px 0 4px; font-size: 18px; text-wrap: balance; }
+.mud-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.mud-n { font-family: var(--f-mono); font-size: 13px; color: var(--muted); white-space: nowrap; }
+.mud-nota { margin-top: 16px; }
+.mud-n b { color: var(--fg); font-weight: 500; } .mud-n b.g { color: var(--c); }
+.mud .porque { margin: 0; }
+.mud-linhas { list-style: none; margin: 0; padding: 0; display: grid; align-content: start; font-size: 13.5px; }
+.mud-linhas li { display: grid; grid-template-columns: minmax(0, 1fr) 52px 96px 42px; gap: 10px; align-items: center;
+  padding: 6px 0; border-bottom: 1px dashed var(--line); }
+.mud-linhas li:last-child { border-bottom: 0; }
+.mud-linhas li.cab { font-size: 11.5px; color: var(--muted); padding-top: 0; border-bottom: 1px solid var(--line); }
+.mud-linhas .q, .mud-linhas .pv { font-family: var(--f-mono); font-variant-numeric: tabular-nums; text-align: right; }
+.mud-linhas .bar { height: 8px; } .mud .bar .fill { background: var(--c); }
+.mud .rodape { grid-column: 1 / -1; font-size: 12.5px; color: var(--muted); margin: 0; max-width: none; }
+:root { --fx0: #1f8a5b; --fx1: #8cc9a8; --fx2: #e8a33d; --fx3: #c8371f; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --fx0: #47cd89; --fx1: #2b6e50; --fx2: #fdb022; --fx3: #f97066; } }
+:root[data-theme="dark"] { --fx0: #47cd89; --fx1: #2b6e50; --fx2: #fdb022; --fx3: #f97066; }
+.ad-grid { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+.ad-v .depois { flex-basis: 100%; }
+.cen { display: grid; gap: 10px; margin-top: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+.cen-linha { display: grid; grid-template-columns: minmax(0, 1fr) 96px; gap: 3px 12px; align-items: center; }
+.cen-lab { grid-column: 1 / -1; font-size: 13px; font-weight: 600; }
+.cen-trilha { position: relative; height: 12px; }
+.cen-zero { position: absolute; top: -3px; bottom: -3px; width: 1px; background: var(--fg); opacity: .5; }
+.cen-bar { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
+.cen-bar.atual { background: var(--muted); } .cen-bar.prop { background: var(--accent); }
+.cen-v { font-family: var(--f-mono); font-size: 12.5px; text-align: right; font-variant-numeric: tabular-nums; }
+.cen-v.neg { color: var(--risk); }
+.fx { display: grid; gap: 8px; margin-top: 8px; }
+.fx-linha { display: grid; grid-template-columns: 70px minmax(0, 1fr) 86px; gap: 10px; align-items: center; font-size: 13px; }
+.fx-trilha { display: flex; gap: 1px; height: 22px; }
+.fx-trilha span:first-child { border-radius: 4px 0 0 4px; } .fx-trilha span:last-child { border-radius: 0 4px 4px 0; }
+.fx-v { font-family: var(--f-mono); font-size: 12.5px; text-align: right; }
+.fx0 { background: var(--fx0); } .fx1 { background: var(--fx1); } .fx2 { background: var(--fx2); } .fx3 { background: var(--fx3); }
+ul.fo { list-style: none; padding: 0; margin: 10px 0; display: grid; gap: 8px; }
+ul.fo li { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) 92px 40px; gap: 12px; align-items: center; font-size: 13.5px; }
+.fo-trilha { height: 12px; background: var(--band); border-radius: 3px; position: relative; }
+.fo-trilha span { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--muted); }
+ul.fo li.nega .fo-trilha span { background: var(--risk); } ul.fo li.aprova .fo-trilha span { background: var(--good); }
+ul.fo li.reduz .fo-trilha span { background: var(--warn); }
+.fo-v, .fo-p { font-family: var(--f-mono); font-size: 12.5px; text-align: right; font-variant-numeric: tabular-nums; }
+.fo-p { font-weight: 600; }
+.fo-call { border-left: 3px solid var(--risk); border-radius: 0 8px 8px 0; }
+.fo-call p { max-width: none; }
+td.n.neg { color: var(--risk); } td.n.pos { color: var(--good); }
+ul.atencao { padding-left: 18px; display: grid; gap: 8px; margin: 8px 0; }
+ul.atencao li { max-width: 90ch; }
+@media (max-width: 720px) { .mud { grid-template-columns: minmax(0, 1fr); }
+  ul.fo li { grid-template-columns: minmax(0, 1fr) 84px 36px; } ul.fo .fo-trilha { grid-column: 1 / -1; grid-row: 2; } }
+@media (max-width: 440px) { .mud-linhas li { grid-template-columns: minmax(0, 1fr) 44px 42px; } .mud-linhas .bh, .mud-linhas .bar { display: none; } }
+
+.pitch h2 { font-size: clamp(26px, 3.6vw, 36px); line-height: 1.15; margin: 0 0 4px; }
+.pitch .sub { color: var(--muted); margin: 0 0 14px; }
+.big-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.big { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; min-width: 0; }
+.big .k { font-size: 13px; color: var(--muted); }
+.big .v { font-family: var(--f-mono); font-size: clamp(30px, 4vw, 40px); font-weight: 500; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.big .s { font-size: 13px; color: var(--muted); }
+.big.destaque { border: 2px solid var(--accent); } .big.destaque .v { color: var(--accent); }
+.pq-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 12px; margin-top: 12px; }
+.pq { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; min-width: 0; }
+.pq h3 { margin: 0 0 6px; font-size: 16px; }
+.pq ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.pq li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; font-size: 14px; line-height: 1.45;
+  padding-top: 10px; border-top: 1px solid var(--line); }
+.pq li:first-child { border-top: 0; padding-top: 0; }
+.pq li .t { display: block; font-size: 15px; font-weight: 700; }
+.pq li .ev b { color: var(--fg); }
+.pq li .ev { color: var(--muted); }
+.pq .rs { font-family: var(--f-mono); font-size: 13.5px; font-weight: 600; white-space: nowrap; color: var(--good); }
+.pq .rs.neg { color: var(--risk); }
+.fontes { margin-top: 12px; background: var(--band); border-radius: 10px; padding: 10px 16px; font-size: 13px; }
+.fontes b { margin-right: 6px; }
+.fontes ul { list-style: none; display: inline; padding: 0; margin: 0; }
+.fontes li { display: inline; }
+.fontes li + li::before { content: " · "; color: var(--muted); }
+details.det-resumo { margin-top: 18px; }
+details.det-resumo > summary { font-size: 14px; font-weight: 600; padding: 8px 0; }
 </style>
 
 <header class="wrap">
   <div class="eyebrow">Fortuna Crédito · Time Dividendos · Hackathon GOW 2026</div>
   <h1>Política de crédito proposta</h1>
-  <p class="lead">O que a IA encontrou em 6.033 contratos do histórico, como a nova política decide e o que ela faz com os 2.000 pedidos de outubro de 2026.
-  A IA sugere; o analista de risco decide o que entra em produção.</p>
+  <p class="lead">Feita com IA a partir de 6.033 contratos do histórico. A IA sugere; o analista de risco decide o que entra em produção.</p>
   <p class="small muted">Gerado pelo pipeline em 2026-11-11 13:38:11 · dados do histórico com corte em 30/09/2026 · arquivo <span class="mono">dividendos_final.csv</span></p>
 </header>
 <nav class="wrap" aria-label="Seções">
-  <a href="#resumo">Resumo</a><a href="#padroes">1. Padrões encontrados</a><a href="#politica">2. Política proposta</a><a href="#simulador">Simulador</a>
+  <a href="#resumo">Resultado</a><a href="#padroes">1. Padrões encontrados</a><a href="#politica">2. Política proposta</a><a href="#simulador">Simulador</a>
   <a href="#ia">IA e analista</a><a href="#comparacao">Comparação com a atual</a><a href="#validacao">Validação</a><a href="#consulta">Consultar pedido</a><a href="#tecnico">Detalhes técnicos</a>
 </nav>
 
+
 <section class="wrap" id="resumo">
-  <h2>Resumo</h2>
-  <div class="tiles">
-    <div class="tile"><div class="k">Pedidos novos</div><div class="v">2.000</div><div class="s">outubro de 2026</div></div>
-    <div class="tile"><div class="k">Aprovados</div><div class="v">1.371</div><div class="s">política atual: 1.145</div></div>
-    <div class="tile"><div class="k">Valor aprovado</div><div class="v">R$ 9,2 mi</div><div class="s">política atual: R$ 8,9 mi</div></div>
-    <div class="tile"><div class="k">Decisões diferentes da atual</div><div class="v">618</div><div class="s">115 aprovados com valor reduzido</div></div>
-    <div class="tile destaque"><div class="k">Ganho estimado sobre a atual</div><div class="v">+R$ 611 mil</div><div class="s">resultado esperado pelo modelo</div></div>
+  
+  <div class="pitch">
+    <h2>Mais crédito, metade do calote.</h2>
+    <p class="sub">A nova política nos 2.000 pedidos de outubro de 2026, comparada com a regra atual da Fortuna.</p>
+    <div class="big-grid">
+      <div class="big destaque"><div class="k">Lucro a mais que a regra atual</div><div class="v">+R$ 611 mil</div>
+        <div class="s">a regra atual fica no zero (−R$ 13 mil)</div></div>
+      <div class="big"><div class="k">Calote</div><div class="v">8,4%</div>
+        <div class="s">era 17,6% do dinheiro emprestado</div></div>
+      <div class="big"><div class="k">Crédito liberado</div><div class="v">R$ 9,20 mi</div>
+        <div class="s">+R$ 339 mil · 1.371 aprovados (eram 1.145)</div></div>
+    </div>
+    <div class="pq-grid">
+      <div class="pq"><h3>Por que dá mais lucro</h3><ol><li><span><span class="t">Nega quem não consegue pagar.</span><span class="ev">Quem pede mais de 6x o que entra por mês deu <b>74%</b> de calote no histórico; quem gasta mais de 80% do que entra, <b>98%</b>. A regra atual aprova os dois.</span></span><span class="rs">+R$ 409 mil</span></li><li><span><span class="t">Aprova bom pagador que a regra atual recusa.</span><span class="ev">Score de 450 a 600, renda de R$ 1.500 a R$ 2.000 ou 1 restrição no nome, sem sinal de alerta: no piloto, <b>8,5%</b> de calote, contra 17% da média.</span></span><span class="rs">+R$ 140 mil</span></li><li><span><span class="t">Empresta o que cabe no bolso.</span><span class="ev">A parcela fica em até 40% do que sobra na conta no mês. Acima de 50%, <b>99%</b> deram calote.</span></span><span class="rs">+R$ 62 mil</span></li></ol></div>
+      <div class="pq"><h3>Riscos, e por que o resultado se sustenta</h3><ol><li><span><span class="t">E se o calote for o dobro do previsto?</span><span class="ev">A proposta ainda lucra. A regra atual perderia R$ 709 mil.</span></span><span class="rs">+R$ 36 mil</span></li><li><span><span class="t">E se o atraso custar −10%, como a Fortuna estimou?</span><span class="ev">Continua no lucro. A regra atual vai a −R$ 268 mil.</span></span><span class="rs">+R$ 298 mil</span></li><li><span><span class="t">422 clientes que a Fortuna hoje não atende.</span><span class="ev">São R$ 2,41 mi. Acompanhar as primeiras parcelas desse grupo. O analista liga, desliga ou ajusta cada regra no simulador antes de aprovar.</span></span><span></span></li></ol></div>
+    </div>
+    <div class="fontes"><b>De onde vêm os números:</b><ul><li>6.033 contratos reais, com 6 meses de piloto</li><li>modelo testado em trimestres que nunca viu: previsto e real batem (nota 0,88)</li><li>em 10 mil pedidos antigos, +R$ 3,24 mi sobre a regra atual</li><li>regra atual reproduzida: acerta 100% das 8.737 decisões dela</li><li>sem CEP, gênero, idade ou estado civil</li></ul></div>
   </div>
+  <details class="det-resumo"><summary>Ver em detalhe: cenários, onde está o dinheiro, de onde vem o lucro e cada regra</summary>
+  <h3>Antes e depois</h3>
+  <div class="ad-grid"><div class="ad"><div class="k">Dinheiro emprestado</div><div class="ad-v"><span class="antes">R$ 8,86 mi</span><span class="seta" aria-label="passa para">→</span><span class="depois">R$ 9,20 mi</span></div><div class=s>+R$ 339 mil · 1.145 → 1.371 aprovados</div></div><div class="ad"><div class="k">Calote esperado</div><div class="ad-v"><span class="antes">17,6%</span><span class="seta" aria-label="passa para">→</span><span class="depois">8,4%</span></div><div class=s>do dinheiro emprestado · cerca de 168 → 115 contratos</div></div><div class="ad"><div class="k">Perda com calote</div><div class="ad-v"><span class="antes">R$ 937 mil</span><span class="seta" aria-label="passa para">→</span><span class="depois">R$ 465 mil</span></div><div class=s>R$ 472 mil a menos</div></div><div class="ad destaque"><div class="k">Lucro esperado</div><div class="ad-v"><span class="antes">−R$ 13 mil</span><span class="seta" aria-label="passa para">→</span><span class="depois">+R$ 598 mil</span></div><div class=s><b>+R$ 611 mil</b> sobre a atual · 6,5% sobre o emprestado</div></div></div>
+  <p class="small muted">Nos 2.000 pedidos de outubro de 2026, pela chance de calote que o modelo estima para cada pedido.
+  Regras do desafio: +15% em dia, +5% com atraso, −60% no calote.</p>
+
+  
+  <h3>E se o cenário piorar?</h3>
+  <p>A atual já está no zero: qualquer piora vira prejuízo. A proposta só dá prejuízo se o calote passar de <b>2,1 vezes</b> o previsto
+  (folga de 106%).</p>
+  <div class="legend"><span><i class="sw" style="background:var(--muted)"></i>Política atual</span><span><i class="sw" style="background:var(--accent)"></i>Proposta</span>
+    <span>lucro esperado em cada cenário</span></div>
+  <div class="cen"><div class="cen-linha"><div class="cen-lab">Previsto</div><div class="cen-trilha"><span class="cen-zero" style="left:52.1%"></span><span class="cen-bar atual" style="left:51.2%;width:0.9%" data-tip="Política atual: −R$ 13 mil"></span></div><span class="cen-v neg">−R$ 13 mil</span><div class="cen-trilha"><span class="cen-zero" style="left:52.1%"></span><span class="cen-bar prop" style="left:52.1%;width:44.0%" data-tip="Proposta: +R$ 598 mil"></span></div><span class="cen-v">+R$ 598 mil</span></div><div class="cen-linha"><div class="cen-lab">Atraso custa −10%, como a Fortuna estimou</div><div class="cen-trilha"><span class="cen-zero" style="left:52.1%"></span><span class="cen-bar atual" style="left:32.5%;width:19.7%" data-tip="Política atual: −R$ 268 mil"></span></div><span class="cen-v neg">−R$ 268 mil</span><div class="cen-trilha"><span class="cen-zero" style="left:52.1%"></span><span class="cen-bar prop" style="left:52.1%;width:21.9%" data-tip="Proposta: +R$ 298 mil"></span></div><span class="cen-v">+R$ 298 mil</span></div><div class="cen-linha"><div class="cen-lab">Calote 20% maior que o previsto</div><div class="cen-trilha"><span class="cen-zero" style="left:52.1%"></span><span class="cen-bar atual" style="left:39.4%;width:12.7%" data-tip="Política atual: −R$ 173 mil"></span></div><span class="cen-v neg">−R$ 173 mil</span><div class="cen-trilha"><span class="cen-zero" style="left:52.1%"></span><span class="cen-bar prop" style="left:52.1%;width:35.7%" data-tip="Proposta: +R$ 486 mil"></span></div><span class="cen-v">+R$ 486 mil</span></div><div class="cen-linha"><div class="cen-lab">Calote 50% maior</div><div class="cen-trilha"><span class="cen-zero" style="left:52.1%"></span><span class="cen-bar atual" style="left:24.1%;width:28.0%" data-tip="Política atual: −R$ 381 mil"></span></div><span class="cen-v neg">−R$ 381 mil</span><div class="cen-trilha"><span class="cen-zero" style="left:52.1%"></span><span class="cen-bar prop" style="left:52.1%;width:23.3%" data-tip="Proposta: +R$ 317 mil"></span></div><span class="cen-v">+R$ 317 mil</span></div><div class="cen-linha"><div class="cen-lab">Calote dobra</div><div class="cen-trilha"><span class="cen-zero" style="left:52.1%"></span><span class="cen-bar atual" style="left:0.0%;width:52.1%" data-tip="Política atual: −R$ 709 mil"></span></div><span class="cen-v neg">−R$ 709 mil</span><div class="cen-trilha"><span class="cen-zero" style="left:52.1%"></span><span class="cen-bar prop" style="left:52.1%;width:2.6%" data-tip="Proposta: +R$ 36 mil"></span></div><span class="cen-v">+R$ 36 mil</span></div></div>
+  
+  <h3>Onde está o dinheiro</h3>
+  <p>Acima de cerca de 16% de chance de calote, emprestar dá prejuízo. A atual põe <b>R$ 2,00 mi</b> (190 contratos) nessa faixa.
+  A proposta, R$ 5 mil (1 contrato).</p>
+  <div class="legend"><span>Chance de calote de cada contrato:</span><span><i class="sw fx0"></i>até 10%</span><span><i class="sw fx1"></i>10% a 16%</span><span><i class="sw fx2"></i>16% a 30%</span><span><i class="sw fx3"></i>acima de 30%</span></div>
+  <div class="fx"><div class="fx-linha"><span class="fx-lab">Atual</span><div class="fx-trilha"><span class="fx0" style="width:67.22%" data-tip="Atual, chance de calote até 10%: R$ 6,18 mi em 878 contratos"></span><span class="fx1" style="width:7.32%" data-tip="Atual, chance de calote 10% a 16%: R$ 673 mil em 77 contratos"></span><span class="fx2" style="width:10.55%" data-tip="Atual, chance de calote 16% a 30%: R$ 970 mil em 103 contratos"></span><span class="fx3" style="width:11.22%" data-tip="Atual, chance de calote acima de 30%: R$ 1,03 mi em 87 contratos"></span></div><span class="fx-v">R$ 8,86 mi</span></div><div class="fx-linha"><span class="fx-lab">Proposta</span><div class="fx-trilha"><span class="fx0" style="width:92.44%" data-tip="Proposta, chance de calote até 10%: R$ 8,50 mi em 1.278 contratos"></span><span class="fx1" style="width:7.51%" data-tip="Proposta, chance de calote 10% a 16%: R$ 691 mil em 92 contratos"></span><span class="fx2" style="width:0.05%" data-tip="Proposta, chance de calote 16% a 30%: R$ 5 mil em 1 contratos"></span></div><span class="fx-v">R$ 9,20 mi</span></div></div>
+  
+  <h3>De onde vem o lucro</h3>
+  <p>O ganho de <b>+R$ 611 mil</b> sobre a atual, por regra. Cada pedido que muda de decisão conta para a primeira regra que o decidiu.</p>
+  <ul class="fo"><li class="nega"><span class="fo-lab">Nega quem pede mais de 6x o que entra por mês na conta<span class="muted"> · 53 pedidos</span></span><span class="fo-trilha" data-tip="Nega quem pede mais de 6x o que entra por mês na conta"><span style="width:100.0%"></span></span><span class="fo-v">+R$ 266 mil</span><span class="fo-p">44%</span></li><li class="aprova"><span class="fo-lab">Aprova bom pagador que a atual nega<span class="muted"> · 422 pedidos</span></span><span class="fo-trilha" data-tip="Aprova bom pagador que a atual nega"><span style="width:52.5%"></span></span><span class="fo-v">+R$ 140 mil</span><span class="fo-p">23%</span></li><li class="nega"><span class="fo-lab">Nega quem gasta mais de 80% do que entra na conta<span class="muted"> · 24 pedidos</span></span><span class="fo-trilha" data-tip="Nega quem gasta mais de 80% do que entra na conta"><span style="width:42.0%"></span></span><span class="fo-v">+R$ 112 mil</span><span class="fo-p">18%</span></li><li class="reduz"><span class="fo-lab">Empresta menos quando a parcela não cabe na sobra<span class="muted"> · 64 pedidos</span></span><span class="fo-trilha" data-tip="Empresta menos quando a parcela não cabe na sobra"><span style="width:23.4%"></span></span><span class="fo-v">+R$ 62 mil</span><span class="fo-p">10%</span></li><li class="resto"><span class="fo-lab">Outras 4 regras<span class="muted"> · 119 pedidos</span></span><span class="fo-trilha" data-tip="Nega por risco alto no modelo, mesmo com valor menor: +R$ 15 mil; Nega: pico de entradas nos 3 meses antes do pedido: +R$ 9 mil; Nega: parcelas em outros bancos acima de 35% do que entra na conta: +R$ 3 mil; Nega: renda declarada mais que o dobro das entradas reais: +R$ 3 mil"><span style="width:11.5%"></span></span><span class="fo-v">+R$ 31 mil</span><span class="fo-p">5%</span></li></ul>
+  
+  <div class="callout fo-call">
+    <p><b>Por que 53 pedidos rendem 44% do ganho?</b> São pedidos grandes: R$ 22.460 em média.
+    A atual corta para R$ 13.374, para a parcela caber em 30% da renda declarada, e aprova. Mesmo assim, o modelo estima <b>69%</b> de chance de calote. No histórico, clientes assim deram <b>74%</b> de calote (294 contratos).
+    Cada um custa em média R$ 5.022 de prejuízo esperado.</p>
+    <p id="fo-erro" data-regra="pedido_sobre_entradas_max"><b>É erro?</b> Não. No valor que a atual aprova, o modelo e o histórico concordam que esse cliente dá prejuízo.
+    O analista pode testar outros cortes no <a href="#simulador">simulador</a>.</p>
+  </div>
+  
+  <h3>E se tirar cada regra?</h3>
+  <p>Tirando uma regra de cada vez, sem mexer nas outras. "Se o histórico se repetir" supõe que os clientes liberados deem o calote que
+  clientes iguais deram no histórico.</p>
+  <div id="fo-sem" data-testes="[[&quot;pedido_sobre_entradas_max&quot;, &quot;Negar pedido acima de 6x o que entra por mês&quot;, null], [&quot;saidas_sobre_entradas_max&quot;, &quot;Negar gasto acima de 80% do que entra&quot;, null], [&quot;outras_sobre_entradas_max&quot;, &quot;Negar dívida em outros bancos acima de 35% do que entra&quot;, null], [&quot;tendencia_entradas_max&quot;, &quot;Negar pico de entradas antes do pedido&quot;, null], [&quot;renda_decl_sobre_real_max&quot;, &quot;Negar renda declarada acima de 2x as entradas&quot;, null], [&quot;score_min&quot;, &quot;Aprovar score de 450 a 600&quot;, 600], [&quot;renda_min&quot;, &quot;Aprovar renda declarada de R$ 1.500 a R$ 2.000&quot;, 2000], [&quot;restricoes_max&quot;, &quot;Aprovar quem tem restrição no nome&quot;, 0]]"><p class="small muted">Calculando…</p></div>
+  <p class="small"><b>Como ler.</b> As regras de alerta funcionam como seguro. Pelo modelo, tirar uma delas quase não muda o lucro, porque os passos 4 e 5
+  negariam ou cortariam a maioria desses pedidos. Elas protegem contra o modelo errar nesses grupos, como o histórico indica.
+  Aprovar quem a atual nega rende de fato: sem essas mudanças, o lucro cai pelos dois critérios.</p>
+
+  <h3>Para onde vão os 2.000 pedidos</h3>
+  <p class="small"><b>618</b> decisões mudam. Em outros <b>64</b>, muda só o valor.</p>
+  <div class="fluxo" role="img" aria-label="Igual: aprova 885, Aprova com valor menor 64, Passa a negar 196, Passa a aprovar 422, Igual: nega 433"><span class="f-igual" style="flex:885 1 0" data-tip="Igual: aprova: 885 pedidos">885</span><span class="f-reduz" style="flex:64 1 0" data-tip="Aprova com valor menor: 64 pedidos"></span><span class="f-nega" style="flex:196 1 0" data-tip="Passa a negar: 196 pedidos">196</span><span class="f-aprova" style="flex:422 1 0" data-tip="Passa a aprovar: 422 pedidos">422</span><span class="f-negam" style="flex:433 1 0" data-tip="Igual: nega: 433 pedidos">433</span></div>
+  <ul class="fluxo-leg"><li><i class="f-igual"></i>Igual: aprova <b>885</b></li><li><i class="f-reduz"></i>Aprova com valor menor <b>64</b></li><li><i class="f-nega"></i>Passa a negar <b>196</b></li><li><i class="f-aprova"></i>Passa a aprovar <b>422</b></li><li><i class="f-negam"></i>Igual: nega <b>433</b></li></ul>
+
+  <h3>Como funciona cada mudança</h3>
+  <p class="small muted">Barras: calote que clientes iguais deram no histórico. O traço marca a média da carteira (17%).</p>
+  
+  <article class="mud nega">
+    <div><div class="mud-top"><span class="chip risco">Passa a negar</span><span class="mud-n"><b>196</b> pedidos · <b class="g">+R$ 409 mil</b></span></div>
+      <h3>Quem a atual aprova, mas não paga</h3><p class="porque">A atual olha score e renda declarada e não vê quem já está no limite. O extrato da conta mostra.</p></div>
+    <ul class="mud-linhas"><li class="cab"><span>Motivo</span><span class="q">Pedidos</span><span class="bh"></span><span class="pv">Calote</span></li><li><span>Parcelas em outros bancos acima de 35% do que entra na conta</span><span class="q">59</span><span class="bar" data-tip="Parcelas em outros bancos acima de 35% do que entra na conta: 32% de calote no histórico (média 17%)"><span class="fill" style="width:31.6%"></span><span class="media" style="left:16.7%"></span></span><span class="pv">32%</span></li><li><span>Pede mais de 6x o que entra por mês na conta</span><span class="q">53</span><span class="bar" data-tip="Pede mais de 6x o que entra por mês na conta: 74% de calote no histórico (média 17%)"><span class="fill" style="width:74.3%"></span><span class="media" style="left:16.7%"></span></span><span class="pv">74%</span></li><li><span>Risco alto pelo modelo, mesmo com valor menor</span><span class="q">34</span><span class="bar" data-tip="Chance de calote estimada pelo modelo: 20% em média (média da carteira 17%)"><span class="fill" style="width:20.1%"></span><span class="media" style="left:16.7%"></span></span><span class="pv">20%</span></li><li><span>Gasta mais de 80% do que entra na conta</span><span class="q">24</span><span class="bar" data-tip="Gasta mais de 80% do que entra na conta: 98% de calote no histórico (média 17%)"><span class="fill" style="width:98.4%"></span><span class="media" style="left:16.7%"></span></span><span class="pv">98%</span></li><li><span>Pico de entradas nos 3 meses antes do pedido</span><span class="q">21</span><span class="bar" data-tip="Pico de entradas nos 3 meses antes do pedido: 27% de calote no histórico (média 17%)"><span class="fill" style="width:27.1%"></span><span class="media" style="left:16.7%"></span></span><span class="pv">27%</span></li><li><span>Renda declarada mais que o dobro das entradas reais</span><span class="q">5</span><span class="bar" data-tip="Renda declarada mais que o dobro das entradas reais: 92% de calote no histórico (média 17%)"><span class="fill" style="width:92.0%"></span><span class="media" style="left:16.7%"></span></span><span class="pv">92%</span></li></ul>
+    <p class="rodape">Um calote apaga o lucro de 4 bons pagadores: perde 60% do valor, contra 15% de ganho de quem paga.</p>
+  </article>
+  <article class="mud aprova">
+    <div><div class="mud-top"><span class="chip oportunidade">Passa a aprovar</span><span class="mud-n"><b>422</b> pedidos · <b class="g">+R$ 140 mil</b></span></div>
+      <h3>Bom pagador que a atual nega</h3><p class="porque">Sem sinal de alerta no extrato, esses clientes pagam tão bem quanto a média, ou melhor.</p></div>
+    <ul class="mud-linhas"><li class="cab"><span>Motivo</span><span class="q">Pedidos</span><span class="bh"></span><span class="pv">Calote</span></li><li><span>Score entre 450 e 600</span><span class="q">260</span><span class="bar" data-tip="Score entre 450 e 600: 11% de calote no histórico (média 17%)"><span class="fill" style="width:10.6%"></span><span class="media" style="left:16.7%"></span></span><span class="pv">11%</span></li><li><span>Renda declarada entre R$ 1.500 e R$ 2.000</span><span class="q">67</span><span class="bar" data-tip="Renda declarada entre R$ 1.500 e R$ 2.000: 4% de calote no histórico (média 17%)"><span class="fill" style="width:3.8%"></span><span class="media" style="left:16.7%"></span></span><span class="pv">4%</span></li><li><span>1 restrição no nome</span><span class="q">52</span><span class="bar" data-tip="1 restrição no nome: 2% de calote no histórico (média 17%)"><span class="fill" style="width:1.9%"></span><span class="media" style="left:16.7%"></span></span><span class="pv">2%</span></li><li><span>Mais de um desses</span><span class="q">43</span><span class="bh"></span><span class="pv">—</span></li></ul>
+    <p class="rodape">Só aprova quem não tem sinal de alerta. 2 ou mais restrições continuam negadas: ninguém assim foi aprovado no histórico, então não dá para medir o risco.</p>
+  </article>
+  <article class="mud reduz">
+    <div><div class="mud-top"><span class="chip reduz">Empresta menos</span><span class="mud-n"><b>64</b> pedidos · <b class="g">+R$ 62 mil</b></span></div>
+      <h3>Valor que cabe no bolso</h3><p class="porque">A atual limita a parcela a 30% da renda declarada. A proposta também a limita a 40% do que sobra na conta (o que entra menos o que sai).</p></div>
+    <ul class="mud-linhas"><li class="cab"><span>Motivo</span><span class="q"></span><span class="bh"></span><span class="pv">Calote</span></li><li><span>Cortados pela regra atual (30% da renda declarada)</span><span class="q"></span><span class="bar" data-tip="Cortados pela regra atual (30% da renda declarada): 58% de calote no histórico (média 17%)"><span class="fill" style="width:58.1%"></span><span class="media" style="left:16.7%"></span></span><span class="pv">58%</span></li><li><span>Parcela acima de 50% da sobra da conta</span><span class="q"></span><span class="bar" data-tip="Parcela acima de 50% da sobra da conta: 99% de calote no histórico (média 17%)"><span class="fill" style="width:98.7%"></span><span class="media" style="left:16.7%"></span></span><span class="pv">99%</span></li></ul>
+    <p class="rodape">Contando os que passam a ser aprovados, 115 pedidos saem com valor menor que o pedido.</p>
+  </article>
+  <p class="small mud-nota"><b>Depois das respostas da Fortuna (11/11):</b> cheque especial e consultas ao CPF deixaram de negar sozinhos.
+    Quase todos esses clientes gastam mais de 80% do que entra, e essa regra continua negando. Efeito: 6 pedidos a mais aprovados.</p>
+  
+  <h3>Pontos de atenção</h3>
+  <ul class="atencao"><li><b>Os números são uma estimativa do modelo.</b> Ele foi testado em pedidos que não viu: previu bem os calotes dos trimestres seguintes (nota 0,88, numa escala de 0,5 a 1). Em 10 mil pedidos antigos, decididos por modelos que não os viram, rendeu +R$ 3,24 mi sobre a atual.</li><li><b>422 clientes que a Fortuna hoje não atende (R$ 2,41 mi).</b> No piloto, clientes assim, sem sinal de alerta, deram 8,5% de calote (303 contratos). Sugestão: acompanhar as primeiras parcelas desse grupo.</li><li><b>O atraso pode custar mais que o manual diz.</b> A Fortuna estimou −10% no atraso, e não +5%. Nesse caso o lucro da proposta cai para +R$ 298 mil, e a atual vai a −R$ 268 mil. A vantagem sobre a atual fica em +R$ 566 mil.</li><li><b>Parcelas em outros bancos acima de 35% do que entra na conta: o modelo e o histórico discordam.</b> O modelo vê esses 59 pedidos quase no empate (16% de chance de calote). No histórico, foram 32%. Ficamos com o histórico. Se ele estiver certo, o ganho real é maior que o mostrado.</li><li><b>174 pedidos com 2 ou mais restrições continuam negados.</b> Ninguém assim foi aprovado no histórico, então não dá para medir o risco. Pode haver bom pagador aí. Sugestão: um piloto pequeno e controlado para medir.</li></ul>
+  </details>
 </section>
 
 <section class="wrap" id="padroes">
@@ -1086,4 +1273,37 @@ document.addEventListener("pointermove", ev => {
   atualizar();
 })();
 
+</script>
+<script>
+(function () {
+  const el = document.getElementById("fo-sem"), dadosEl = document.getElementById("sim-dados");
+  if (!el || !dadosEl || !window.Simulador) return;
+  const S = window.Simulador, D = JSON.parse(dadosEl.textContent), g = S.decodificarGrade(D.grade_pd_u16_b64);
+  const pad = { ...D.parametros_padrao }, base = S.resumir(D, S.simular(D, g, pad), pad);
+  const fmt = (v, c) => v.toLocaleString("pt-BR", { minimumFractionDigits: c, maximumFractionDigits: c });
+  const mil = v => { const a = Math.abs(v); if (a < 500) return "R$ 0"; const s = v < 0 ? "−" : "+";
+    return a >= 1e6 ? `${s}R$ ${fmt(a / 1e6, 2)} mi` : `${s}R$ ${fmt(Math.round(a / 1e3), 0)} mil`; };
+  const sem = s => s.replace(/^[+−]/, "");
+  const linhas = JSON.parse(el.dataset.testes).map(([id, rot, valor]) => {
+    const P = { ...pad, [id]: valor }, r = S.resumir(D, S.simular(D, g, P), P);
+    return { id, rot, n: r.aprovados - base.aprovados, mod: r.ganho - base.ganho, hist: r.ganhoHistorico - base.ganho };
+  });
+  const cls = v => (v <= -500 ? "neg" : v >= 500 ? "pos" : "");
+  const esc = s => String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]);
+  el.innerHTML = `<div class="tbl"><table><thead><tr><th>Se tirar</th><th>Aprovados</th><th>Lucro, pelo modelo</th>
+    <th>Lucro, se o histórico se repetir</th></tr></thead><tbody>` + linhas.map(l => `<tr><td>${esc(l.rot)}</td>
+    <td class="n">${l.n > 0 ? "+" : ""}${fmt(l.n, 0)}</td><td class="n ${cls(l.mod)}">${mil(l.mod)}</td>
+    <td class="n ${cls(l.hist)}">${mil(l.hist)}</td></tr>`).join("") + "</tbody></table></div>";
+  const p = document.getElementById("fo-erro");
+  const l = p && linhas.find(x => x.id === p.dataset.regra);
+  const ev = l && D.evidencia[l.id] && D.evidencia[l.id].grupo_padrao;
+  if (l && ev && ev.pd != null && l.hist < l.mod - 500) {
+    p.innerHTML = `<b>É erro?</b> Não, mas aqui o modelo e o histórico discordam. Sem essa regra, os passos 4 e 5 emprestariam um valor menor
+      a esses clientes, e o modelo acha que aí eles pagam: o lucro pelo modelo ${l.mod >= 500 ? "até sobe " + mil(l.mod) : "fica em " + mil(l.mod)}.
+      No histórico, porém, o calote desse grupo passou de <b>${fmt(Math.floor(ev.pd * 10) * 10, 0)}%</b>.
+      Se isso se repetir, tirar a regra custa <b>${sem(mil(l.hist))}</b>. A regra é um seguro:
+      ${l.mod >= 500 ? "deixa de ganhar " + sem(mil(l.mod)) + " se o modelo estiver certo e " : ""}evita ${sem(mil(l.hist))} de prejuízo se o histórico estiver.
+      Ficamos com o histórico. O analista pode testar outros cortes no <a href="#simulador">simulador</a>.`;
+  }
+})();
 </script>
