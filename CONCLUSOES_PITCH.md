@@ -2,7 +2,7 @@
 
 > **Para que serve este documento:** as análises das nossas IAs ficaram muito técnicas. Aqui estão **as mesmas conclusões, mas em português simples**, para a banca entender sem esforço. Cada bloco tem um espaço **🗣️ Time — comentar ao vivo** para alguém do time explicar com as próprias palavras durante o pitch.
 >
-> Números atuais da solução (v3): **1.365 aprovados · R$ 9,15 mi emprestados · +R$ 608 mil de lucro esperado sobre a política atual**.
+> Números atuais da solução (v4): **1.371 aprovados · R$ 9,20 mi emprestados · +R$ 611 mil de lucro esperado sobre a política atual**.
 
 ---
 
@@ -19,7 +19,7 @@ A Fortuna empresta dinheiro. **Ganha pouco quando o cliente paga (+15%) e perde 
 **A regra velha da Fortuna, na prática, não dá lucro. A nossa dá — e com folga.**
 
 - Política atual, nos mesmos pedidos: **praticamente empatada no zero** (até leve prejuízo).
-- Nossa política: **+R$ 608 mil** de lucro esperado sobre a atual.
+- Nossa política: **+R$ 611 mil** de lucro esperado sobre a atual.
 - Num teste no passado com 10 mil empréstimos reais, a nossa rende **+R$ 3,2 milhões** a mais que a atual.
 
 > 🗣️ **Time — comentar ao vivo:** _(é a frase de abertura do pitch — diga o número grande primeiro)_
@@ -34,8 +34,8 @@ A inadimplência média da base é **~17%**. A IA achou grupos muito acima e mui
 - **Quem pede mais de 6× o que entra por mês na conta → ~74% de calote.** Pede uma fortuna perto do que ganha. Reduzir o empréstimo não resolve: ele se endivida em outro lugar.
 - **Quem gasta mais de 80% do que entra → ~98%.** Não sobra pra parcela nenhuma.
 - **Quem declara renda maior que o dobro do que entra na conta → ~92%.** A conta desmente a renda informada.
-- **Quem ficou no cheque especial em 2+ meses → ~82%.** Aperto financeiro crônico.
-- **Quem teve o CPF consultado 8+ vezes em 90 dias → ~100%.** Está correndo atrás de crédito em todo canto.
+- **Quem ficou no cheque especial em 2+ meses → ~82%.** Aperto financeiro crônico. Mas quase sempre vem junto com gastar mais de 80% do que entra, e é isso que já nega. Por isso, na v4, o cheque não nega sozinho.
+- **Quem teve o CPF consultado 8+ vezes em 90 dias → ~100%.** Está correndo atrás de crédito em todo canto. Todos eles também gastam mais de 80% do que entra. Por isso, na v4, as consultas não negam sozinhas.
 - **Quem tem dívida em outros bancos acima de 35% do que entra → ~25%.**
 
 ### 🟢 OPORTUNIDADES (gente boa que a regra velha rejeita à toa)
@@ -57,7 +57,7 @@ São 6 passos, aplicados em ordem; o primeiro que reprova encerra:
 
 1. **Consulta o bureau.** Se não responder, nega por segurança.
 2. **Faixas sem histórico:** nega 2+ restrições, score muito baixo ou renda muito baixa.
-3. **Sinais de alerta:** nega os perfis vermelhos do item 3 (cheque especial, gasta demais, pede 6×, etc.).
+3. **Sinais de alerta:** nega os perfis vermelhos do item 3 (gasta demais, renda inflada, pede 6×, dívida alta etc.). Desde a v4, depois das respostas da Fortuna, cheque especial e consultas ao CPF não negam sozinhos: eles só marcam quem já gasta demais.
 4. **Capacidade de pagar:** a parcela tem que caber no que sobra na conta.
 5. **Risco × retorno:** a IA calcula a chance de calote e escolhe o **valor** que dá mais lucro. Se nenhum valor compensa, nega.
 6. **Aprova** o valor escolhido (que pode ser menor que o pedido).
@@ -70,9 +70,9 @@ São 6 passos, aplicados em ordem; o primeiro que reprova encerra:
 
 | Frente | Pedidos | Ganho |
 |---|---|---|
-| **Negar quem a regra atual aprovava** (evitar calote) | 199 | **+R$ 407 mil** |
-| Aprovar bom pagador que a atual negava | 419 | +R$ 139 mil |
-| Emprestar menos pra quem é risco médio | 63 | +R$ 62 mil |
+| **Negar quem a regra atual aprovava** (evitar calote) | 196 | **+R$ 409 mil** |
+| Aprovar bom pagador que a atual negava | 422 | +R$ 140 mil |
+| Emprestar menos pra quem é risco médio | 64 | +R$ 62 mil |
 
 A maior fatia é **cortar as aprovações ruins** da política atual — ou seja, **evitar calote vale mais do que aprovar mais gente**.
 
