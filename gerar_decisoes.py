@@ -3,8 +3,10 @@
 banco (PostgreSQL) -> alvo com censura -> modelo de calote (hazard + calibração) -> API do bureau
 -> política proposta -> output/dividendos_final.csv (validado) + artefatos do painel.
 
-Uso:  python gerar_decisoes.py            (precisa de FORTUNA_BUREAU_TOKEN ou solucao/.bureau_token)
+Uso:  python gerar_decisoes.py            (precisa de FORTUNA_BUREAU_TOKEN no ambiente ou no .env da raiz)
       python gerar_decisoes.py --so-cache  (não chama a API; usa só o cache do bureau)
+      python gerar_decisoes.py --parametros parametros_aprovados.json
+                                           (aplica a versão aprovada pelo analista no simulador do painel)
 """
 from __future__ import annotations
 
@@ -27,9 +29,10 @@ from features import montar_base  # noqa: E402
 from target import construir_alvo  # noqa: E402
 from modelo import ModeloEnsemble, km_relativo  # noqa: E402
 from politica import (Parametros, politica_atual, politica_nova, resultado_esperado,  # noqa: E402
-                      taxa_atraso_por_segmento, parametros_dict, PASSOS)
+                      taxa_atraso_por_segmento, parametros_dict, parametros_de_json, PASSOS)
 from bureau_client import BureauClient, TokenInvalido  # noqa: E402
 import padroes  # noqa: E402
+import simulador  # noqa: E402
 
 TIME = "dividendos"
 SAIDA = RAIZ / "output"
@@ -98,6 +101,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--so-cache", action="store_true", help="não chama a API do bureau; usa só o cache")
     ap.add_argument("--saida", default=str(SAIDA / f"{TIME}_final.csv"))
+    ap.add_argument("--parametros", help="JSON aprovado no simulador do painel (parametros_aprovados.json)")
     args = ap.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -135,7 +139,15 @@ def main():
     novos = base[base["tipo_base"] == "novo"].sort_values("id_pedido").reset_index(drop=True)
 
     # 4. decisões
-    params = Parametros()
+    origem = {"fonte": "proposta (padrão de src/politica.py)"}
+    if args.parametros:
+        aprovado = json.loads(Path(args.parametros).read_text(encoding="utf-8"))
+        params = parametros_de_json(aprovado)
+        origem = {"fonte": args.parametros, "aprovado_por": aprovado.get("aprovado_por"),
+                  "aprovado_em": aprovado.get("aprovado_em")}
+        log.info("aplicando parâmetros aprovados: %s", origem)
+    else:
+        params = Parametros()
     dec = politica_nova(novos, modelo, taxa_atraso, params)
     atual = politica_atual(novos).reset_index(drop=True)
     tem_bureau = novos["score"].notna().values
@@ -190,6 +202,7 @@ def main():
         "bureau": stats_bureau,
         "bureau_api": stats_api,
         "parametros": parametros_dict(params),
+        "parametros_origem": origem,
         "taxa_atraso": taxa_atraso,
         "modelo": {
             "linhas_treino": modelo.n_linhas_treino, "eventos": modelo.n_eventos,
@@ -208,6 +221,16 @@ def main():
         "onde_atual_erra": padroes.onde_a_politica_atual_erra(h),
     }
     (SAIDA / "resumo.json").write_text(json.dumps(resumo, ensure_ascii=False, indent=2, default=float), encoding="utf-8")
+
+    # simulador do painel: sempre parte da proposta padrão, para o analista comparar qualquer versão com ela
+    if args.parametros:
+        oficial = politica_nova(novos, modelo, taxa_atraso, Parametros())
+        oficial["ev_modelo"] = resultado_esperado(oficial, novos, modelo, taxa_atraso).values
+    else:
+        oficial = dec
+    log.info("preparando o simulador do painel (chance de calote por valor para cada pedido)")
+    sim = simulador.montar(novos, hist, modelo, taxa_atraso, oficial, atual)
+    (SAIDA / "simulador.json").write_text(json.dumps(sim, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     log.info("aprovados: proposta %d (R$ %.0f) | atual %d (R$ %.0f) | ganho estimado R$ %.0f | %.0fs",
              resumo["proposta"]["aprovados"], resumo["proposta"]["valor"], resumo["atual"]["aprovados"],
              resumo["atual"]["valor"], resumo["ganho_estimado"], time.time() - t0)

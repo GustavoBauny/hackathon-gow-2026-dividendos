@@ -1,4 +1,5 @@
-"""Gera output/painel.html a partir de output/resumo.json, output/avaliacao.json e output/decisoes_detalhadas.csv.
+"""Gera output/painel.html a partir de output/resumo.json, output/avaliacao.json, output/decisoes_detalhadas.csv
+e output/simulador.json (simulador do analista; motor em src/simulador.js e tela em src/simulador_ui.js).
 
 Uso: python gerar_painel.py   (o gerar_decisoes.py já chama no final)
 """
@@ -126,6 +127,109 @@ def tabela(cab, linhas, classes=None):
     return f'<div class="tbl"><table><thead><tr>{th}</tr></thead><tbody>{"".join(trs)}</tbody></table></div>'
 
 
+SIM_CSS = """
+.sim-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin-top: 14px; }
+.sim-grupo { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+.sim-grupo h3 { margin: 0; font-size: 15px; }
+.sim-grupo .sim-cab { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; margin-bottom: 4px; }
+.sim-regra { padding: 9px 0 7px; border-top: 1px dashed var(--line); }
+.sim-topo { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.sim-liga { cursor: pointer; }
+.sim-liga input { accent-color: var(--accent); }
+.sim-regra input[type=range] { width: 100%; accent-color: var(--accent); margin: 6px 0 2px; }
+.sim-rot { font-size: 13.5px; }
+.sim-regra.off .sim-rot, .sim-regra.off input[type=range] { opacity: .45; }
+.sim-regra.mudou .sim-rot { color: var(--warn); font-weight: 600; }
+.sim-cnt { font-family: var(--f-mono); font-size: 12px; color: var(--muted); white-space: nowrap; }
+.sim-ev { margin-top: 2px; }
+.sim-acoes { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin: 18px 0 8px; }
+.sim-acoes input { font: inherit; padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--fg); width: 220px; max-width: 100%; }
+.callout.aviso { background: var(--risk-bg); }
+#sim-mudancas .ok { color: var(--good); } #sim-mudancas .no { color: var(--risk); }
+#sim-mudancas button.ex { padding: 2px 8px; font-family: var(--f-mono); }
+"""
+
+
+AGENTES_HTML = """
+  <h3>Segunda frente: agentes de IA leram o histórico e tentaram derrubar cada achado</h3>
+  <p>Em paralelo à varredura, 7 pares de agentes de IA (modelos de linguagem) analisaram o histórico, cada par num tema:
+  bureau, movimentação da conta, cadastro e renda, valor e capacidade, atraso e censura, mineração de regras e auditoria da política atual.
+  Em cada par, um agente propõe padrões e o outro tenta derrubá-los com os dados. Onde os pares discordaram, uma síntese refez as contas.
+  Dois achados dessa frente viraram regra na v3: o pedido excessivo e a dívida medida sobre as entradas reais.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Achado dos agentes</th><th>Veredito</th><th>Na política proposta</th></tr></thead>
+    <tbody>
+      <tr><td>Parcela acima de 50% da sobra mensal: calote quase certo. O degrau fica exatamente em 50%, e o gatilho é o valor <b>aprovado</b>, não o pedido.</td>
+        <td>Confirmado</td><td>Passo 4: parcela até 40% da sobra. Reduzir o valor resolve.</td></tr>
+      <tr><td>Quem gasta 90% ou mais do que entra na conta: calote quase certo.</td><td>Confirmado</td><td>Passo 3: saídas acima de 80% das entradas.</td></tr>
+      <tr><td>Renda declarada maior que 2 vezes as entradas reais. Só aparece em conta nova.</td><td>Confirmado</td><td>Passo 3.</td></tr>
+      <tr><td>Pedido maior que 6 vezes as entradas do mês: reduzir o valor não resolve. É isso que explica o erro da política atual ao cortar para 30% da renda declarada:
+        os reduzidos que pediram até 6x deram só 12,6% de calote.</td><td>Confirmado; virou regra na v3</td><td>Passo 3: nega em vez de reduzir.</td></tr>
+      <tr><td>Dívida em outros bancos acima de 35% das entradas reais. Contra a renda declarada, a mesma conta não separa bons de maus pagadores.</td>
+        <td>Confirmado; virou regra na v3</td><td>Passo 3.</td></tr>
+      <tr><td>Score não prevê calote. Com menos de 12 meses de histórico no bureau, o score é sorteado entre 450 e 590.</td><td>Confirmado</td>
+        <td>Passo 2 aceita score a partir de 450.</td></tr>
+      <tr><td>1 restrição ativa aumenta o atraso, não o calote.</td><td>Confirmado</td><td>Aprova; o atraso maior entra no resultado esperado do passo 5.</td></tr>
+      <tr><td>Entradas instáveis (variação acima de 35%), só em autônomos e empresários: cerca de 20% de calote.</td><td>Confirmado, no ponto de equilíbrio</td>
+        <td>Entra no modelo do passo 5, não como corte.</td></tr>
+      <tr><td>8 ou mais consultas ao CPF; cheque especial em 2 ou mais meses.</td><td>Derrubados como regra própria: são marcas do perfil que gasta tudo o que entra</td>
+        <td>Mantidos como alerta, com efeito pequeno: no simulador, desligar as consultas não libera nenhum pedido, e desligar o cheque especial libera 6.</td></tr>
+      <tr><td>CEP iniciado em 1, a partir de abril de 2025: risco cerca de 2 vezes maior.</td><td>Achado, mas <b>não usado</b></td>
+        <td>É atributo sensível. Os agentes estimaram que usá-lo renderia só cerca de R$ 300 a mais. Não usamos gênero, CEP, estado civil nem idade.</td></tr>
+    </tbody></table></div>
+  <details><summary>Como os agentes explicam os dados, e a checagem contra o histórico</summary>
+    <ul class="small">
+      <li><b>Três situações de calote quase certo:</b> saídas de 90% ou mais das entradas; parcela acima de 50% da sobra mensal; renda declarada acima de 2 vezes as entradas.</li>
+      <li><b>Fora delas, o risco parte de cerca de 8% e se multiplica:</b> 4,9 vezes com pedido acima de 6x as entradas; 3,1 vezes com dívida acima de 35% das entradas;
+        2,2 vezes com entradas instáveis; 1,4 vez com menos de 36 meses de bureau; 0,73 vez para aposentados.</li>
+      <li><b>O calote começa até 60% do prazo.</b> Parcela não paga há mais de 60 dias nunca é paga depois.</li>
+      <li><b>Checagem:</b> aplicada aos 6.033 contratos aprovados do histórico, essa explicação prevê 613 calotes; foram 626.</li>
+      <li><b>Perguntas que ficaram para o analista:</b> 2 ou mais restrições (174 pedidos novos), que ninguém no histórico teve aprovadas, são a maior aposta pendente;
+        o corte exato do pedido excessivo fica entre 5x e 6x.</li>
+    </ul>
+    <p class="small muted">Os agentes mediram a inadimplência por exposição e em clientes sem os perfis de calote quase certo, por isso algumas taxas diferem das dos cards acima,
+    que usam Kaplan-Meier no grupo inteiro. Relatório completo e o roteiro dos agentes em <span class="mono">docs/descoberta_agentes/</span>.</p>
+  </details>"""
+
+
+def bloco_simulador() -> tuple[str, str]:
+    """Seção e scripts do simulador. Sem output/simulador.json, o painel sai sem o simulador."""
+    caminho = SAIDA / "simulador.json"
+    if not caminho.exists():
+        return "", ""
+    dados = caminho.read_text(encoding="utf-8").replace("</", "<\\/")
+    motor = (RAIZ / "src" / "simulador.js").read_text(encoding="utf-8")
+    tela = (RAIZ / "src" / "simulador_ui.js").read_text(encoding="utf-8")
+    secao = """
+<section class="wrap" id="simulador">
+  <div class="parte">Parte 2 · experimentação</div>
+  <h2>Simulador: teste a política antes de aprovar</h2>
+  <p class="lead">Ligue, desligue ou mude o corte de cada regra. O painel refaz na hora as decisões dos 2.000 pedidos novos, com o mesmo
+  modelo do pipeline, e mostra quanto calote clientes iguais tiveram no histórico. Com os cortes da proposta, ele reproduz o arquivo de decisões pedido a pedido.</p>
+  <div class="tiles" id="sim-tiles"></div>
+  <div class="callout aviso" id="sim-aviso" hidden></div>
+  <div class="sim-grid">
+    <div class="sim-grupo"><div class="sim-cab"><h3>Passo 2 · Faixas sem histórico</h3></div><div id="sim-p2"></div></div>
+    <div class="sim-grupo"><div class="sim-cab"><h3>Passo 3 · Sinais de alerta</h3></div><div id="sim-p3"></div></div>
+    <div class="sim-grupo"><div class="sim-cab"><h3>Passo 4 · Teto pela capacidade</h3><span class="sim-cnt" id="sim-p4-cnt"></span></div><div id="sim-p4"></div></div>
+    <div class="sim-grupo"><div class="sim-cab"><h3>Passo 5 · Risco e retorno</h3><span class="sim-cnt" id="sim-p5-cnt"></span></div><div id="sim-p5"></div>
+      <p class="small muted">O modelo escolhe o valor de maior resultado esperado até o teto. A margem é a folga exigida para aprovar.</p></div>
+  </div>
+  <div class="sim-acoes">
+    <label class="small">Analista responsável <input id="sim-analista" placeholder="nome de quem aprova" autocomplete="name"></label>
+    <button type="button" id="sim-aprovar">Aprovar esta versão</button>
+    <button type="button" class="ex" id="sim-padrao">Voltar à proposta</button>
+  </div>
+  <div class="decide" id="sim-aprovado" hidden></div>
+  <h3>Pedidos que mudam em relação à proposta</h3>
+  <div id="sim-mudancas"></div>
+</section>
+"""
+    scripts = (f'<script type="application/json" id="sim-dados">{dados}</script>\n'
+               f"<script>\n{motor}\n</script>\n<script>\n{tela}\n</script>\n")
+    return secao, scripts
+
+
 def gerar(resumo_path: Path = SAIDA / "resumo.json", destino: Path = SAIDA / "painel.html"):
     r = json.loads(Path(resumo_path).read_text(encoding="utf-8"))
     av_path = SAIDA / "avaliacao.json"
@@ -229,6 +333,8 @@ def gerar(resumo_path: Path = SAIDA / "resumo.json", destino: Path = SAIDA / "pa
             exemplos.append((s.iloc[0]["id_pedido"], rot))
     ex_html = "".join(f'<button type="button" class="ex" data-id="{e(i)}">{e(i)} · {e(t)}</button>' for i, t in exemplos)
     primeiro = exemplos[0][0] if exemplos else det.iloc[0]["id_pedido"]
+
+    sim_secao, sim_scripts = bloco_simulador()
 
     alvo = r["alvo"]
     restr2 = por_motivo.get("2+ restrições ativas (nunca aprovado no histórico)", 0)
@@ -341,7 +447,7 @@ ol.trilha li.na {{ color: var(--muted); }}
 .muted {{ color: var(--muted); }} .small {{ font-size: 13px; }}
 footer.wrap {{ padding-block: 24px 40px; color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--line); }}
 @media (prefers-reduced-motion: no-preference) {{ .bar .fill {{ transition: width .4s ease-out; }} }}
-</style>
+{SIM_CSS}</style>
 
 <header class="wrap">
   <div class="eyebrow">Fortuna Crédito · Time Dividendos · Hackathon GOW 2026</div>
@@ -351,7 +457,7 @@ footer.wrap {{ padding-block: 24px 40px; color: var(--muted); font-size: 12.5px;
   <p class="small muted">Gerado pelo pipeline em {e(r['gerado_em'])} · dados do histórico com corte em 30/09/2026 · arquivo <span class="mono">{e(r['csv']['arquivo'])}</span></p>
 </header>
 <nav class="wrap" aria-label="Seções">
-  <a href="#resumo">Resumo</a><a href="#padroes">1. Padrões encontrados</a><a href="#politica">2. Política proposta</a>
+  <a href="#resumo">Resumo</a><a href="#padroes">1. Padrões encontrados</a><a href="#politica">2. Política proposta</a>{'<a href="#simulador">Simulador</a>' if sim_secao else ''}
   <a href="#ia">IA e analista</a><a href="#comparacao">Comparação com a atual</a><a href="#validacao">Validação</a><a href="#consulta">Consultar pedido</a><a href="#tecnico">Detalhes técnicos</a>
 </nav>
 
@@ -397,6 +503,7 @@ footer.wrap {{ padding-block: 24px 40px; color: var(--muted); font-size: 12.5px;
   <ol class="arv">{arv}</ol>
   <p><b>O que mais pesa no modelo de risco</b> (participação no ganho de informação do modelo):</p>
   <ul class="imp">{imp_html}</ul>
+{AGENTES_HTML}
 </section>
 
 <section class="wrap" id="politica">
@@ -434,28 +541,33 @@ footer.wrap {{ padding-block: 24px 40px; color: var(--muted); font-size: 12.5px;
       <p>Aprova o valor escolhido. Quando é menor que o pedido, a parcela ficou grande demais para a renda real do cliente.</p></li>
   </ol>
   <div class="decide">
-    <b>O analista decide.</b> Todo corte acima é um parâmetro em <span class="mono">src/politica.py</span> (classe <span class="mono">Parametros</span>).
-    Mudar um valor e rodar <span class="mono">python gerar_decisoes.py</span> refaz as decisões e este painel em cerca de 2 minutos.
+    <b>O analista decide.</b> Cada corte acima pode ser ligado, desligado ou mudado no <a href="#simulador">simulador</a>, logo abaixo,
+    com o efeito nos 2.000 pedidos e o calote de clientes iguais no histórico. Só uma versão aprovada por ele vai para o pipeline.
     Sugestão para decidir: um piloto pequeno e controlado com clientes de {P['restricoes_max'] + 1}+ restrições, hoje negados por falta de evidência, para medir o risco deles.
   </div>
 </section>
 
+{sim_secao}
 <section class="wrap" id="ia">
   <h2>Onde a IA entra e onde o analista decide</h2>
   <div class="tiles">
-    <div class="tile"><div class="k">IA · descoberta</div><p class="small">Árvores de decisão varrem todas as variáveis e combinações do histórico.
-      Elas encontram os cortes e grupos da Parte 1. As taxas de cada grupo são medidas sem contar contrato em andamento como bom pagador.</p></div>
+    <div class="tile"><div class="k">IA · descoberta</div><p class="small">Árvores de decisão varrem todas as variáveis e combinações do histórico e encontram os cortes da Parte 1.
+      Em paralelo, 7 pares de agentes de IA propõem padrões e tentam derrubá-los. As taxas de cada grupo são medidas sem contar contrato em andamento como bom pagador.</p></div>
     <div class="tile"><div class="k">IA · decisão</div><p class="small">No passo 5, 5 modelos de sobrevivência treinados no histórico estimam a chance de calote de cada pedido para cada valor possível.
       A política aprova o valor com o maior resultado esperado.</p></div>
-    <div class="tile"><div class="k">Analista · aprovação</div><p class="small">Os cortes dos passos 2 a 5 são parâmetros visíveis. O analista ajusta, roda de novo e compara.
-      Nenhuma política vai para produção sem a aprovação dele.</p></div>
+    <div class="tile"><div class="k">Analista · aprovação</div><p class="small">No simulador, o analista liga, desliga e ajusta cada regra, vê o efeito e a evidência do histórico,
+      e aprova a versão com o nome dele. Nenhuma política vai para produção sem essa aprovação.</p></div>
   </div>
   <h3>Como o analista valida uma mudança</h3>
   <ol class="small">
-    <li>Muda um parâmetro em <span class="mono">src/politica.py</span>. Exemplo: aceitar 2 restrições, ou trocar o teto de 40% da sobra.</li>
-    <li>Roda <span class="mono">python gerar_decisoes.py</span>, que refaz o arquivo e este painel, e <span class="mono">python avaliar_historico.py</span>, que refaz o backtest.</li>
-    <li>Compara o ganho no backtest e roda os testes com <span class="mono">python -m unittest discover tests</span>.</li>
-    <li>Confere os pedidos que mudaram em <span class="mono">output/decisoes_detalhadas.csv</span> ou com <span class="mono">python explicar.py P-xxxxx</span>.</li>
+    <li><b>Testa no <a href="#simulador">simulador</a>.</b> Liga, desliga ou muda o corte de uma regra, sem ler código.
+      O painel mostra na hora quantos pedidos mudam, o ganho pelo modelo e o calote de clientes iguais no histórico.</li>
+    <li><b>Confere quando o modelo e o histórico discordam.</b> O painel avisa. Exemplo: desligar o pedido excessivo rende mais pelo modelo,
+      mas bem menos se esses clientes repetirem o calote do histórico. Pedidos sem nenhum caso parecido no histórico também são sinalizados.</li>
+    <li><b>Olha os pedidos que mudam</b>, um a um, na tabela do simulador ou em <a href="#consulta">Consultar pedido</a>.</li>
+    <li><b>Aprova a versão com o nome dele.</b> O painel baixa <span class="mono">parametros_aprovados.json</span>, com os cortes e quem aprovou.</li>
+    <li><b>O pipeline aplica só a versão aprovada:</b> <span class="mono">python gerar_decisoes.py --parametros parametros_aprovados.json</span>
+      refaz o arquivo de decisões, valida o formato e refaz este painel.</li>
   </ol>
 </section>
 
@@ -557,7 +669,7 @@ function mostrar(id) {{
     </div>`;
 }}
 document.getElementById("f-busca").addEventListener("submit", ev => {{ ev.preventDefault(); mostrar(document.getElementById("pedido").value); }});
-document.querySelectorAll("button.ex").forEach(b => b.addEventListener("click", () => {{ document.getElementById("pedido").value = b.dataset.id; mostrar(b.dataset.id); }}));
+document.querySelectorAll("#consulta button.ex[data-id]").forEach(b => b.addEventListener("click", () => {{ document.getElementById("pedido").value = b.dataset.id; mostrar(b.dataset.id); }}));
 mostrar(document.getElementById("pedido").value);
 const tip = document.getElementById("tip");
 document.addEventListener("pointermove", ev => {{
@@ -568,7 +680,7 @@ document.addEventListener("pointermove", ev => {{
   tip.style.left = x + "px"; tip.style.top = (ev.clientY + 14) + "px";
 }});
 </script>
-"""
+{sim_scripts}"""
     Path(destino).write_text(pagina, encoding="utf-8")
     return destino
 

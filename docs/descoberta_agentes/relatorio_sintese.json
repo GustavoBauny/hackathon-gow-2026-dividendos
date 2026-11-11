@@ -1,0 +1,996 @@
+{
+ "metodo_taxa": "ajustada por exposição sum(calote_obs)/sum(exposicao), checada em maduros; pop. limpa = sem P01-P05",
+ "breakeven_pd": 0.176,
+ "patterns": [
+  {
+   "id": "P01_parcela_sobra_50",
+   "rank": 1,
+   "titulo_negocio": "Clientes cuja parcela aprovada passa de 50% da sobra mensal da conta (ou sem sobra) têm inadimplência de 100%, contra 11% da média. Afeta 231 clientes.",
+   "regra": "parcela_price(valor_aprovado,prazo)/(mov_entradas_med-mov_saidas_med) > 0.50 OR sobra <= 0",
+   "variaveis": [
+    "valor_aprovado",
+    "prazo_meses",
+    "mov_entradas_med",
+    "mov_saidas_med"
+   ],
+   "limiar": 0.5,
+   "efeito": "P(calote)=1.0",
+   "depende_do_valor_aprovado": true,
+   "n_hist_segmento": 1157,
+   "n_aprovados_com_desfecho": 348,
+   "taxa_calote_segmento": 1.0,
+   "taxa_calote_referencia": 0.114,
+   "metodo": "exposicao 238/226.9; maduros 127/127",
+   "n_novos_segmento": 231,
+   "n_novos_exclusivos": 125,
+   "acao": "limitar valor a 0.45*sobra*annuity(prazo); negar se sobra<=0",
+   "fontes": [
+    "valor_capacidade",
+    "movimentacao",
+    "cadastro_renda",
+    "mineracao_regras",
+    "auditoria_politica_atual"
+   ],
+   "status": "confirmado",
+   "confianca": "alta",
+   "usa_atributo_sensivel": false
+  },
+  {
+   "id": "P02_saidas_ge_90pct",
+   "rank": 2,
+   "titulo_negocio": "Clientes cujas saídas chegam a 90% ou mais das entradas da conta têm inadimplência de 100%, contra 15% da média. Afeta 97 clientes.",
+   "regra": "mov_saidas_sobre_entradas >= 0.9 (gap 0.5-0.949; perfil gerado em bloco: pico de saídas ~7x em t-3, cheque 2-4 meses, consultas 4-10)",
+   "variaveis": [
+    "mov_saidas_sobre_entradas"
+   ],
+   "limiar": 0.9,
+   "efeito": "P(calote)=1.0",
+   "depende_do_valor_aprovado": false,
+   "n_hist_segmento": 490,
+   "n_aprovados_com_desfecho": 156,
+   "taxa_calote_segmento": 1.0,
+   "taxa_calote_referencia": 0.148,
+   "metodo": "exposicao 102/94.1; maduros 47/47",
+   "n_novos_segmento": 97,
+   "acao": "negar",
+   "nota": "contido em P01 entre aprovados; consultas>=8 e cheque>=3 são subconjuntos",
+   "fontes": [
+    "movimentacao",
+    "mineracao_regras",
+    "cadastro_renda",
+    "valor_capacidade",
+    "bureau"
+   ],
+   "status": "confirmado",
+   "confianca": "alta",
+   "usa_atributo_sensivel": false
+  },
+  {
+   "id": "P03_renda_declarada_inflada_2x",
+   "rank": 3,
+   "titulo_negocio": "Clientes que declaram renda maior que 2 vezes as entradas reais da conta têm inadimplência de 92%, contra 17% da média. Afeta 66 clientes.",
+   "regra": "renda_declarada/mov_entradas_med > 2 (na prática >=3; só contas novas)",
+   "variaveis": [
+    "renda_declarada",
+    "mov_entradas_med"
+   ],
+   "limiar": 2.0,
+   "efeito": "P(calote)~0.92",
+   "depende_do_valor_aprovado": false,
+   "n_hist_segmento": 304,
+   "n_aprovados_com_desfecho": 42,
+   "taxa_calote_segmento": 0.92,
+   "taxa_calote_referencia": 0.167,
+   "metodo": "exposicao 25/23.8; maduros 8/9",
+   "n_novos_segmento": 66,
+   "acao": "negar",
+   "fontes": [
+    "movimentacao",
+    "cadastro_renda",
+    "mineracao_regras",
+    "auditoria_politica_atual"
+   ],
+   "status": "confirmado",
+   "confianca": "alta",
+   "usa_atributo_sensivel": false
+  },
+  {
+   "id": "P04_pedido_excessivo_6x_entradas",
+   "rank": 4,
+   "titulo_negocio": "Clientes que pedem mais de 6 vezes o que entra por mês na conta têm inadimplência de 50%, contra 10% da média, mesmo com valor reduzido. Afeta 121 clientes.",
+   "regra": "valor_SOLICITADO/mov_entradas_med > 6",
+   "variaveis": [
+    "valor_solicitado",
+    "mov_entradas_med"
+   ],
+   "limiar": 6.0,
+   "efeito": "RR ~4.9 sobre a base (P~0.37-0.50)",
+   "depende_do_valor_aprovado": false,
+   "depende_do_valor_solicitado": true,
+   "n_hist_segmento": 582,
+   "n_aprovados_com_desfecho": 139,
+   "taxa_calote_segmento": 0.495,
+   "taxa_calote_referencia": 0.099,
+   "metodo": "exposicao 43/86.9 (pop. limpa); maduros 26/49",
+   "n_novos_segmento": 121,
+   "n_novos_exclusivos": 106,
+   "acao": "negar (redução não resolve)",
+   "nota": "Absorve \"valor reduzido ao teto\" e \"parcela>=27-30% renda declarada\": reduzidos com vs<=6 = 12.6%; Poisson AIC vs6 2107.6 vs cap 2124.1 / pd27 2122.5; com vs6, cap p=0.54, pd27 p=0.12; valor_aprovado/entradas não adiciona (p=0.62)",
+   "fontes": [
+    "cadastro_renda",
+    "valor_capacidade",
+    "mineracao_regras",
+    "auditoria_politica_atual",
+    "atraso_censura",
+    "synthesis"
+   ],
+   "status": "refinado",
+   "confianca": "alta",
+   "usa_atributo_sensivel": false
+  },
+  {
+   "id": "P05_outras_parcelas_sobre_entradas_35",
+   "rank": 5,
+   "titulo_negocio": "Clientes cujas parcelas em outras instituições passam de 35% das entradas mensais da conta têm inadimplência de 29%, contra 10% da média, e atrasam 46% das vezes, contra 22%. Afeta 165 clientes.",
+   "regra": "parcelas_outras_instituicoes/mov_entradas_med > 0.35",
+   "variaveis": [
+    "parcelas_outras_instituicoes",
+    "mov_entradas_med"
+   ],
+   "limiar": 0.35,
+   "efeito": "RR ~3.1 calote; atraso logit +1.05",
+   "depende_do_valor_aprovado": false,
+   "n_hist_segmento": 828,
+   "n_aprovados_com_desfecho": 350,
+   "taxa_calote_segmento": 0.292,
+   "taxa_calote_referencia": 0.097,
+   "taxa_atraso_segmento": 0.46,
+   "taxa_atraso_referencia": 0.22,
+   "metodo": "exposicao 62/212.2 (pop. limpa); maduros 37/119",
+   "n_novos_segmento": 165,
+   "n_novos_exclusivos": 144,
+   "acao": "negar",
+   "nota": "versão sobre renda declarada >0.30 é proxy (2.4% de calote quando oe<=0.35)",
+   "fontes": [
+    "bureau",
+    "valor_capacidade",
+    "mineracao_regras"
+   ],
+   "status": "refinado",
+   "confianca": "alta",
+   "usa_atributo_sensivel": false
+  },
+  {
+   "id": "P06_score_sem_poder_preditivo",
+   "rank": 6,
+   "titulo_negocio": "Clientes com score até 600 e sem outros fatores de risco têm inadimplência de 11%, contra 9% da média dos clientes limpos. Afeta 445 clientes.",
+   "regra": "score ~ U(450,590) se meses_historico_bureau<12, senão N(768,100) truncado em 1000; score não entra no desfecho",
+   "variaveis": [
+    "score",
+    "meses_historico_bureau"
+   ],
+   "limiar": null,
+   "efeito": "nulo (Poisson coef ~0, p=0.99)",
+   "depende_do_valor_aprovado": false,
+   "n_hist_segmento": 2385,
+   "n_aprovados_com_desfecho": 221,
+   "taxa_calote_segmento": 0.113,
+   "taxa_calote_referencia": 0.086,
+   "metodo": "exposicao, pop. totalmente limpa",
+   "n_novos_segmento": 445,
+   "acao": "retirar corte de score (proposta aprova 287 deles)",
+   "fontes": [
+    "bureau",
+    "auditoria_politica_atual",
+    "mineracao_regras"
+   ],
+   "status": "confirmado",
+   "confianca": "alta",
+   "usa_atributo_sensivel": false
+  },
+  {
+   "id": "P07_cv_entradas_35",
+   "rank": 7,
+   "titulo_negocio": "Clientes com entradas mensais muito instáveis (variação acima de 35%) têm inadimplência de 20%, contra 9% da média. Afeta 269 clientes.",
+   "regra": "mov_entradas_cv > 0.35 (só autônomos/empresários)",
+   "variaveis": [
+    "mov_entradas_cv"
+   ],
+   "limiar": 0.35,
+   "efeito": "RR ~2.2",
+   "depende_do_valor_aprovado": false,
+   "n_hist_segmento": 1344,
+   "n_aprovados_com_desfecho": 578,
+   "taxa_calote_segmento": 0.202,
+   "taxa_calote_referencia": 0.088,
+   "metodo": "exposicao pop. limpa; maduros 19.6%",
+   "n_novos_segmento": 269,
+   "n_novos_exclusivos": 207,
+   "acao": "negar (EV ~0; opcional)",
+   "fontes": [
+    "movimentacao",
+    "cadastro_renda",
+    "mineracao_regras"
+   ],
+   "status": "refinado",
+   "confianca": "media",
+   "usa_atributo_sensivel": false
+  },
+  {
+   "id": "P08_restricao_1_atraso",
+   "rank": 8,
+   "titulo_negocio": "Clientes com 1 restrição ativa e sem outros fatores de risco têm inadimplência de 7%, contra 10% da média, mas atrasam 46% das vezes, contra 23%. Afeta 203 clientes.",
+   "regra": "restricoes_ativas==1 → atraso logit +0.95; sem efeito no calote (marcador de P02/P03)",
+   "variaveis": [
+    "restricoes_ativas"
+   ],
+   "limiar": 1,
+   "efeito": "atraso ~47% vs 22%",
+   "depende_do_valor_aprovado": false,
+   "n_hist_segmento": 1087,
+   "n_aprovados_com_desfecho": 127,
+   "taxa_calote_segmento": 0.073,
+   "taxa_calote_referencia": 0.11,
+   "taxa_atraso_segmento": 0.46,
+   "taxa_atraso_referencia": 0.23,
+   "metodo": "exposicao 3/41.0 (pop. limpa)",
+   "n_novos_segmento": 203,
+   "acao": "aprovar r=1 sem outros fatores; negar r>=2 (sem evidência)",
+   "fontes": [
+    "bureau",
+    "auditoria_politica_atual",
+    "atraso_censura"
+   ],
+   "status": "refinado",
+   "confianca": "media",
+   "usa_atributo_sensivel": false
+  },
+  {
+   "id": "P09_renda_1500_2000_neutra",
+   "rank": 9,
+   "titulo_negocio": "Clientes com renda declarada entre R$ 1.500 e R$ 2.000 e sem outros fatores de risco têm inadimplência de 7% a 12%, contra 9% a 11% da média. Afeta 120 clientes.",
+   "regra": "nível de renda declarada sem efeito após controlar sobra (RR 1.03, p=0.95)",
+   "variaveis": [
+    "renda_declarada"
+   ],
+   "limiar": null,
+   "efeito": "nulo",
+   "depende_do_valor_aprovado": false,
+   "n_hist_segmento": 587,
+   "n_aprovados_com_desfecho": 56,
+   "taxa_calote_segmento": 0.065,
+   "taxa_calote_referencia": 0.088,
+   "metodo": "exposicao pop. limpa (n pequeno)",
+   "n_novos_segmento": 120,
+   "acao": "baixar mínimo para >1500",
+   "fontes": [
+    "auditoria_politica_atual",
+    "bureau"
+   ],
+   "status": "confirmado",
+   "confianca": "baixa",
+   "usa_atributo_sensivel": false
+  },
+  {
+   "id": "P10_aposentado_menor_risco",
+   "rank": 10,
+   "titulo_negocio": "Clientes aposentados têm inadimplência de 6%, contra 9% da média dos clientes limpos. Afeta 196 clientes.",
+   "regra": "tipo_vinculo=='aposentado' → RR ~0.73",
+   "variaveis": [
+    "tipo_vinculo"
+   ],
+   "limiar": null,
+   "efeito": "RR 0.73 (Poisson p=0.11; logit maduros p=0.016)",
+   "depende_do_valor_aprovado": false,
+   "n_hist_segmento": 1016,
+   "n_aprovados_com_desfecho": 528,
+   "taxa_calote_segmento": 0.056,
+   "taxa_calote_referencia": 0.091,
+   "metodo": "exposicao pop. limpa; maduros 11/202",
+   "n_novos_segmento": 196,
+   "acao": "nenhuma regra extra",
+   "fontes": [
+    "atraso_censura"
+   ],
+   "status": "refinado",
+   "confianca": "media",
+   "usa_atributo_sensivel": false,
+   "nota": "correlacionado com idade, mas idade não explica"
+  },
+  {
+   "id": "P11_bureau_menos_36m",
+   "rank": 11,
+   "titulo_negocio": "Clientes com menos de 36 meses de histórico no bureau têm inadimplência de 11%, contra 7% da média dos clientes limpos. Afeta 619 clientes.",
+   "regra": "meses_historico_bureau < 36 → RR ~1.37",
+   "variaveis": [
+    "meses_historico_bureau"
+   ],
+   "limiar": 36,
+   "efeito": "RR 1.37 (p=0.01), sem degrau nítido",
+   "depende_do_valor_aprovado": false,
+   "n_hist_segmento": null,
+   "n_aprovados_com_desfecho": 464,
+   "taxa_calote_segmento": 0.112,
+   "taxa_calote_referencia": 0.07,
+   "metodo": "exposicao pop. limpa sem cv",
+   "n_novos_segmento": 619,
+   "acao": "não usar (abaixo do equilíbrio)",
+   "fontes": [
+    "mineracao_regras",
+    "synthesis"
+   ],
+   "status": "refinado",
+   "confianca": "baixa",
+   "usa_atributo_sensivel": false
+  },
+  {
+   "id": "P12_cep1_pos_2025_04",
+   "rank": 12,
+   "titulo_negocio": "Clientes com CEP iniciado em 1 que pediram a partir de abril de 2025 têm inadimplência de 20% a 24%, contra 8% a 9% da média. Afeta 102 clientes.",
+   "regra": "cep[0]=='1' AND data_pedido>=2025-04-01 → RR ~2.25",
+   "variaveis": [
+    "cep",
+    "data_pedido"
+   ],
+   "limiar": null,
+   "efeito": "RR 2.25 (p<0.001)",
+   "depende_do_valor_aprovado": false,
+   "n_hist_segmento": 513,
+   "n_aprovados_com_desfecho": 182,
+   "taxa_calote_segmento": 0.2,
+   "taxa_calote_referencia": 0.084,
+   "metodo": "exposicao pop. limpa 18/90.1",
+   "n_novos_segmento": 102,
+   "acao": "NÃO usar; custo de não usar ~R$300",
+   "fontes": [
+    "cadastro_renda"
+   ],
+   "status": "refinado",
+   "confianca": "media",
+   "usa_atributo_sensivel": true
+  },
+  {
+   "id": "M1_mecanica_calote_atraso",
+   "rank": null,
+   "titulo_negocio": "Parcela vencida e não paga há mais de 60 dias nunca é paga depois: a inadimplência real dos aprovados é 17,2%, contra 10,4% da contagem ingênua. Afeta 2000 clientes.",
+   "regra": "calote = parcela em aberto >60 dias (absorvente); k=floor(U(0,0.6*prazo))+1; atraso pago U(5,60) dias; em dia paga 0-5 dias antes; classe atraso: round(prazo*U(0.2,0.5)) parcelas atrasadas; classes 64.6/17.8/17.6; situacao_final marca inadimplente só após ~90 dias",
+   "variaveis": [
+    "parcelas"
+   ],
+   "limiar": 60,
+   "efeito": "mecânica",
+   "depende_do_valor_aprovado": false,
+   "n_hist_segmento": 10000,
+   "n_aprovados_com_desfecho": 6033,
+   "taxa_calote_segmento": 0.172,
+   "taxa_calote_referencia": 0.104,
+   "metodo": "exposicao 626/3632; maduros 0.176",
+   "n_novos_segmento": 2000,
+   "acao": "usar calote_obs pela regra de 60 dias",
+   "fontes": [
+    "atraso_censura"
+   ],
+   "status": "confirmado",
+   "confianca": "alta",
+   "usa_atributo_sensivel": false
+  },
+  {
+   "id": "M2_politicas_historicas",
+   "rank": null,
+   "titulo_negocio": "A política atual aprova 1.145 dos 2.000 novos pedidos (R$ 8.856.446,13) e tem inadimplência de 15,8%, contra 17,6% do ponto de equilíbrio. Afeta 1145 clientes.",
+   "regra": "atual: score>600 & renda>2000 & restr==0, valor=min(sol, floor_cent(0.30*renda*annuity), 30000) [100% das 8.737]; piloto: score>450 & renda>1500 & restr<=1, teto 35% [100% das 1.263]",
+   "variaveis": [
+    "score",
+    "renda_declarada",
+    "restricoes_ativas"
+   ],
+   "limiar": null,
+   "efeito": "política",
+   "depende_do_valor_aprovado": true,
+   "n_hist_segmento": 8737,
+   "n_aprovados_com_desfecho": 4907,
+   "taxa_calote_segmento": 0.158,
+   "taxa_calote_referencia": 0.176,
+   "metodo": "exposicao",
+   "n_novos_segmento": 1145,
+   "acao": "baseline",
+   "fontes": [
+    "auditoria_politica_atual"
+   ],
+   "status": "confirmado",
+   "confianca": "alta",
+   "usa_atributo_sensivel": false
+  }
+ ],
+ "refutados_absorvidos": [
+  {
+   "hipotese": "consultas_90_dias>=8 = calote",
+   "status": "absorvido em P02",
+   "evidencia": "177/177 hist e 38/38 novos dentro de saídas>=0.9; 0-7 consultas plano"
+  },
+  {
+   "hipotese": "cheque especial >=2 meses = calote",
+   "status": "absorvido em P02",
+   "evidencia": "fora de P02: 15-23% ajustado, 0/10 maduros"
+  },
+  {
+   "hipotese": "parcela/entradas > 0.30",
+   "status": "refutado",
+   "evidencia": "137/175 são reduzidos; Poisson RR 1.07 p=0.84 com \"reduzido\""
+  },
+  {
+   "hipotese": "valor reduzido ao teto / parcela >= 27-30% renda declarada / pediu acima do teto",
+   "status": "absorvido em P04",
+   "evidencia": "reduzidos com vs<=6: 12.6% (n=59); não reduzidos vs>6: 50%; AIC vs6 2107.6 vs 2122-2124"
+  },
+  {
+   "hipotese": "dívida outras/renda declarada > 0.30 (calote)",
+   "status": "proxy de P05",
+   "evidencia": "od>0.3 & oe<=0.35: 2.4% (n=144); possível efeito residual só no atraso (30% vs 22%, n=69)"
+  },
+  {
+   "hipotese": "tipo_vinculo autônomo/empresário",
+   "status": "absorvido em P07",
+   "evidencia": "com cv<=0.35: 8-10% em todos"
+  },
+  {
+   "hipotese": "thin-file (<12m) arriscado",
+   "status": "refutado",
+   "evidencia": "limpo 12.3% vs 10.9%, Poisson +0.08 p=0.82"
+  },
+  {
+   "hipotese": "piloto tem risco próprio",
+   "status": "refutado",
+   "evidencia": "limpo 11.7% vs 10.8%; mesma janela 11.4% vs 11.7%"
+  },
+  {
+   "hipotese": "gênero, estado civil, idade, prazo, nível de valor/renda, saldo, tendência",
+   "status": "nulo",
+   "evidencia": "planos na pop. limpa"
+  },
+  {
+   "hipotese": "gradiente de parcela/sobra abaixo de 0.5",
+   "status": "quase nulo",
+   "evidencia": "7% até 0.3; 11-12% em 0.3-0.45; 5% em 0.45-0.5 (pop. limpa sem cv)"
+  }
+ ],
+ "generator": {
+  "descricao": "P(calote) = 1 se regras duras; senão min(1, base*prod(RR)). Atraso entre não caloteiros por logística.",
+  "score_gerado": "U(450,590) se meses_historico_bureau<12; senão N(768,100) truncado 1000; sem efeito no desfecho",
+  "regras_duras": [
+   {
+    "regra": "mov_saidas_sobre_entradas>=0.9",
+    "p": 1.0
+   },
+   {
+    "regra": "parcela(valor_aprovado)/sobra>0.5 ou sobra<=0",
+    "p": 1.0
+   },
+   {
+    "regra": "renda_declarada/entradas>2",
+    "p": 0.92
+   }
+  ],
+  "base": 0.076,
+  "multiplicadores": {
+   "valor_solicitado/entradas>6": 4.89,
+   "outras/entradas>0.35": 3.09,
+   "cv_entradas>0.35": 2.16,
+   "aposentado": 0.73,
+   "meses_bureau<36": 1.37
+  },
+  "variante_sensivel": {
+   "cep1 & data_pedido>=2025-04-01": 2.25
+  },
+  "interacao_OExCV": {
+   "RR": 1.21,
+   "p": 0.61,
+   "conclusao": "multiplicativo basta"
+  },
+  "atraso": {
+   "forma": "logit(L)=logit(0.216)+1.05*[outras/entradas>0.35]+0.95*[restr==1]",
+   "n_parcelas_atrasadas": "round(prazo*U(0.2,0.5))",
+   "dias": "U(5,60)"
+  },
+  "momento_calote": "k=floor(U(0,0.6*prazo))+1, absorvente; calote = >60 dias em aberto",
+  "payoff": {
+   "em_dia": 0.15,
+   "atraso": 0.05,
+   "calote": -0.6
+  },
+  "ajustes_poisson": {
+   "core": {
+    "params": {
+     "const": -2.549854233513887,
+     "vs6": 1.5761749267799683,
+     "OE": 1.1248988545944494,
+     "CV": 0.8138394771902946
+    },
+    "aic": 2419.285003389221
+   },
+   "core+apos": {
+    "params": {
+     "const": -2.516576856685729,
+     "vs6": 1.5755174628949924,
+     "OE": 1.1274456603864207,
+     "CV": 0.7803346049458166,
+     "apos": -0.30982219661515
+    },
+    "aic": 2418.6375982496693
+   },
+   "core+apos+h36": {
+    "params": {
+     "const": -2.578317779210338,
+     "vs6": 1.5869288274287991,
+     "OE": 1.1276936650466756,
+     "CV": 0.7713283195612395,
+     "apos": -0.3146759266564706,
+     "h36": 0.31597588701536866
+    },
+    "aic": 2414.5894787005127
+   },
+   "full_sens": {
+    "params": {
+     "const": -2.6141843548773007,
+     "vs6": 1.5520486930817274,
+     "OE": 1.1382563308249345,
+     "CV": 0.7646062283182972,
+     "apos": -0.31486492073977257,
+     "h36": 0.31445339707762937,
+     "cep1p": 0.8117710319489825
+    },
+    "aic": 2403.91736635212
+   }
+  },
+  "checagem_simulacao": [
+   {
+    "segmento": "all",
+    "n": 6033,
+    "obs": 626,
+    "esp": 613.0,
+    "obs_esp": 1.02,
+    "mat_obs": "344/1957",
+    "mat_esp": 0.17
+   },
+   {
+    "segmento": "atual",
+    "n": 4907,
+    "obs": 480,
+    "esp": 484.9,
+    "obs_esp": 0.99,
+    "mat_obs": "304/1831",
+    "mat_esp": 0.161
+   },
+   {
+    "segmento": "piloto",
+    "n": 1126,
+    "obs": 146,
+    "esp": 128.1,
+    "obs_esp": 1.14,
+    "mat_obs": "40/126",
+    "mat_esp": 0.295
+   },
+   {
+    "segmento": "S saidas>=0.9",
+    "n": 156,
+    "obs": 102,
+    "esp": 94.1,
+    "obs_esp": 1.08,
+    "mat_obs": "47/47",
+    "mat_esp": 1.0
+   },
+   {
+    "segmento": "I rdr>2",
+    "n": 42,
+    "obs": 25,
+    "esp": 22.3,
+    "obs_esp": 1.12,
+    "mat_obs": "8/9",
+    "mat_esp": 0.929
+   },
+   {
+    "segmento": "C c_sobra>0.5",
+    "n": 348,
+    "obs": 238,
+    "esp": 227.0,
+    "obs_esp": 1.05,
+    "mat_obs": "127/127",
+    "mat_esp": 1.0
+   },
+   {
+    "segmento": "cap (reduzido)",
+    "n": 347,
+    "obs": 159,
+    "esp": 151.5,
+    "obs_esp": 1.05,
+    "mat_obs": "96/158",
+    "mat_esp": 0.572
+   },
+   {
+    "segmento": "cap & vs<=6 & !C",
+    "n": 61,
+    "obs": 7,
+    "esp": 4.5,
+    "obs_esp": 1.55,
+    "mat_obs": "7/46",
+    "mat_esp": 0.091
+   },
+   {
+    "segmento": "vs6 & !C",
+    "n": 139,
+    "obs": 43,
+    "esp": 41.0,
+    "obs_esp": 1.05,
+    "mat_obs": "26/49",
+    "mat_esp": 0.474
+   },
+   {
+    "segmento": "OE",
+    "n": 354,
+    "obs": 64,
+    "esp": 61.2,
+    "obs_esp": 1.05,
+    "mat_obs": "37/119",
+    "mat_esp": 0.281
+   },
+   {
+    "segmento": "CV",
+    "n": 593,
+    "obs": 74,
+    "esp": 73.2,
+    "obs_esp": 1.01,
+    "mat_obs": "37/182",
+    "mat_esp": 0.195
+   },
+   {
+    "segmento": "OE&CV",
+    "n": 29,
+    "obs": 10,
+    "esp": 7.9,
+    "obs_esp": 1.27,
+    "mat_obs": "3/4",
+    "mat_esp": 0.544
+   },
+   {
+    "segmento": "r=1",
+    "n": 127,
+    "obs": 29,
+    "esp": 31.7,
+    "obs_esp": 0.92,
+    "mat_obs": "9/17",
+    "mat_esp": 0.546
+   },
+   {
+    "segmento": "score<=600",
+    "n": 278,
+    "obs": 41,
+    "esp": 31.9,
+    "obs_esp": 1.28,
+    "mat_obs": "11/30",
+    "mat_esp": 0.324
+   },
+   {
+    "segmento": "thin<12m",
+    "n": 237,
+    "obs": 34,
+    "esp": 26.4,
+    "obs_esp": 1.29,
+    "mat_obs": "6/22",
+    "mat_esp": 0.296
+   },
+   {
+    "segmento": "renda<=2000",
+    "n": 70,
+    "obs": 10,
+    "esp": 8.6,
+    "obs_esp": 1.16,
+    "mat_obs": "3/11",
+    "mat_esp": 0.328
+   },
+   {
+    "segmento": "apos",
+    "n": 612,
+    "obs": 47,
+    "esp": 44.7,
+    "obs_esp": 1.05,
+    "mat_obs": "25/229",
+    "mat_esp": 0.11
+   },
+   {
+    "segmento": "cep1",
+    "n": 277,
+    "obs": 43,
+    "esp": 30.7,
+    "obs_esp": 1.4,
+    "mat_obs": "20/90",
+    "mat_esp": 0.178
+   },
+   {
+    "segmento": "cep1 post2504",
+    "n": 217,
+    "obs": 35,
+    "esp": 22.6,
+    "obs_esp": 1.55,
+    "mat_obs": "16/47",
+    "mat_esp": 0.243
+   },
+   {
+    "segmento": "od>0.3&oe<=.35",
+    "n": 152,
+    "obs": 6,
+    "esp": 11.6,
+    "obs_esp": 0.52,
+    "mat_obs": "5/48",
+    "mat_esp": 0.148
+   },
+   {
+    "segmento": "c_sobra .3-.5",
+    "n": 607,
+    "obs": 92,
+    "esp": 78.9,
+    "obs_esp": 1.17,
+    "mat_obs": "66/355",
+    "mat_esp": 0.154
+   },
+   {
+    "segmento": "prazo36",
+    "n": 1529,
+    "obs": 89,
+    "esp": 105.3,
+    "obs_esp": 0.85,
+    "mat_obs": "0/0",
+    "mat_esp": null
+   },
+   {
+    "segmento": "prazo6",
+    "n": 308,
+    "obs": 70,
+    "esp": 63.2,
+    "obs_esp": 1.11,
+    "mat_obs": "66/246",
+    "mat_esp": 0.248
+   },
+   {
+    "segmento": "cheque>=2 & !S",
+    "n": 35,
+    "obs": 5,
+    "esp": 5.0,
+    "obs_esp": 1.01,
+    "mat_obs": "2/12",
+    "mat_esp": 0.274
+   },
+   {
+    "segmento": "consultas>=8",
+    "n": 49,
+    "obs": 36,
+    "esp": 31.5,
+    "obs_esp": 1.14,
+    "mat_obs": "16/16",
+    "mat_esp": 1.0
+   },
+   {
+    "segmento": "bur<36",
+    "n": 1074,
+    "obs": 133,
+    "esp": 106.6,
+    "obs_esp": 1.25,
+    "mat_obs": "60/305",
+    "mat_esp": 0.164
+   },
+   {
+    "segmento": "2024",
+    "n": 717,
+    "obs": 110,
+    "esp": 111.7,
+    "obs_esp": 0.99,
+    "mat_obs": "86/541",
+    "mat_esp": 0.159
+   },
+   {
+    "segmento": "2025",
+    "n": 3041,
+    "obs": 417,
+    "esp": 409.9,
+    "obs_esp": 1.02,
+    "mat_obs": "242/1375",
+    "mat_esp": 0.169
+   },
+   {
+    "segmento": "2026",
+    "n": 2275,
+    "obs": 99,
+    "esp": 91.5,
+    "obs_esp": 1.08,
+    "mat_obs": "16/41",
+    "mat_esp": 0.338
+   }
+  ]
+ },
+ "policy": {
+  "passos": [
+   "negar se mov_saidas_sobre_entradas>=0.9",
+   "negar se renda_declarada/mov_entradas_med>2",
+   "negar se valor_solicitado>6*mov_entradas_med",
+   "negar se parcelas_outras_instituicoes/mov_entradas_med>0.35",
+   "negar se mov_entradas_cv>0.35 (opcional, EV~0)",
+   "negar se restricoes_ativas>=2",
+   "exigir score>450 e renda_declarada>1500 (envelope do piloto); sem cortes 600/2000",
+   "valor=min(valor_solicitado, 0.45*sobra*annuity(prazo), 0.30*renda_declarada*annuity(prazo), 30000), annuity=(1-1.03^-prazo)/0.03; negar se sobra<=0 ou valor<500"
+  ],
+  "resultados_novos": [
+   {
+    "politica": "atual",
+    "aprovados": 1145,
+    "valor_total": 8856446.13,
+    "pd_media_contratos": 0.156,
+    "pd_ponderada_valor": 0.1806,
+    "lucro_esperado": -37054.0,
+    "margem_por_real": -0.0042
+   },
+   {
+    "politica": "atual (avaliada c/ gerador sensivel)",
+    "aprovados": 1145,
+    "valor_total": 8856446.13,
+    "pd_media_contratos": 0.1573,
+    "pd_ponderada_valor": 0.1826,
+    "lucro_esperado": -49122.0,
+    "margem_por_real": -0.0055
+   },
+   {
+    "politica": "proposta",
+    "aprovados": 1287,
+    "valor_total": 9039987.81,
+    "pd_media_contratos": 0.0783,
+    "pd_ponderada_valor": 0.0786,
+    "lucro_esperado": 635906.0,
+    "margem_por_real": 0.0703
+   },
+   {
+    "politica": "proposta_sem_negar_CV",
+    "aprovados": 1463,
+    "valor_total": 10256382.91,
+    "pd_media_contratos": 0.0901,
+    "pd_ponderada_valor": 0.0902,
+    "lucro_esperado": 631909.0,
+    "margem_por_real": 0.0616
+   },
+   {
+    "politica": "proposta_aceita_r2",
+    "aprovados": 1341,
+    "valor_total": 9429448.26,
+    "pd_media_contratos": 0.0783,
+    "pd_ponderada_valor": 0.0786,
+    "lucro_esperado": 663546.0,
+    "margem_por_real": 0.0704
+   },
+   {
+    "politica": "proposta_sem_envelope",
+    "aprovados": 1324,
+    "valor_total": 9125636.59,
+    "pd_media_contratos": 0.0783,
+    "pd_ponderada_valor": 0.0786,
+    "lucro_esperado": 642125.0,
+    "margem_por_real": 0.0704
+   },
+   {
+    "politica": "proposta_sem_teto30decl",
+    "aprovados": 1287,
+    "valor_total": 9042546.84,
+    "pd_media_contratos": 0.0783,
+    "pd_ponderada_valor": 0.0786,
+    "lucro_esperado": 636089.0,
+    "margem_por_real": 0.0703
+   },
+   {
+    "politica": "proposta_k0.49",
+    "aprovados": 1287,
+    "valor_total": 9052083.16,
+    "pd_media_contratos": 0.0783,
+    "pd_ponderada_valor": 0.0786,
+    "lucro_esperado": 636739.0,
+    "margem_por_real": 0.0703
+   },
+   {
+    "politica": "proposta_k0.40",
+    "aprovados": 1287,
+    "valor_total": 9016441.76,
+    "pd_media_contratos": 0.0783,
+    "pd_ponderada_valor": 0.0786,
+    "lucro_esperado": 634254.0,
+    "margem_por_real": 0.0703
+   },
+   {
+    "politica": "proposta (avaliada c/ gerador sensivel)",
+    "aprovados": 1287,
+    "valor_total": 9039987.81,
+    "pd_media_contratos": 0.0836,
+    "pd_ponderada_valor": 0.0842,
+    "lucro_esperado": 598985.0,
+    "margem_por_real": 0.0663
+   },
+   {
+    "politica": "proposta + nega CEP1 (SENSIVEL)",
+    "aprovados": 1230,
+    "valor_total": 8615510.93,
+    "pd_media_contratos": 0.0794,
+    "pd_ponderada_valor": 0.0796,
+    "lucro_esperado": 599285.0,
+    "margem_por_real": 0.0696
+   }
+  ],
+  "contagens_motivos_novos": {
+   "S saidas>=0.9": 97,
+   "I renda_decl/entradas>2": 66,
+   "vs_ent>6": 121,
+   "OE outras/entradas>0.35": 165,
+   "CV>0.35": 269,
+   "sobra<=0": 72,
+   "restr>=2": 174,
+   "score<=450": 4,
+   "renda<=1500": 48,
+   "psol/sobra>0.45 (reduzidos)": 245,
+   "cep1": 102
+  },
+  "contagens_segmentos_novos": {
+   "S": 97,
+   "I": 66,
+   "vs6": 121,
+   "vs6_only_noSI": 106,
+   "OE": 165,
+   "OE_noSIvs": 144,
+   "CV": 269,
+   "CV_noother": 207,
+   "psol_sobra>0.5": 231,
+   "psol_sobra>0.5_noSI": 125,
+   "r1": 203,
+   "r2+": 174,
+   "score<=600": 445,
+   "thin": 384,
+   "apos": 196,
+   "cep1": 102,
+   "bur<36": 619,
+   "cur_cap": 61,
+   "cap_decl_req>0.3": 130,
+   "od>0.3&oe<=0.35": 49,
+   "cheque>=2": 105,
+   "consultas>=8": 38
+  },
+  "comparacao": {
+   "atual": {
+    "aprovados": 1145,
+    "valor": 8856446.13,
+    "pd": 0.156,
+    "pd_valor": 0.181,
+    "lucro_esperado": -37054
+   },
+   "proposta": {
+    "aprovados": 1287,
+    "valor": 9039987.81,
+    "pd": 0.078,
+    "pd_valor": 0.079,
+    "lucro_esperado": 635906
+   },
+   "aprovados_novos_que_atual_nega": 383,
+   "atual_aprova_proposta_nega": 241,
+   "valores_reduzidos": 25
+  },
+  "atributo_sensivel": {
+   "cep1": "negar CEP1 além da proposta: +R$300 sob gerador sensível (599,285 vs 598,985); não usar"
+  },
+  "arquivo_decisoes": "<area-de-trabalho>/discovery/decisoes_proposta.csv"
+ },
+ "open_questions": [
+  "corte exato do pedido excessivo (5-6x; 4-5x=15%) e denominador entradas vs renda declarada",
+  "corte saídas/entradas entre 0.5 e 0.949 (1 novo em 0.505)",
+  "corte renda inflada entre 2 e 3 (11 novos em 1.8-3)",
+  "restricoes>=2 sem evidência (174 novos; +R$28k se neutras)",
+  "score<=450 e renda<=1500 fora do envelope (52 novos)",
+  "cv: corte 0.30 vs 0.35 e EV real",
+  "bureau <36m / 21-30m fraco",
+  "rampa parcela/sobra 0.3-0.5 (obs/esp 1.17); folga 0.40 vs 0.45",
+  "atraso residual em dívida/renda declarada>0.3 (30% vs 22%)",
+  "interação dívida x cv (obs/esp 1.27) e resíduo do piloto (1.14)",
+  "persistência do choque CEP1 (sensível)",
+  "prazo 36 sem maduros (obs/esp 0.85)"
+ ]
+}

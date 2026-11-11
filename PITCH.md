@@ -1,6 +1,6 @@
 # Roteiro do pitch · Time Dividendos
 
-São 5 minutos de apresentação e 2 de perguntas. Deixe o painel aberto (`output/painel.html` ou o link publicado) e um terminal na pasta `solucao/`.
+São 5 minutos de apresentação e 2 de perguntas. Deixe o painel aberto (`output/painel.html` ou o link publicado) e um terminal na pasta do projeto.
 
 ## 0:00 · O problema e o resultado (30 s)
 

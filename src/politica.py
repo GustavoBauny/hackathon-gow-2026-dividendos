@@ -8,7 +8,7 @@ EV(valor) = valor x [ (1-PD) x (0,15 x (1-L) + 0,05 x L) - 0,60 x PD ]
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, fields
 
 import numpy as np
 import pandas as pd
@@ -41,18 +41,19 @@ def politica_atual(base: pd.DataFrame) -> pd.DataFrame:
 # ----------------------------------------------------------------------------------------------
 @dataclass
 class Parametros:
+    # Passos 2 e 3: None desliga a regra (o analista pode testar isso no simulador do painel)
     # Passo 2: fora da faixa onde o histórico tem desfecho -> nega (sem evidência, sem aposta)
-    score_min: float = 450            # menor score aprovado no histórico: 452
-    renda_min: float = 1500           # menor renda aprovada no histórico: 1.550
-    restricoes_max: int = 1           # piloto aprovou até 1 restrição; 2+ nunca foi aprovado
+    score_min: float | None = 450            # menor score aprovado no histórico: 452
+    renda_min: float | None = 1500           # menor renda aprovada no histórico: 1.550
+    restricoes_max: int | None = 1           # piloto aprovou até 1 restrição; 2+ nunca foi aprovado
     # Passo 3: sinais de alerta descobertos no histórico (calote de 70% a 100%)
-    meses_cheque_max: int = 1         # 2+ meses no cheque especial nos últimos 12
-    saidas_sobre_entradas_max: float = 0.80
-    consultas_90d_max: int = 7        # 8+ consultas ao CPF em 90 dias
-    renda_decl_sobre_real_max: float = 2.0
-    tendencia_entradas_max: float = 1.35      # entradas dos últimos 3 meses / meses anteriores (pico antes do pedido)
-    pedido_sobre_entradas_max: float = 6.0    # v3: valor PEDIDO / entradas médias. Acima, ~50% de calote mesmo com valor reduzido
-    outras_sobre_entradas_max: float = 0.35   # v3: parcelas em outros bancos / entradas médias (não a renda declarada)
+    meses_cheque_max: int | None = 1         # 2+ meses no cheque especial nos últimos 12
+    saidas_sobre_entradas_max: float | None = 0.80
+    consultas_90d_max: int | None = 7        # 8+ consultas ao CPF em 90 dias
+    renda_decl_sobre_real_max: float | None = 2.0
+    tendencia_entradas_max: float | None = 1.35      # entradas dos últimos 3 meses / meses anteriores (pico antes do pedido)
+    pedido_sobre_entradas_max: float | None = 6.0    # v3: valor PEDIDO / entradas médias. Acima, ~74% de calote (70% mesmo com valor reduzido)
+    outras_sobre_entradas_max: float | None = 0.35   # v3: parcelas em outros bancos / entradas médias (não a renda declarada)
     # Passo 4: teto de valor pela capacidade de pagamento
     teto_parcela_sobre_sobra: float = 0.40   # calote salta para ~100% acima de 50% da sobra mensal
     teto_comprometimento: float = 0.30       # parcela / renda declarada (mesmo limite da política atual)
@@ -96,6 +97,41 @@ def taxa_atraso_de(b: pd.DataFrame, taxa_atraso: dict) -> np.ndarray:
                     np.where(divida, taxa_atraso.get("divida_fora_alta", taxa_atraso["sem_restricao"]), taxa_atraso["sem_restricao"]))
 
 
+def _x(v: float) -> str:
+    return f"{v:g}".replace(".", ",")
+
+
+def sinais_de_alerta(b: pd.DataFrame, p: Parametros) -> list[tuple[pd.Series, str]]:
+    """Passo 3: (máscara, motivo) de cada sinal de alerta ligado. Um parâmetro None desliga o sinal."""
+    entradas = b["mov_entradas_med"].where(b["mov_entradas_med"] > 0)
+    regras = []
+    if p.meses_cheque_max is not None:
+        regras.append((b["mov_meses_cheque"] > p.meses_cheque_max,
+                       f"usou cheque especial em {p.meses_cheque_max + 1:.0f}+ meses no último ano"))
+    if p.saidas_sobre_entradas_max is not None:
+        regras.append((b["mov_saidas_sobre_entradas"] > p.saidas_sobre_entradas_max,
+                       f"gasta mais de {p.saidas_sobre_entradas_max * 100:.0f}% do que entra na conta"))
+    if p.consultas_90d_max is not None:
+        regras.append((b["consultas_90_dias"] > p.consultas_90d_max,
+                       f"{p.consultas_90d_max + 1:.0f}+ consultas ao CPF em 90 dias"))
+    if p.renda_decl_sobre_real_max is not None:
+        vezes = "o dobro" if p.renda_decl_sobre_real_max == 2 else f"{_x(p.renda_decl_sobre_real_max)}x"
+        regras.append((b["renda_decl_sobre_real"] > p.renda_decl_sobre_real_max,
+                       f"renda declarada mais que {vezes} das entradas reais"))
+    if p.tendencia_entradas_max is not None:
+        regras.append((b["mov_tendencia_entradas"] > p.tendencia_entradas_max,
+                       f"pico de entradas nos 3 meses antes do pedido ({(p.tendencia_entradas_max - 1) * 100:.0f}%+ acima da média anterior)"))
+    # v3: medidos contra o que de fato entra na conta. O pedido excessivo é negado, não reduzido: no histórico,
+    # reduzir o valor não tirou o risco (70% de calote entre os que a política atual aprovou com valor reduzido)
+    if p.pedido_sobre_entradas_max is not None:
+        regras.append(((b["valor_solicitado"] / entradas > p.pedido_sobre_entradas_max).fillna(False),
+                       f"pede mais de {_x(p.pedido_sobre_entradas_max)}x o que entra por mês na conta (reduzir o valor não tira o risco)"))
+    if p.outras_sobre_entradas_max is not None:
+        regras.append(((b["parcelas_outras_instituicoes"] / entradas > p.outras_sobre_entradas_max).fillna(False),
+                       f"parcelas em outros bancos acima de {p.outras_sobre_entradas_max * 100:.0f}% do que entra na conta"))
+    return regras
+
+
 def politica_nova(base: pd.DataFrame, modelo, taxa_atraso: dict, p: Parametros = Parametros()) -> pd.DataFrame:
     b = base.reset_index(drop=True)
     n = len(b)
@@ -114,24 +150,18 @@ def politica_nova(base: pd.DataFrame, modelo, taxa_atraso: dict, p: Parametros =
     sem_bureau = b["score"].isna()
     negar(sem_bureau, 1, "bureau indisponível após todas as tentativas")
 
-    # 2. fora da faixa com evidência
-    negar(b["restricoes_ativas"] > p.restricoes_max, 2, f"{p.restricoes_max + 1}+ restrições ativas (nunca aprovado no histórico)")
-    negar(b["score"] < p.score_min, 2, f"score abaixo de {p.score_min:.0f} (sem histórico de pagamento)")
-    negar(b["renda_declarada"] < p.renda_min, 2, f"renda abaixo de R$ {p.renda_min:,.0f} (sem histórico de pagamento)")
+    # 2. fora da faixa com evidência. Um parâmetro None desliga a regra (decisão do analista no painel).
+    if p.restricoes_max is not None:
+        negar(b["restricoes_ativas"] > p.restricoes_max, 2,
+              f"{p.restricoes_max + 1:.0f}+ restrições ativas (nunca aprovado no histórico)")
+    if p.score_min is not None:
+        negar(b["score"] < p.score_min, 2, f"score abaixo de {p.score_min:.0f} (sem histórico de pagamento)")
+    if p.renda_min is not None:
+        negar(b["renda_declarada"] < p.renda_min, 2, f"renda abaixo de R$ {p.renda_min:,.0f} (sem histórico de pagamento)")
 
     # 3. sinais de alerta
-    negar(b["mov_meses_cheque"] > p.meses_cheque_max, 3, "usou cheque especial em 2+ meses no último ano")
-    negar(b["mov_saidas_sobre_entradas"] > p.saidas_sobre_entradas_max, 3, "gasta mais de 80% do que entra na conta")
-    negar(b["consultas_90_dias"] > p.consultas_90d_max, 3, "8+ consultas ao CPF em 90 dias")
-    negar(b["renda_decl_sobre_real"] > p.renda_decl_sobre_real_max, 3, "renda declarada mais que o dobro das entradas reais")
-    negar(b["mov_tendencia_entradas"] > p.tendencia_entradas_max, 3, "pico de entradas nos 3 meses antes do pedido (35%+ acima da média anterior)")
-    # v3: medidos contra o que de fato entra na conta. O pedido excessivo é negado, não reduzido: no histórico,
-    # reduzir o valor não tirou o risco (76% de calote nos reduzidos a até 3x as entradas)
-    entradas = b["mov_entradas_med"].where(b["mov_entradas_med"] > 0)
-    negar((b["valor_solicitado"] / entradas > p.pedido_sobre_entradas_max).fillna(False), 3,
-          "pede mais de 6x o que entra por mês na conta (reduzir o valor não tira o risco)")
-    negar((b["parcelas_outras_instituicoes"] / entradas > p.outras_sobre_entradas_max).fillna(False), 3,
-          "parcelas em outros bancos acima de 35% do que entra na conta")
+    for mask, motivo in sinais_de_alerta(b, p):
+        negar(mask, 3, motivo)
 
     # 4. teto de valor pela capacidade de pagamento
     sobra = (b["mov_entradas_med"] - b["mov_saidas_med"]).clip(lower=0)
@@ -204,3 +234,17 @@ def resultado_esperado(decisoes: pd.DataFrame, base: pd.DataFrame, modelo, taxa_
 
 def parametros_dict(p: Parametros) -> dict:
     return asdict(p)
+
+
+def parametros_de_json(dados: dict) -> Parametros:
+    """Lê os parâmetros aprovados no simulador do painel (arquivo exportado pelo botão "Aprovar esta versão").
+
+    Aceita o arquivo inteiro ou só o bloco "parametros". None (null no JSON) desliga a regra.
+    Chave desconhecida é erro: um parâmetro digitado errado não pode ser ignorado em silêncio.
+    """
+    dados = dados.get("parametros", dados)
+    validos = {f.name for f in fields(Parametros)}
+    desconhecidos = set(dados) - validos
+    if desconhecidos:
+        raise ValueError(f"parâmetros desconhecidos: {sorted(desconhecidos)}")
+    return Parametros(**dados)

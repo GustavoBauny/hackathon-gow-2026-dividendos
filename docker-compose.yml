@@ -1,0 +1,60 @@
+# Reproduz a solução do zero: banco restaurado do dump, pipeline e painel.
+#   docker compose run --rm solucao          -> output/dividendos_final.csv + output/painel.html
+#   docker compose up -d painel              -> http://localhost:8080/painel.html
+#   docker compose down -v                   -> apaga containers e o banco
+name: dividendos
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: fortuna
+      POSTGRES_HOST_AUTH_METHOD: trust  # banco local, só acessível pela rede do compose
+    volumes:
+      - db:/var/lib/postgresql/data
+      - type: bind
+        source: ./docker/restaurar_dump.sh
+        target: /docker-entrypoint-initdb.d/10-restaurar_dump.sh
+        read_only: true
+      - type: bind
+        source: ${FORTUNA_DUMP:-./fortuna_hackathon.dump}
+        target: /dump/fortuna_hackathon.dump
+        read_only: true
+        bind:
+          create_host_path: false
+    # sem porta no host: não conflita com um Postgres local na 5432.
+    # Saudável só depois do restore: o servidor temporário do init não escuta TCP.
+    healthcheck:
+      test: ["CMD-SHELL", "psql -h 127.0.0.1 -U postgres -d fortuna -tAc 'SELECT count(*) FROM hackathon.pedidos' | grep -q '^[1-9]'"]
+      interval: 3s
+      timeout: 5s
+      retries: 100
+      start_period: 60s
+
+  solucao:
+    build: .
+    image: dividendos-solucao
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      FORTUNA_DSN: host=db port=5432 dbname=fortuna user=postgres
+      # do ambiente ou do .env na raiz do projeto (FORTUNA_BUREAU_TOKEN=...)
+      FORTUNA_BUREAU_TOKEN: ${FORTUNA_BUREAU_TOKEN:-}
+      TZ: America/Sao_Paulo  # horário do resumo e do painel igual ao de uma execução local
+    volumes:
+      - ./output:/app/output
+      - ./data:/app/data  # cache do bureau: reexecuções não chamam a API de novo
+    init: true
+
+  painel:
+    image: python:3.14-slim
+    command: ["python", "-m", "http.server", "8080", "--directory", "/srv"]
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - ./output:/srv:ro
+
+volumes:
+  db:

@@ -1,0 +1,13 @@
+.git
+.venv
+.env
+*.dump
+data
+output
+__pycache__
+**/__pycache__
+*.pyc
+.pytest_cache
+.ipynb_checkpoints
+.orca
+.claude

@@ -35,7 +35,7 @@ class TokenInvalido(RuntimeError):
 
 
 def ler_token() -> str:
-    """Ordem: variável de ambiente, solucao/.env (FORTUNA_BUREAU_TOKEN=...), solucao/.bureau_token."""
+    """Ordem: variável de ambiente, .env na raiz do projeto (FORTUNA_BUREAU_TOKEN=...), .bureau_token na raiz."""
     tok = os.environ.get("FORTUNA_BUREAU_TOKEN")
     raiz = Path(__file__).resolve().parent.parent
     if not tok and (raiz / ".env").exists():
@@ -46,7 +46,7 @@ def ler_token() -> str:
     if not tok and (raiz / ".bureau_token").exists():
         tok = (raiz / ".bureau_token").read_text(encoding="utf-8").strip()
     if not tok:
-        raise TokenInvalido("Defina FORTUNA_BUREAU_TOKEN (ambiente ou solucao/.env) com o token do time.")
+        raise TokenInvalido("Defina FORTUNA_BUREAU_TOKEN (ambiente ou .env na raiz do projeto) com o token do time.")
     return tok
 
 

@@ -1,6 +1,19 @@
-pandas>=2.2
-numpy>=2.0
-scikit-learn>=1.5
-lightgbm>=4.5
-psycopg[binary]>=3.2
-requests>=2.32
+# versões exatas: o CSV de entrega foi gerado com elas (Python 3.14).
+# Outra versão do LightGBM, scikit-learn ou numpy pode mudar o modelo e algumas decisões.
+pandas==3.1.1
+numpy==2.5.4
+scipy==1.18.1
+scikit-learn==1.9.1
+joblib==1.6.0
+threadpoolctl==3.8.0
+lightgbm==4.7.0
+psycopg[binary]==3.3.8
+requests==2.34.2
+# dependências indiretas, fixadas pelo mesmo motivo
+python-dateutil==4.0.0
+six==1.17.0
+tzdata==2026.6
+certifi==2026.10.23
+charset-normalizer==3.5.2
+idna==3.20
+urllib3==2.8.0

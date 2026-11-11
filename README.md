@@ -65,20 +65,71 @@ Muitos contratos do histórico ainda não terminaram. Um contrato "em dia há 1 
 - **Cache em disco** (`data/bureau_cache.jsonl`). A resposta de um cliente não muda, então reexecutar não chama a API de novo. Se a execução for interrompida, ela continua de onde parou.
 - **Validação do payload** e estatísticas de execução: 503, timeouts, latência p50/p95.
 
+## Painel e simulador do analista
+
+O painel (`output/painel.html`) é uma página só, que abre no navegador sem servidor. Tem duas partes, como pede o manual: os padrões e a política em passos.
+
+- **Simulador.** O analista liga, desliga ou muda o corte de cada regra dos passos 2 a 5, sem ler código. O painel refaz na hora as decisões dos 2.000 pedidos, com o mesmo modelo do pipeline, e mostra:
+  - aprovados, valor e ganho esperado sobre a política atual;
+  - o calote que clientes iguais tiveram no histórico, na faixa que a mudança libera ou passa a negar;
+  - um aviso quando o modelo e o histórico discordam (exemplo: desligar o pedido excessivo rende +R$ 646 mil pelo modelo, mas +R$ 366 mil se os liberados repetirem o calote do histórico);
+  - um aviso para pedidos aprovados sem nenhum caso parecido no histórico;
+  - a lista dos pedidos que mudam.
+- **Com os cortes da proposta, o simulador reproduz o arquivo de decisões pedido a pedido.** Isso é testado em `tests/test_simulador.py`.
+- **Aprovação.** O analista aprova uma versão com o nome dele, e o painel baixa `parametros_aprovados.json`. O pipeline só aplica uma versão aprovada:
+  `python gerar_decisoes.py --parametros parametros_aprovados.json`. No Docker, ponha o arquivo em `output/` e passe `--parametros output/parametros_aprovados.json`.
+- **Descoberta com agentes de IA.** Além da varredura por árvores, 7 pares de agentes de IA (um propõe padrões, o outro tenta derrubá-los) analisaram o histórico. O resumo está no painel; o relatório completo e o roteiro dos agentes ficam em `docs/descoberta_agentes/`.
+
 ## Como rodar
 
-Pré-requisitos: PostgreSQL 16 ou mais novo e Python 3.12 ou mais novo (testado em 3.13).
+### Com Docker (do zero, um comando)
+
+Pré-requisito: Docker com Compose v2. Não precisa de Python nem de PostgreSQL na máquina.
+
+```bash
+# 1. dump do banco na raiz do projeto (ou: export FORTUNA_DUMP=/caminho/fortuna_hackathon.dump)
+cp /caminho/fortuna_hackathon.dump .
+
+# 2. token do bureau (não versionado): no ambiente ou num .env na raiz do projeto
+echo "FORTUNA_BUREAU_TOKEN=<token do time>" > .env
+
+# 3. gerar o arquivo de decisões do zero
+#    sobe o banco, restaura o dump, treina o modelo e consulta a API (cerca de 4 min na primeira vez, com o build)
+docker compose run --rm --build solucao     # -> output/dividendos_final.csv (validado) + output/painel.html
+
+# 4. painel do analista
+docker compose up -d painel                 # http://localhost:8080/painel.html
+```
+
+Opcionais:
+
+```bash
+docker compose run --rm solucao python -m unittest discover tests      # testes, inclusive a réplica da política atual no banco
+docker compose run --rm solucao python explicar.py P-00808            # explica a decisão de um pedido
+docker compose run --rm solucao python gerar_decisoes.py --so-cache   # roda sem chamar a API (usa só o cache)
+docker compose run --rm solucao python avaliar_historico.py           # validação fora do tempo + backtest
+docker compose down -v                                                # apaga os containers e o banco
+```
+
+- O banco fica só na rede interna do Compose, sem porta no host. Não conflita com um PostgreSQL local na 5432.
+- O dump é restaurado só na primeira subida. Para restaurar de novo, use `docker compose down -v`.
+- `output/` e `data/` são pastas do host montadas no container. O CSV e o painel aparecem em `output/`. O cache do bureau fica em `data/` entre execuções.
+- As versões em `requirements.txt` são exatas. Com elas, o CSV sai idêntico byte a byte ao versionado, com ou sem cache do bureau (testado também com 1, 3 e 12 núcleos).
+
+### Sem Docker
+
+Pré-requisitos: PostgreSQL 16 ou mais novo e Python 3.14.
 
 ```bash
 # 1. banco
 createdb fortuna
 pg_restore --no-owner --no-privileges -d fortuna fortuna_hackathon.dump
 
-# 2. dependências
+# 2. dependências (versões exatas)
 pip install -r requirements.txt
 
 # 3. token do bureau (não versionado)
-export FORTUNA_BUREAU_TOKEN=<token do time>   # ou FORTUNA_BUREAU_TOKEN=... em solucao/.env
+export FORTUNA_BUREAU_TOKEN=<token do time>   # ou FORTUNA_BUREAU_TOKEN=... no .env da raiz do projeto
 
 # 4. conexão com o banco (opcional; padrão: host=localhost dbname=fortuna user=postgres)
 export FORTUNA_DSN="host=localhost port=5432 dbname=fortuna user=postgres"
@@ -91,7 +142,8 @@ python avaliar_historico.py           # validação fora do tempo + backtest (ce
 python gerar_painel.py                # só regera o painel
 python explicar.py P-00070 P-01208    # explica a decisão de pedidos específicos (demo)
 python gerar_decisoes.py --so-cache   # roda sem chamar a API (usa só o cache)
-python -m unittest discover tests     # testes: falhas do bureau (API simulada), réplica da política atual e regras da v3
+python -m unittest discover tests     # testes: falhas do bureau (API simulada), réplica da política atual, regras da v3 e simulador
+python gerar_decisoes.py --parametros parametros_aprovados.json   # aplica a versão aprovada no simulador do painel
 ```
 
 Saídas em `output/`:
@@ -99,7 +151,8 @@ Saídas em `output/`:
 | Arquivo | Conteúdo |
 |---|---|
 | `dividendos_final.csv` | Arquivo de entrega: `id_pedido,decisao,valor_aprovado`. É validado contra as regras do manual a cada execução. |
-| `painel.html` | Painel para o analista de risco: padrões, política em passos, comparação, validação e consulta de pedido. |
+| `painel.html` | Painel para o analista de risco: padrões, política em passos, simulador, comparação, validação e consulta de pedido. |
+| `simulador.json` | Dados do simulador: medidas de cada pedido, resultado do passo 5 e chance de calote por valor, de R$ 100 em R$ 100. |
 | `decisoes_detalhadas.csv` | Para cada pedido: passo que decidiu, motivo, PD, resultado esperado e decisão da política atual. |
 | `resumo.json`, `avaliacao.json` | Números que alimentam o painel. |
 | `bureau_execucao_api.json` | Estatísticas da última execução que chamou a API: 503, tentativas e latência. |
@@ -115,6 +168,10 @@ Saídas em `output/`:
 | `src/politica.py` | Réplica da política atual e política proposta em passos |
 | `src/bureau_client.py` | Cliente resiliente da API do bureau |
 | `src/padroes.py` | Descoberta de padrões: varredura por árvore, combinações e onde a política atual erra |
+| `src/simulador.py` | Prepara os dados do simulador do painel e a evidência do histórico para cada corte |
+| `src/simulador.js`, `src/simulador_ui.js` | Motor do simulador (refaz a política no navegador) e a tela dele |
+| `docs/descoberta_agentes/` | Relatório e roteiro dos agentes de IA que descobriram e testaram padrões |
+| `Dockerfile`, `docker-compose.yml`, `docker/` | Execução do zero com Docker: banco restaurado do dump, pipeline e painel |
 | `gerar_decisoes.py` | Pipeline completo: banco, modelo, bureau, política, CSV e painel |
 | `avaliar_historico.py` | Validação fora do tempo e backtest |
 | `gerar_painel.py` | Gera `output/painel.html` |

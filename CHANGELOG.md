@@ -1,5 +1,25 @@
 # Changelog
 
+## Painel do analista, agentes de IA e Docker (11/11, ~12h)
+
+Nenhuma decisão mudou: o CSV é o mesmo da v3, byte a byte.
+
+- **Simulador no painel.** O analista liga, desliga ou muda o corte de cada regra e vê na hora o efeito nos 2.000 pedidos.
+  - Mostra o ganho pelo modelo, o calote que clientes iguais tiveram no histórico e os pedidos que mudam.
+  - Avisa quando o modelo e o histórico discordam e quando um pedido aprovado não tem caso parecido no histórico.
+  - Com os cortes da proposta, reproduz o arquivo de decisões pedido a pedido.
+- **Aprovação do analista.** O painel exporta `parametros_aprovados.json`, com o nome de quem aprovou, e `gerar_decisoes.py --parametros` aplica a versão aprovada.
+  - Toda regra dos passos 2 e 3 pode ser desligada com `None`.
+  - O texto do motivo acompanha o corte escolhido.
+- **Agentes de IA no painel.** Nova seção com os achados dos 7 pares de agentes (um propõe, o outro tenta derrubar).
+  - Mostra o que foi confirmado, o que foi derrubado e o efeito de CEP que achamos e decidimos não usar.
+  - O relatório completo e o roteiro dos agentes estão em `docs/descoberta_agentes/`.
+- **Docker.** `docker compose run --rm solucao` sobe o banco, restaura o dump, roda o pipeline e gera o CSV e o painel. `docker compose up -d painel` serve o painel.
+  - Versões exatas em `requirements.txt`.
+  - Testado do zero, com e sem o cache do bureau: CSV idêntico byte a byte.
+- **Testes:** 26 (eram 18). Os novos cobrem as regras desligadas, a leitura dos parâmetros aprovados e o motor do simulador, que deve reproduzir o CSV.
+- Referências a uma pasta `solucao/` que não existe foram corrigidas.
+
 ## v3 · pedido excessivo e dívida sobre as entradas como sinais de alerta (11/11, ~10h45)
 
 - **Novo sinal de alerta: pedido excessivo.** Nega o pedido quando o valor pedido passa de 6x o que entra por mês na conta.
