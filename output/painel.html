@@ -133,7 +133,7 @@ footer.wrap { padding-block: 24px 40px; color: var(--muted); font-size: 12.5px; 
   <h1>Política de crédito proposta</h1>
   <p class="lead">O que a IA encontrou em 6.033 contratos do histórico, como a nova política decide e o que ela faz com os 2.000 pedidos de outubro de 2026.
   A IA sugere; o analista de risco decide o que entra em produção.</p>
-  <p class="small muted">Gerado pelo pipeline em 2026-11-11 11:46:03 · dados do histórico com corte em 30/09/2026 · arquivo <span class="mono">dividendos_final.csv</span></p>
+  <p class="small muted">Gerado pelo pipeline em 2026-11-11 12:52:55 · dados do histórico com corte em 30/09/2026 · arquivo <span class="mono">dividendos_final.csv</span></p>
 </header>
 <nav class="wrap" aria-label="Seções">
   <a href="#resumo">Resumo</a><a href="#padroes">1. Padrões encontrados</a><a href="#politica">2. Política proposta</a><a href="#simulador">Simulador</a>
@@ -171,7 +171,7 @@ footer.wrap { padding-block: 24px 40px; color: var(--muted); font-size: 12.5px; 
           <span class="fill" style="width:98.7%"></span>
           <span class="media" style="left:16.7%"></span>
         </div>
-        <p class="meta"><span>O corte mais forte da base: quase todos deixam de pagar. O problema é o tamanho da parcela, então reduzir o valor resolve.</span>
+        <p class="meta"><span>O corte mais forte da base: quase todos deixam de pagar, seja qual for o tamanho do pedido. Para quem pede um valor proporcional à conta, reduzir o valor resolve. Quem pede mais de 6x o que entra é negado (ver pedido excessivo).</span>
           <span class="kv">Nos 2.000 novos pedidos (pelo valor pedido): <b>231</b></span>
           <span class="kv">Atraso entre os que pagam: <b>94%</b></span></p>
       </li>
@@ -262,7 +262,7 @@ footer.wrap { padding-block: 24px 40px; color: var(--muted); font-size: 12.5px; 
           <span class="fill" style="width:74.3%"></span>
           <span class="media" style="left:16.7%"></span>
         </div>
-        <p class="meta"><span>Pedido desproporcional à conta. Reduzir o valor não resolve: entre os que a política atual aprovou com valor cortado, o calote continuou alto. Por isso é corte, não teto (v3).</span>
+        <p class="meta"><span>Aqui o problema é o cliente, não só a parcela: mesmo com a parcela entre 30% e 50% da sobra, esse grupo deu cerca de 50% de calote, contra 11% a 19% de quem pediu menos de 6x. Reduzir o valor não resolve; por isso é corte, não teto (v3).</span>
           <span class="kv">Nos 2.000 novos pedidos: <b>121</b></span>
           <span class="kv">Atraso entre os que pagam: <b>39%</b></span></p>
       </li>
@@ -473,7 +473,7 @@ footer.wrap { padding-block: 24px 40px; color: var(--muted); font-size: 12.5px; 
       <li>Pico de entradas: os 3 meses antes do pedido vêm 35% ou mais acima da média dos meses anteriores.</li>
       <li>Pedido maior que 6 vezes o que entra por mês na conta. Nega em vez de reduzir: no histórico, reduzir o valor não tirou o risco.</li>
       <li>Parcelas em outros bancos acima de 35% do que entra na conta.</li></ul>
-      <p class="small muted">Nos quatro primeiros grupos, de 82% a 100% dos clientes deixaram de pagar. No pico de entradas, cerca de 27%, bem acima do limite (cerca de 16%) em que emprestar deixa de dar lucro. No pedido excessivo, cerca de 74%, e 70% entre os que a política atual aprovou com o valor reduzido; na dívida acima de 35% das entradas, cerca de 32%.</p></li>
+      <p class="small muted">Nos quatro primeiros grupos, de 82% a 100% dos clientes deixaram de pagar. No pico de entradas, cerca de 27%, bem acima do limite (cerca de 16%) em que emprestar deixa de dar lucro. No pedido excessivo, cerca de 74%. Mesmo com a parcela entre 30% e 50% da sobra, fica perto de 50%, contra 11% a 19% de quem pede menos; na dívida acima de 35% das entradas, cerca de 32%.</p></li>
     <li><h4>Calcula o valor máximo que cabe no bolso</h4> <span class="cnt">0 negados</span>
       <ul><li>A parcela pode ser no máximo 40% da sobra mensal (entradas menos saídas, média de 12 meses). Acima de 50%, quase todos deram calote.</li>
       <li>A parcela também fica em no máximo 30% das entradas reais da conta. Vale a menor entre a média de 12 meses e a de 3 meses.</li>

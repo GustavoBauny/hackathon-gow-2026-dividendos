@@ -1,6 +1,6 @@
 {
-  "gerado_em": "2026-11-11 11:46:03",
-  "duracao_s": 17.8,
+  "gerado_em": "2026-11-11 12:52:55",
+  "duracao_s": 41.6,
   "csv": {
     "arquivo": "dividendos_final.csv",
     "linhas": 2000,
@@ -341,7 +341,7 @@
       "pd_media": 0.16653163037656937,
       "depende_valor": true,
       "lift": 5.923896540265137,
-      "leitura": "O corte mais forte da base: quase todos deixam de pagar. O problema é o tamanho da parcela, então reduzir o valor resolve.",
+      "leitura": "O corte mais forte da base: quase todos deixam de pagar, seja qual for o tamanho do pedido. Para quem pede um valor proporcional à conta, reduzir o valor resolve. Quem pede mais de 6x o que entra é negado (ver pedido excessivo).",
       "taxa_atraso": 0.9444444444444444,
       "n_novos": 231
     },
@@ -432,7 +432,7 @@
       "pd_media": 0.16653163037656937,
       "depende_valor": false,
       "lift": 4.460146608643859,
-      "leitura": "Pedido desproporcional à conta. Reduzir o valor não resolve: entre os que a política atual aprovou com valor cortado, o calote continuou alto. Por isso é corte, não teto (v3).",
+      "leitura": "Aqui o problema é o cliente, não só a parcela: mesmo com a parcela entre 30% e 50% da sobra, esse grupo deu cerca de 50% de calote, contra 11% a 19% de quem pediu menos de 6x. Reduzir o valor não resolve; por isso é corte, não teto (v3).",
       "taxa_atraso": 0.38636363636363635,
       "n_novos": 121
     },

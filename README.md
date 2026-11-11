@@ -38,7 +38,7 @@ Os passos são aplicados nesta ordem. O primeiro que nega encerra a análise.
    - 8 ou mais consultas ao CPF em 90 dias;
    - renda declarada maior que 2 vezes as entradas reais;
    - pico de entradas: os 3 meses antes do pedido 35% ou mais acima dos meses anteriores (cerca de 27% de calote);
-   - pedido maior que 6 vezes o que entra por mês na conta (cerca de 74% de calote, e 70% mesmo com o valor reduzido: por isso nega em vez de reduzir);
+   - pedido maior que 6 vezes o que entra por mês na conta (cerca de 74% de calote; mesmo com a parcela entre 30% e 50% da sobra, perto de 50%, contra 11% a 19% de quem pede menos: por isso nega em vez de reduzir);
    - parcelas em outros bancos acima de 35% do que entra na conta (cerca de 32% de calote).
 4. **Capacidade de pagamento.** Teto de valor:
    - parcela até 40% da sobra mensal (entradas menos saídas);

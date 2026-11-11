@@ -149,7 +149,8 @@ def _reduzido_pela_atual(h: pd.DataFrame) -> pd.Series:
 SPECS = [
     ("risco", "Parcela acima de 50% da sobra mensal", "com parcela acima de 50% da sobra mensal (entradas menos saídas da conta)",
      lambda h, a: h["parcela_sobre_sobra"] > 0.5,
-     "O corte mais forte da base: quase todos deixam de pagar. O problema é o tamanho da parcela, então reduzir o valor resolve."),
+     "O corte mais forte da base: quase todos deixam de pagar, seja qual for o tamanho do pedido. Para quem pede um valor "
+     "proporcional à conta, reduzir o valor resolve. Quem pede mais de 6x o que entra é negado (ver pedido excessivo)."),
     ("risco", "Parcela entre 40% e 50% da sobra", "com parcela entre 40% e 50% da sobra mensal",
      lambda h, a: (h["parcela_sobre_sobra"] > 0.4) & (h["parcela_sobre_sobra"] <= 0.5),
      "Zona de risco crescente antes do corte de 50%. A política proposta limita a parcela a 40% da sobra."),
@@ -171,8 +172,8 @@ SPECS = [
      "A movimentação da conta desmente a renda informada no cadastro."),
     ("risco", "Pedido acima de 6x as entradas", "que pedem mais de 6 vezes o que entra por mês na conta",
      lambda h, a: h["valor_solicitado"] / h["mov_entradas_med"] > 6,
-     "Pedido desproporcional à conta. Reduzir o valor não resolve: entre os que a política atual aprovou com valor cortado, "
-     "o calote continuou alto. Por isso é corte, não teto (v3)."),
+     "Aqui o problema é o cliente, não só a parcela: mesmo com a parcela entre 30% e 50% da sobra, esse grupo deu cerca de "
+     "50% de calote, contra 11% a 19% de quem pediu menos de 6x. Reduzir o valor não resolve; por isso é corte, não teto (v3)."),
     ("risco", "Dívidas fora acima de 35% das entradas", "com parcelas em outros bancos acima de 35% do que entra na conta",
      lambda h, a: h["parcelas_outras_instituicoes"] / h["mov_entradas_med"] > 0.35,
      "Medida contra o que de fato entra na conta, a dívida em outros bancos tem um degrau nítido em 35%. "

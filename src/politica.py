@@ -52,7 +52,7 @@ class Parametros:
     consultas_90d_max: int | None = 7        # 8+ consultas ao CPF em 90 dias
     renda_decl_sobre_real_max: float | None = 2.0
     tendencia_entradas_max: float | None = 1.35      # entradas dos últimos 3 meses / meses anteriores (pico antes do pedido)
-    pedido_sobre_entradas_max: float | None = 6.0    # v3: valor PEDIDO / entradas médias. Acima, ~74% de calote (70% mesmo com valor reduzido)
+    pedido_sobre_entradas_max: float | None = 6.0    # v3: valor PEDIDO / entradas médias. Acima, ~74% de calote (~50% mesmo com parcela de 30-50% da sobra)
     outras_sobre_entradas_max: float | None = 0.35   # v3: parcelas em outros bancos / entradas médias (não a renda declarada)
     # Passo 4: teto de valor pela capacidade de pagamento
     teto_parcela_sobre_sobra: float = 0.40   # calote salta para ~100% acima de 50% da sobra mensal
@@ -122,7 +122,8 @@ def sinais_de_alerta(b: pd.DataFrame, p: Parametros) -> list[tuple[pd.Series, st
         regras.append((b["mov_tendencia_entradas"] > p.tendencia_entradas_max,
                        f"pico de entradas nos 3 meses antes do pedido ({(p.tendencia_entradas_max - 1) * 100:.0f}%+ acima da média anterior)"))
     # v3: medidos contra o que de fato entra na conta. O pedido excessivo é negado, não reduzido: no histórico,
-    # reduzir o valor não tirou o risco (70% de calote entre os que a política atual aprovou com valor reduzido)
+    # reduzir o valor não tira o risco (~50% de calote mesmo com a parcela entre 30% e 50% da sobra, contra 11% a 19%
+    # de quem pede menos de 6x)
     if p.pedido_sobre_entradas_max is not None:
         regras.append(((b["valor_solicitado"] / entradas > p.pedido_sobre_entradas_max).fillna(False),
                        f"pede mais de {_x(p.pedido_sobre_entradas_max)}x o que entra por mês na conta (reduzir o valor não tira o risco)"))
