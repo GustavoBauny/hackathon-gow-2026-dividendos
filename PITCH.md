@@ -26,21 +26,21 @@ A política atual nega quem pagaria e aprova quem não consegue pagar. Nos 2.000
 
 ## 1:30 · Os padrões (75 s)
 
-- **Manchete: o tamanho da parcela.** Com parcela acima de 50% da sobra mensal (entradas menos saídas), **99%** não pagam. O problema não é o cliente, é a parcela, e reduzir o valor resolve.
+- **Manchete: o tamanho da parcela.** Com parcela acima de 50% da sobra mensal (entradas menos saídas), **99%** não pagam, seja qual for o tamanho do pedido. Para quem pede um valor proporcional à conta, reduzir o valor resolve.
 - **A política atual erra porque olha a renda declarada.** Quem ela reduziu para caber em 30% da renda declarada deu 58% de calote: 3 em cada 4 tinham pedido mais de 6x o que entra na conta, e reduzir não tirou o risco.
 - **Sinais de alerta na movimentação da conta, que o manual disse que passavam despercebidos:**
   - cheque especial em 2 ou mais meses: 82% de calote;
   - gasto acima de 80% das entradas: 98%;
   - renda declarada maior que 2x a real: 92%;
   - pico de entradas nos 3 meses antes do pedido: 27%;
-  - **pedido maior que 6x o que entra por mês: 74%, e 70% mesmo com o valor reduzido.** Por isso a v3 nega em vez de reduzir;
+  - **pedido maior que 6x o que entra por mês: 74%.** Aqui o problema é o cliente, não só a parcela: mesmo com a parcela entre 30% e 50% da sobra, esse grupo deu cerca de 50% de calote, contra 11% a 19% de quem pediu menos. Por isso a v3 nega em vez de reduzir;
   - parcelas em outros bancos acima de 35% das entradas reais: 32%. Contra a renda declarada, a mesma conta não separa ninguém.
 - **Bons pagadores que a atual nega:**
   - score de 450 a 600 sem alertas: 11%;
   - 1 restrição sem alertas: 2%;
   - renda até R$ 2.000 sem alertas: 4%.
-  - Score alto não protege: acima de 800 paga igual à média.
-- **Medição direta com o piloto:** aprovados no piloto que a atual negaria, sem alerta, deram 8% de calote.
+  - Score alto não protege: acima de 800, sem alertas, paga igual aos demais clientes sem alerta (8%).
+- **Medição direta com o piloto:** aprovados no piloto que a atual negaria, sem alerta, deram 8,5% de calote.
 
 *Mostrar:* a Parte 1, rolando pelos cards e pela tabela "Onde a política atual erra".
 
@@ -63,6 +63,8 @@ O ganho vem de três frentes:
 | Aprovar quem a atual nega | 419 | +R$ 139 mil |
 | Reduzir valor | 63 | +R$ 62 mil |
 
+A maior frente é cortar as aprovações ruins da política atual. Reduzir o valor ficou menor na v3 porque boa parte dos pedidos grandes demais agora é negada antes, no passo 3.
+
 *Mostrar:* a Parte 2 e a tabela de comparação.
 
 ## 3:45 · Demo ao vivo (45 s)
@@ -84,12 +86,34 @@ Na seção "Consultar pedido" do painel, ou no terminal com `python explicar.py 
 - **Backtest cross-fitted em 10 mil pedidos:** ganho de +R$ 3,2 mi sobre a atual, pelo modelo e fora da amostra. As duas regras da v3 vieram do desfecho real: o modelo sozinho achava esses grupos lucrativos, mas no histórico eles deram 74% e 32% de calote.
 - **Réplica da política atual:** reproduz 100% das 8.737 decisões históricas.
 - **Bureau:** 126 respostas 503 tratadas com repetição, 0 falhas.
-- **O que mudou na v3:** comparamos a política com uma segunda abordagem do time (regras descobertas por agentes de IA + modelo explicável), julgando as duas por três juízes diferentes. Dela vieram dois sinais de alerta, o pedido excessivo e a dívida sobre as entradas reais. Isso tirou 145 aprovações que o histórico mostra que dariam prejuízo.
+- **Como a política evoluiu até o checkpoint:**
+  - v1 trouxe o alvo com censura e o valor ótimo.
+  - v2 trouxe o pico de entradas e o ensemble estável.
+  - v3 comparou a política com uma segunda abordagem do time (regras descobertas por agentes de IA + modelo explicável). Dela vieram dois sinais de alerta: o pedido excessivo e a dívida sobre as entradas reais. Isso tirou 145 aprovações que o histórico mostra que dariam prejuízo.
+- **Depois do checkpoint:** *(preencher com o que mudar após a conversa com o mentor; se nada mudar, dizer o que o relatório confirmou, por exemplo as 618 decisões diferentes da atual)*.
 
 ## Perguntas prováveis
 
 **Por que negar 2+ restrições, se 1 restrição paga bem?**
-Ninguém com 2+ foi aprovado no histórico, então não há desfecho para medir. São 84 pedidos novos assim sem nenhum sinal de alerta. Aprová-los seria uma aposta sem nenhum desfecho histórico para medir. A recomendação é um piloto controlado, e a decisão é do analista.
+Ninguém com 2+ foi aprovado no histórico, então não há desfecho para medir. São 84 pedidos novos assim sem nenhum sinal de alerta, e aprová-los seria uma aposta. A recomendação é um piloto controlado, e a decisão é do analista.
+
+**Vocês dizem que reduzir o valor resolve e também que não resolve. Qual dos dois?**
+Depende de onde está o risco.
+- **Parcela grande demais:** acima de 50% da sobra, dá 100% de calote mesmo com pedido de até 3x as entradas. Nesse caso reduzir resolve: com a parcela até 30% da sobra, o calote cai para 10%.
+- **Pedido desproporcional:** quem pede mais de 6x o que entra dá cerca de 50% de calote mesmo com a parcela entre 30% e 50% da sobra. Quem pede menos fica entre 11% e 19%. Aqui o risco é do cliente, e por isso a v3 nega.
+
+**O backtest da v3 (+R$ 3,2 mi) é menor que o da v2 (+R$ 3,5 mi). Por que ficaram com a v3?**
+O backtest usa o próprio modelo como juiz. O modelo só vê o valor concedido, não o valor pedido, então achava lucrativos os dois grupos que a v3 nega. Pelo desfecho real do histórico, esses grupos deram 74% e 32% de calote, muito acima do limite de lucro, que fica perto de 16%.
+
+**Se o modelo errava nesses grupos, por que confiar nele no passo 5?**
+Os dois pontos cegos viraram regras explícitas no passo 3, medidas com desfecho real. No resto, o modelo foi validado:
+- calibração fora da amostra;
+- AUC de 0,88 em dados que ele nunca viu, incluindo o piloto.
+
+**De onde vêm os cortes de 6x e 35%?**
+São os pontos em que a taxa salta.
+- **Dívida em outros bancos:** de 30% a 35% das entradas, o calote é de 11%. Acima de 35%, vai a 32%.
+- **Pedido:** até 6x as entradas, fica entre 11% e 19%. Acima de 6x, cerca de 50% com a mesma parcela.
 
 **Reduzir o valor não espanta o cliente?**
 Para quem a parcela não cabe na sobra, a alternativa é calote: 99% acima de 50% da sobra. Com valor menor, ele vira pagador. Quando dois valores rendem quase igual, ficamos com o maior.
