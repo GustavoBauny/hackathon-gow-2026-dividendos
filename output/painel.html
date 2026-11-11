@@ -113,11 +113,11 @@ footer.wrap { padding-block: 24px 40px; color: var(--muted); font-size: 12.5px; 
   <h1>Política de crédito proposta</h1>
   <p class="lead">O que a IA encontrou em 6.033 contratos do histórico, como a nova política decide e o que ela faz com os 2.000 pedidos de outubro de 2026.
   A IA sugere; o analista de risco decide o que entra em produção.</p>
-  <p class="small muted">Gerado pelo pipeline em 2026-11-11 09:23:11 · dados do histórico com corte em 30/09/2026 · arquivo <span class="mono">dividendos_final.csv</span></p>
+  <p class="small muted">Gerado pelo pipeline em 2026-11-11 09:28:26 · dados do histórico com corte em 30/09/2026 · arquivo <span class="mono">dividendos_final.csv</span></p>
 </header>
 <nav class="wrap" aria-label="Seções">
   <a href="#resumo">Resumo</a><a href="#padroes">1. Padrões encontrados</a><a href="#politica">2. Política proposta</a>
-  <a href="#comparacao">Comparação com a atual</a><a href="#validacao">Validação</a><a href="#consulta">Consultar pedido</a><a href="#tecnico">Detalhes técnicos</a>
+  <a href="#ia">IA e analista</a><a href="#comparacao">Comparação com a atual</a><a href="#validacao">Validação</a><a href="#consulta">Consultar pedido</a><a href="#tecnico">Detalhes técnicos</a>
 </nav>
 
 <section class="wrap" id="resumo">
@@ -152,7 +152,7 @@ footer.wrap { padding-block: 24px 40px; color: var(--muted); font-size: 12.5px; 
           <span class="media" style="left:16.7%"></span>
         </div>
         <p class="meta"><span>O corte mais forte da base: quase todos deixam de pagar. O problema é o tamanho da parcela, então reduzir o valor resolve.</span>
-          <span class="kv">Nos 2.000 novos pedidos: <b>231</b></span>
+          <span class="kv">Nos 2.000 novos pedidos (pelo valor pedido): <b>231</b></span>
           <span class="kv">Atraso entre os que pagam: <b>94%</b></span></p>
       </li>
 
@@ -165,7 +165,7 @@ footer.wrap { padding-block: 24px 40px; color: var(--muted); font-size: 12.5px; 
           <span class="media" style="left:16.7%"></span>
         </div>
         <p class="meta"><span>Zona de risco crescente antes do corte de 50%. A política proposta limita a parcela a 40% da sobra.</span>
-          <span class="kv">Nos 2.000 novos pedidos: <b>27</b></span>
+          <span class="kv">Nos 2.000 novos pedidos (pelo valor pedido): <b>27</b></span>
           <span class="kv">Atraso entre os que pagam: <b>23%</b></span></p>
       </li>
 
@@ -178,7 +178,7 @@ footer.wrap { padding-block: 24px 40px; color: var(--muted); font-size: 12.5px; 
           <span class="media" style="left:16.7%"></span>
         </div>
         <p class="meta"><span>Cortar até exatamente 30% da renda declarada não basta: a renda declarada costuma ser maior que a que entra na conta.</span>
-          <span class="kv">Nos 2.000 novos pedidos: <b>61</b></span>
+          <span class="kv">Nos 2.000 novos pedidos (pelo valor pedido): <b>61</b></span>
           <span class="kv">Atraso entre os que pagam: <b>29%</b></span></p>
       </li>
 
@@ -355,7 +355,7 @@ footer.wrap { padding-block: 24px 40px; color: var(--muted); font-size: 12.5px; 
 
   <h3>Onde a política atual erra, medido com desfecho real</h3>
   <p>Durante seis meses o piloto aprovou clientes que a política atual negaria. Isso permite medir os erros diretamente, sem depender do modelo.</p>
-  <div class="tbl"><table><thead><tr><th>Grupo (histórico, desfecho real)</th><th>Contratos</th><th>Inadimplência (KM)</th><th>Valor emprestado</th></tr></thead><tbody><tr><td class="">Clientes que a política atual aprovaria (aprovados pela atual ou pelo piloto, dentro das regras atuais)</td><td class="n">5.606</td><td class="n">15,8%</td><td class="n">R$ 45.426.002</td></tr><tr><td class="">…desses, com sinal de alerta ou parcela &gt; 50% da sobra (a atual aprova, a proposta nega)</td><td class="n">459</td><td class="n">76,9%</td><td class="n">R$ 4.751.609</td></tr><tr><td class="">…desses, sem sinal de alerta</td><td class="n">5.147</td><td class="n">10,1%</td><td class="n">R$ 40.674.393</td></tr><tr><td class="">Aprovados no piloto que a política atual negaria</td><td class="n">427</td><td class="n">33,9%</td><td class="n">R$ 2.918.321</td></tr><tr><td class="">…desses, sem sinal de alerta (a atual nega, a proposta aprova)</td><td class="n">344</td><td class="n">11,4%</td><td class="n">R$ 2.162.453</td></tr><tr><td class="">…desses, com sinal de alerta</td><td class="n">83</td><td class="n">94,8%</td><td class="n">R$ 755.867</td></tr></tbody></table></div>
+  <div class="tbl"><table><thead><tr><th>Grupo (histórico, desfecho real)</th><th>Contratos</th><th>Inadimplência (KM)</th><th>Valor emprestado</th></tr></thead><tbody><tr><td class="">Clientes que a política atual aprovaria (aprovados pela atual ou pelo piloto, dentro das regras atuais)</td><td class="n">5.606</td><td class="n">15,8%</td><td class="n">R$ 45.426.002</td></tr><tr><td class="">…desses, com sinal de alerta ou parcela &gt; 50% da sobra (a atual aprova; a proposta nega ou reduz o valor)</td><td class="n">459</td><td class="n">76,9%</td><td class="n">R$ 4.751.609</td></tr><tr><td class="">…desses, sem sinal de alerta</td><td class="n">5.147</td><td class="n">10,1%</td><td class="n">R$ 40.674.393</td></tr><tr><td class="">Aprovados no piloto que a política atual negaria</td><td class="n">427</td><td class="n">33,9%</td><td class="n">R$ 2.918.321</td></tr><tr><td class="">…desses, sem sinal de alerta (a atual nega, a proposta aprova)</td><td class="n">344</td><td class="n">11,4%</td><td class="n">R$ 2.162.453</td></tr><tr><td class="">…desses, com sinal de alerta</td><td class="n">83</td><td class="n">94,8%</td><td class="n">R$ 755.867</td></tr></tbody></table></div>
 
   <h3>Como a IA chegou a esses padrões</h3>
   <p><b>Varredura automática.</b> Para cada variável, uma árvore de decisão testou todos os cortes e escolheu o que mais separa quem pagou de quem não pagou.
@@ -408,6 +408,25 @@ footer.wrap { padding-block: 24px 40px; color: var(--muted); font-size: 12.5px; 
   </div>
 </section>
 
+<section class="wrap" id="ia">
+  <h2>Onde a IA entra e onde o analista decide</h2>
+  <div class="tiles">
+    <div class="tile"><div class="k">IA · descoberta</div><p class="small">Árvores de decisão varrem todas as variáveis e combinações do histórico.
+      Elas encontram os cortes e grupos da Parte 1. As taxas de cada grupo são medidas sem contar contrato em andamento como bom pagador.</p></div>
+    <div class="tile"><div class="k">IA · decisão</div><p class="small">No passo 5, 5 modelos de sobrevivência treinados no histórico estimam a chance de calote de cada pedido para cada valor possível.
+      A política aprova o valor com o maior resultado esperado.</p></div>
+    <div class="tile"><div class="k">Analista · aprovação</div><p class="small">Os cortes dos passos 2 a 5 são parâmetros visíveis. O analista ajusta, roda de novo e compara.
+      Nenhuma política vai para produção sem a aprovação dele.</p></div>
+  </div>
+  <h3>Como o analista valida uma mudança</h3>
+  <ol class="small">
+    <li>Muda um parâmetro em <span class="mono">src/politica.py</span>. Exemplo: aceitar 2 restrições, ou trocar o teto de 40% da sobra.</li>
+    <li>Roda <span class="mono">python gerar_decisoes.py</span>, que refaz o arquivo e este painel, e <span class="mono">python avaliar_historico.py</span>, que refaz o backtest.</li>
+    <li>Compara o ganho no backtest e roda os testes com <span class="mono">python -m unittest discover tests</span>.</li>
+    <li>Confere os pedidos que mudaram em <span class="mono">output/decisoes_detalhadas.csv</span> ou com <span class="mono">python explicar.py P-xxxxx</span>.</li>
+  </ol>
+</section>
+
 <section class="wrap" id="comparacao">
   <h2>Comparação com a política atual nos 2.000 pedidos novos</h2>
   <p>A política atual foi reproduzida exatamente: score acima de 600, renda acima de R$ 2.000 e nenhuma restrição.
@@ -430,7 +449,7 @@ footer.wrap { padding-block: 24px 40px; color: var(--muted); font-size: 12.5px; 
       <h3>Backtest no histórico</h3>
       <p>Cada pedido histórico foi decidido por um modelo treinado sem ele (validação cruzada em 5 partes). O resultado esperado usa as regras do desafio.
       As variações mostram que o ganho não depende de um ajuste fino dos parâmetros.</p>
-      <div class="tbl"><table><thead><tr><th>Política (10.000 pedidos históricos)</th><th>Aprovados</th><th>Valor aprovado</th><th>Resultado esperado</th><th>Ganho sobre a atual</th></tr></thead><tbody><tr><td class="">atual</td><td class="n">5.606</td><td class="n">R$ 45.332.129</td><td class="n">−R$ 209.083</td><td class="n">—</td></tr><tr><td class="">proposta</td><td class="n">7.726</td><td class="n">R$ 54.810.469</td><td class="n">R$ 3.262.830</td><td class="n">+R$ 3,47 mi</td></tr><tr><td class="">margem 0%</td><td class="n">7.860</td><td class="n">R$ 55.473.069</td><td class="n">R$ 3.266.599</td><td class="n">+R$ 3,48 mi</td></tr><tr><td class="">margem 3%</td><td class="n">7.189</td><td class="n">R$ 51.136.269</td><td class="n">R$ 3.186.299</td><td class="n">+R$ 3,40 mi</td></tr><tr><td class="">teto 30% da sobra</td><td class="n">7.727</td><td class="n">R$ 54.326.159</td><td class="n">R$ 3.244.158</td><td class="n">+R$ 3,45 mi</td></tr><tr><td class="">teto 50% da sobra</td><td class="n">7.726</td><td class="n">R$ 54.843.629</td><td class="n">R$ 3.264.535</td><td class="n">+R$ 3,47 mi</td></tr></tbody></table></div>
+      <div class="tbl"><table><thead><tr><th>Política (10.000 pedidos históricos)</th><th>Aprovados</th><th>Valor aprovado</th><th>Resultado esperado</th><th>Ganho sobre a atual</th></tr></thead><tbody><tr><td class="">atual</td><td class="n">5.606</td><td class="n">R$ 45.332.129</td><td class="n">−R$ 210.628</td><td class="n">—</td></tr><tr><td class="">proposta</td><td class="n">7.656</td><td class="n">R$ 54.253.069</td><td class="n">R$ 3.274.812</td><td class="n">+R$ 3,49 mi</td></tr><tr><td class="">margem 0%</td><td class="n">7.841</td><td class="n">R$ 55.187.669</td><td class="n">R$ 3.279.946</td><td class="n">+R$ 3,49 mi</td></tr><tr><td class="">margem 3%</td><td class="n">7.164</td><td class="n">R$ 51.033.669</td><td class="n">R$ 3.206.872</td><td class="n">+R$ 3,42 mi</td></tr><tr><td class="">teto 30% da sobra</td><td class="n">7.657</td><td class="n">R$ 53.759.319</td><td class="n">R$ 3.255.819</td><td class="n">+R$ 3,47 mi</td></tr><tr><td class="">teto 50% da sobra</td><td class="n">7.656</td><td class="n">R$ 54.288.329</td><td class="n">R$ 3.276.590</td><td class="n">+R$ 3,49 mi</td></tr></tbody></table></div>
   <h3>Calibração: a chance prevista bate com a observada?</h3>
   <p>A decisão usa a média de 5 modelos treinados com sementes diferentes, para que nenhuma decisão dependa do acaso.
   Cada modelo é calibrado fora da amostra: a chance prevista é ajustada para bater com a inadimplência observada (Kaplan-Meier) em 20 faixas.

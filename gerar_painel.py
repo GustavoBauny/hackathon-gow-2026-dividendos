@@ -76,7 +76,7 @@ def bloco_padroes(pads, media):
           <span class="media" style="left:{media * 100:.1f}%"></span>
         </div>
         <p class="meta"><span>{e(p['leitura'])}</span>
-          <span class="kv">Nos 2.000 novos pedidos: <b>{n_novos}</b></span>
+          <span class="kv">Nos 2.000 novos pedidos{' (pelo valor pedido)' if p.get('depende_valor') else ''}: <b>{n_novos}</b></span>
           <span class="kv">Atraso entre os que pagam: <b>{pct(p['taxa_atraso'], 0)}</b></span></p>
       </li>""")
     return "\n".join(linhas)
@@ -352,7 +352,7 @@ footer.wrap {{ padding-block: 24px 40px; color: var(--muted); font-size: 12.5px;
 </header>
 <nav class="wrap" aria-label="Seções">
   <a href="#resumo">Resumo</a><a href="#padroes">1. Padrões encontrados</a><a href="#politica">2. Política proposta</a>
-  <a href="#comparacao">Comparação com a atual</a><a href="#validacao">Validação</a><a href="#consulta">Consultar pedido</a><a href="#tecnico">Detalhes técnicos</a>
+  <a href="#ia">IA e analista</a><a href="#comparacao">Comparação com a atual</a><a href="#validacao">Validação</a><a href="#consulta">Consultar pedido</a><a href="#tecnico">Detalhes técnicos</a>
 </nav>
 
 <section class="wrap" id="resumo">
@@ -436,6 +436,25 @@ footer.wrap {{ padding-block: 24px 40px; color: var(--muted); font-size: 12.5px;
     Mudar um valor e rodar <span class="mono">python gerar_decisoes.py</span> refaz as decisões e este painel em cerca de 2 minutos.
     Sugestão para decidir: um piloto pequeno e controlado com clientes de {P['restricoes_max'] + 1}+ restrições, hoje negados por falta de evidência, para medir o risco deles.
   </div>
+</section>
+
+<section class="wrap" id="ia">
+  <h2>Onde a IA entra e onde o analista decide</h2>
+  <div class="tiles">
+    <div class="tile"><div class="k">IA · descoberta</div><p class="small">Árvores de decisão varrem todas as variáveis e combinações do histórico.
+      Elas encontram os cortes e grupos da Parte 1. As taxas de cada grupo são medidas sem contar contrato em andamento como bom pagador.</p></div>
+    <div class="tile"><div class="k">IA · decisão</div><p class="small">No passo 5, 5 modelos de sobrevivência treinados no histórico estimam a chance de calote de cada pedido para cada valor possível.
+      A política aprova o valor com o maior resultado esperado.</p></div>
+    <div class="tile"><div class="k">Analista · aprovação</div><p class="small">Os cortes dos passos 2 a 5 são parâmetros visíveis. O analista ajusta, roda de novo e compara.
+      Nenhuma política vai para produção sem a aprovação dele.</p></div>
+  </div>
+  <h3>Como o analista valida uma mudança</h3>
+  <ol class="small">
+    <li>Muda um parâmetro em <span class="mono">src/politica.py</span>. Exemplo: aceitar 2 restrições, ou trocar o teto de 40% da sobra.</li>
+    <li>Roda <span class="mono">python gerar_decisoes.py</span>, que refaz o arquivo e este painel, e <span class="mono">python avaliar_historico.py</span>, que refaz o backtest.</li>
+    <li>Compara o ganho no backtest e roda os testes com <span class="mono">python -m unittest discover tests</span>.</li>
+    <li>Confere os pedidos que mudaram em <span class="mono">output/decisoes_detalhadas.csv</span> ou com <span class="mono">python explicar.py P-xxxxx</span>.</li>
+  </ol>
 </section>
 
 <section class="wrap" id="comparacao">

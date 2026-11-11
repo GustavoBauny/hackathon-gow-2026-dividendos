@@ -18,7 +18,7 @@
   - 589 decisões diferentes da atual.
   - 226 pedidos aprovados com valor reduzido.
   - Ganho esperado pelo modelo: +R$ 662 mil.
-- **Backtest cross-fitted:** ganho de +R$ 3,47 mi, igual ao da v1. AUC fora do tempo subiu de 0,87 para 0,88.
+- **Backtest cross-fitted:** ganho de +R$ 3,49 mi, contra +R$ 3,47 mi da v1. AUC fora do tempo subiu de 0,87 para 0,88.
 
 ## v1 · pré-checkpoint (11/11, ~09h)
 

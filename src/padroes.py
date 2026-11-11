@@ -217,6 +217,7 @@ def padroes_negocio(h: pd.DataFrame, novos: pd.DataFrame | None = None) -> tuple
             mn = fn(nv, an)
             n_novos = int(mn.sum()) if mn is not None else None
         out.append({"tipo": tipo, "titulo": titulo, "sujeito": sujeito, "pd": pd_, "n": n, "pd_media": base_pd,
+                    "depende_valor": "sobra" in titulo.lower() or "renda declarada" in titulo.lower() and "Reduzidos" in titulo,
                     "lift": pd_ / base_pd if base_pd else np.nan, "leitura": leitura, "taxa_atraso": atraso,
                     "n_novos": n_novos})
     return out, {"pd_media": base_pd, "n": base_n, "pd_sem_alerta": pd_limpo, "n_sem_alerta": n_limpo}
@@ -229,7 +230,7 @@ def onde_a_politica_atual_erra(h: pd.DataFrame) -> list[dict]:
     piloto_fora = (h["politica_aplicada"] == "piloto") & ~elegivel_atual
     grupos = [
         ("Clientes que a política atual aprovaria (aprovados pela atual ou pelo piloto, dentro das regras atuais)", elegivel_atual),
-        ("…desses, com sinal de alerta ou parcela > 50% da sobra (a atual aprova, a proposta nega)", elegivel_atual & alerta),
+        ("…desses, com sinal de alerta ou parcela > 50% da sobra (a atual aprova; a proposta nega ou reduz o valor)", elegivel_atual & alerta),
         ("…desses, sem sinal de alerta", elegivel_atual & ~alerta),
         ("Aprovados no piloto que a política atual negaria", piloto_fora),
         ("…desses, sem sinal de alerta (a atual nega, a proposta aprova)", piloto_fora & ~alerta),

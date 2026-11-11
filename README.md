@@ -9,7 +9,7 @@ Hackathon GOW 2026. Nova política de crédito para a Fortuna, construída com I
 | Aprovados (2.000 pedidos novos) | 1.145 | 1.510 (226 com valor reduzido) |
 | Valor aprovado | R$ 8,86 mi | R$ 10,16 mi |
 | Ganho esperado sobre a atual (modelo) | | **+R$ 662 mil** |
-| Backtest cross-fitted nos 10 mil pedidos históricos | −R$ 209 mil | +R$ 3,26 mi (**+R$ 3,47 mi**) |
+| Backtest cross-fitted nos 10 mil pedidos históricos | −R$ 211 mil | +R$ 3,27 mi (**+R$ 3,49 mi**) |
 
 O ganho vem de três frentes:
 - **Reduzir o valor** quando a parcela não cabe na sobra mensal do cliente.
@@ -60,7 +60,7 @@ Muitos contratos do histórico ainda não terminaram. Um contrato "em dia há 1 
 
 ## Como rodar
 
-Pré-requisitos: PostgreSQL 16 ou mais novo e Python 3.11 ou mais novo.
+Pré-requisitos: PostgreSQL 16 ou mais novo e Python 3.12 ou mais novo (testado em 3.13).
 
 ```bash
 # 1. banco
