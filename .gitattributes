@@ -1,0 +1,6 @@
+# arquivo de entrega: manter LF exatamente como o código gera
+*.csv -text
+*.py text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.html text eol=lf
